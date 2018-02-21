@@ -5,7 +5,7 @@
 
 namespace ethash
 {
-constexpr bool is_prime(size_t number) noexcept
+bool is_prime(size_t number) noexcept
 {
     if (number <= 1)
         return false;
