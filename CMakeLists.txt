@@ -1,3 +1,6 @@
+# Copyright 2018 Pawel Bylica.
+# Licensed under the Apache License, Version 2.0. See the LICENSE file.
+
 cmake_minimum_required(VERSION 3.5)
 
 include(cmake/cable/bootstrap.cmake)
@@ -15,3 +18,8 @@ HunterGate(
 project(ethash)
 
 add_subdirectory(lib/ethash)
+
+option(ETHASH_BUILD_TESTS "Build unit tests" ON)
+if(ETHASH_BUILD_TESTS)
+    add_subdirectory(test/unittests)
+endif()
