@@ -13,7 +13,7 @@ bool is_prime(size_t number) noexcept
     if (number % 2 == 0 && number > 2)
         return false;
 
-    for (size_t d = 3; (d * d) < number; d += 2)
+    for (size_t d = 3; (d * d) <= number; d += 2)
     {
         if (number % d == 0)
             return false;
