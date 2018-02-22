@@ -3,6 +3,8 @@
 
 #include <ethash/keccak.hpp>
 
+#include "helpers.hpp"
+
 #include <gtest/gtest.h>
 
 using namespace ethash;
@@ -29,4 +31,25 @@ TEST(keccak512, empty)
     hash512 h = keccak512(nullptr, 0);
     std::string strh{h.bytes, sizeof(h)};
     EXPECT_EQ(strh, std::string(keccack512_of_empty, sizeof(h)));
+}
+
+TEST(to_hex, test)
+{
+    hash256 h;
+    h.bytes[0] = 0;
+    h.bytes[1] = 1;
+    h.bytes[2] = 2;
+    h.bytes[3] = 3;
+    h.bytes[4] = 4;
+    h.bytes[5] = 5;
+    h.bytes[6] = 6;
+    h.bytes[7] = 7;
+    h.bytes[8] = 8;
+    h.bytes[9] = 9;
+    h.bytes[10] = 10;
+
+    h.bytes[31] = 0xff;
+
+    auto s = to_hex(h);
+    EXPECT_EQ(s, "000102030405060708090a0000000000000000000000000000000000000000ff");
 }

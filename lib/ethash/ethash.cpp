@@ -2,7 +2,9 @@
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
 #include <ethash/ethash.hpp>
+#include "ethash-internal.hpp"
 
+#include "keccak.hpp"
 #include "params.hpp"
 #include "utils.hpp"
 
@@ -25,5 +27,13 @@ uint64_t calculate_full_dataset_size(uint32_t epoch_number) noexcept
     uint64_t num_items_upper_bound = size_upper_bound / mix_size;
     uint64_t num_items = find_largest_prime(num_items_upper_bound);
     return num_items * mix_size;  //< This cannot overflow.
+}
+
+hash256 calculate_seed(uint32_t epoch_number) noexcept
+{
+    hash256 seed;
+    for (size_t i = 0; i < epoch_number; ++i)
+        seed = keccak256(seed.bytes, sizeof(seed));
+    return seed;
 }
 }

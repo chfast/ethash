@@ -2,8 +2,13 @@
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
 #include <ethash/ethash.hpp>
+#include <ethash/ethash-internal.hpp>
+
+#include "helpers.hpp"
 
 #include <gtest/gtest.h>
+
+using namespace ethash;
 
 class calculate_light_cache_size_test
   : public ::testing::TestWithParam<std::pair<uint32_t, uint64_t>>
@@ -71,3 +76,36 @@ static std::pair<uint32_t, uint64_t> full_dataset_sizes[] = {{0, 1073739904}, {1
     {1956, 17481857408}, {2047, 18245220736}};
 INSTANTIATE_TEST_CASE_P(
     full_dataset_sizes, calculate_full_dataset_size_test, testing::ValuesIn(full_dataset_sizes));
+
+
+TEST(calculate_seed_test, zero)
+{
+    hash256 s0 = calculate_seed(0);
+    EXPECT_EQ(s0.words[0], 0);
+    EXPECT_EQ(s0.words[1], 0);
+    EXPECT_EQ(s0.words[2], 0);
+    EXPECT_EQ(s0.words[3], 0);
+}
+
+TEST(calculate_seed_test, one)
+{
+    hash256 seed = calculate_seed(1);
+    std::string sh = to_hex(seed);
+    EXPECT_EQ(sh, "290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563");
+}
+
+TEST(calculate_seed_test, current)
+{
+    hash256 seed = calculate_seed(171);
+    std::string sh = to_hex(seed);
+    // FIXME: Compare with legacy ethash.
+    EXPECT_EQ(sh, "a9b0e0c9aca72c07ba06b5bbdae8b8f69e61878301508473379bb4f71807d707");
+}
+
+TEST(calculate_seed_test, last)
+{
+    hash256 seed = calculate_seed(2048);
+    std::string sh = to_hex(seed);
+    // FIXME: Compare with legacy ethash.
+    EXPECT_EQ(sh, "20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920");
+}

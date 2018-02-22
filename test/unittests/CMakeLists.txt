@@ -6,6 +6,7 @@ find_package(GTest CONFIG REQUIRED)
 
 add_executable(
     ethash-test
+    helpers.hpp
     test_ethash.cpp
     test_keccak.cpp
     test_utils.cpp
