@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.5)
 
 include(cmake/cable/bootstrap.cmake)
 
+include(CableCompilerSettings)
 include(CableToolchains)
 include(HunterGate)
 
@@ -16,6 +17,8 @@ HunterGate(
 )
 
 project(ethash)
+
+cable_configure_compiler()
 
 add_subdirectory(lib/ethash)
 

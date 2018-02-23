@@ -14,4 +14,3 @@ add_executable(
 
 target_link_libraries(ethash-test PRIVATE ethash GTest::gtest GTest::main)
 target_include_directories(ethash-test PRIVATE ${ETHASH_PRIVATE_INCLUDE_DIR})
-message("XX: ${ETHASH_PRIVATE_INCLUDE_DIR}")
