@@ -4,6 +4,8 @@
 #include <ethash/ethash.hpp>
 #include "ethash-internal.hpp"
 
+#include <ethash-buildinfo.h>
+
 #include "keccak.hpp"
 #include "params.hpp"
 #include "utils.hpp"
@@ -64,5 +66,10 @@ std::vector<hash512> make_light_cache(size_t size, const hash256& seed)
     }
 
     return cache;
+}
+
+const char* version() noexcept
+{
+    return get_buildinfo().project_version;
 }
 }

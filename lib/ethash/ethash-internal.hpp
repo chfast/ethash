@@ -17,4 +17,6 @@ hash256 calculate_seed(uint32_t epoch_number) noexcept;
 
 std::vector<hash512> make_light_cache(size_t size, const hash256& seed);
 
+const char* version() noexcept;
+
 }

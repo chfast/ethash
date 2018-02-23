@@ -108,3 +108,9 @@ TEST(calculate_seed_test, last)
     // FIXME: Compare with legacy ethash.
     EXPECT_EQ(sh, "20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920");
 }
+
+TEST(ethash, version)
+{
+    std::string expected_version{"0.1.0.dev0"};
+    EXPECT_EQ(version(), expected_version);
+}
