@@ -36,4 +36,33 @@ hash256 calculate_seed(uint32_t epoch_number) noexcept
         seed = keccak256(seed.bytes, sizeof(seed));
     return seed;
 }
+
+std::vector<hash512> make_light_cache(size_t size, const hash256& seed)
+{
+    size_t n = size / sizeof(hash512);
+
+    hash512 item = keccak512(seed.bytes, sizeof(seed));
+    std::vector<hash512> cache;
+    cache.reserve(n);
+    cache.emplace_back(item);
+    for (size_t i = 1; i < n; ++i)
+    {
+        item = keccak512(item.bytes, sizeof(item));
+        cache.emplace_back(item);
+    }
+
+    for (size_t q = 0; q < light_cache_rounds; ++q)
+    {
+        for (size_t i = 0; i < n; ++i)
+        {
+            size_t t = static_cast<size_t>(cache[i].words[0]);
+            size_t v = t % n;
+            size_t w = (n + i - 1) % n;
+            hash512 xored = bitwise_xor(cache[v], cache[w]);
+            cache[i] = keccak512(xored.bytes, sizeof(xored));
+        }
+    }
+
+    return cache;
+}
 }

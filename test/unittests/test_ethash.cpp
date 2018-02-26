@@ -98,7 +98,6 @@ TEST(calculate_seed_test, current)
 {
     hash256 seed = calculate_seed(171);
     std::string sh = to_hex(seed);
-    // FIXME: Compare with legacy ethash.
     EXPECT_EQ(sh, "a9b0e0c9aca72c07ba06b5bbdae8b8f69e61878301508473379bb4f71807d707");
 }
 

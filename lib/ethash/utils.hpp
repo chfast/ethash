@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "types.hpp"
+
 #include <cstddef>
 
 namespace ethash
@@ -14,4 +16,6 @@ bool is_prime(size_t number) noexcept;
 /// @param upper_bound  The upper bound. MUST be greater than 2.
 /// @return  The largest prime number `p` such `p <= upper_bound`.
 size_t find_largest_prime(size_t upper_bound) noexcept;
+
+hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept;
 }
