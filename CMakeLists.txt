@@ -24,7 +24,7 @@ set(PROJECT_VERSION 0.1.0.dev0)
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug Release RelWithDebInfo)
 cable_configure_compiler()
 
-cable_add_buildinfo_library(ethash-buildinfo)
+cable_add_buildinfo_library(PREFIX ethash)
 
 add_subdirectory(lib/ethash)
 
