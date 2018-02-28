@@ -12,6 +12,16 @@
 
 namespace ethash
 {
+namespace
+{
+uint32_t load_uint32(const hash512& item)
+{
+    // FIXME: Add support for big-endian architectures.
+    return static_cast<uint32_t>(item.words[0]);
+}
+}
+
+
 uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept
 {
     // FIXME: Handle overflow.
@@ -57,9 +67,13 @@ std::vector<hash512> make_light_cache(size_t size, const hash256& seed)
     {
         for (size_t i = 0; i < n; ++i)
         {
-            size_t t = static_cast<size_t>(cache[i].words[0]);
+            // Fist index: 4 first bytes of the item as little-endian integer.
+            size_t t = load_uint32(cache[i]);
             size_t v = t % n;
+
+            // Second index.
             size_t w = (n + i - 1) % n;
+
             hash512 xored = bitwise_xor(cache[v], cache[w]);
             cache[i] = keccak512(xored.bytes, sizeof(xored));
         }

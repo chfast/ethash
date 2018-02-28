@@ -7,7 +7,8 @@
 
 #include <string>
 
-inline std::string to_hex(const ethash::hash256& h)
+template<typename Hash>
+inline std::string to_hex(const Hash& h)
 {
     static const auto hex_chars = "0123456789abcdef";
     std::string str;
