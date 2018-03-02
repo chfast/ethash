@@ -22,7 +22,12 @@ project(ethash)
 set(PROJECT_VERSION 0.1.0.dev0)
 
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug Release RelWithDebInfo)
+
 cable_configure_compiler()
+if(CABLE_COMPILER_GNULIKE)
+    # Do not allow lossy type conversions.
+    add_compile_options(-Wconversion)
+endif()
 
 cable_add_buildinfo_library(PREFIX ethash)
 

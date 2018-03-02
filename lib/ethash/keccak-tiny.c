@@ -44,6 +44,11 @@ static const uint64_t RC[24] = \
 
 /*** Keccak-f[1600] ***/
 static inline void keccakf(void* state) {
+
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma clang diagnostic ignored "-Wconversion"
+
+
     uint64_t* a = (uint64_t*)state;
     uint64_t b[5] = {0};
     uint64_t t = 0;
