@@ -49,12 +49,12 @@ hash256 calculate_seed(uint32_t epoch_number) noexcept
     return seed;
 }
 
-std::vector<hash512> make_light_cache(size_t size, const hash256& seed)
+light_cache make_light_cache(size_t size, const hash256& seed)
 {
     size_t n = size / sizeof(hash512);
 
     hash512 item = keccak512(seed.bytes, sizeof(seed));
-    std::vector<hash512> cache;
+    light_cache cache;
     cache.reserve(n);
     cache.emplace_back(item);
     for (size_t i = 1; i < n; ++i)
