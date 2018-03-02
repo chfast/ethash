@@ -19,6 +19,8 @@ hash256 calculate_seed(uint32_t epoch_number) noexcept;
 
 light_cache make_light_cache(size_t size, const hash256& seed);
 
+hash512 calculate_full_dataset_item(const light_cache& cache, uint32_t index);
+
 const char* version() noexcept;
 
 }
