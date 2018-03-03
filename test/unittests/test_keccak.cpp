@@ -33,7 +33,7 @@ TEST(keccak512, empty)
     EXPECT_EQ(strh, std::string(keccack512_of_empty, sizeof(h)));
 }
 
-TEST(to_hex, test)
+TEST(helpers, to_hex)
 {
     hash256 h;
     h.bytes[0] = 0;
@@ -52,4 +52,12 @@ TEST(to_hex, test)
 
     auto s = to_hex(h);
     EXPECT_EQ(s, "000102030405060708090a0000000000000000000000000000000000000000ff");
+}
+
+TEST(helpers, to_hash256)
+{
+    const char* hex = "0313d03c5ed78694c90ecb3d04190b82d5b222c75ba4cab83383dde4d11ed512";
+    hash256 h = to_hash256(hex);
+    std::string s = to_hex(h);
+    EXPECT_EQ(s, hex);
 }
