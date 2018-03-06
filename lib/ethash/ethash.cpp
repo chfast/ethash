@@ -1,16 +1,18 @@
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
-#include <ethash/ethash.hpp>
 #include "ethash-internal.hpp"
+#include <ethash/ethash.hpp>
 
 #include <cassert>
+#include <cstring>
 #include <limits>
 
-#include <ethash-buildinfo.h>
 #include "keccak.hpp"
 #include "params.hpp"
 #include "utils.hpp"
+#include <ethash-buildinfo.h>
+
 
 namespace ethash
 {
@@ -132,6 +134,57 @@ hash512 calculate_full_dataset_item(const light_cache& cache, uint32_t index)
 
     return keccak512(mix.bytes, sizeof(mix));
 }
+
+hash256 calculate_hash(
+    uint32_t epoch, const light_cache& cache, const hash256& header_hash, uint64_t nonce)
+{
+    const auto n = calculate_full_dataset_size(epoch);
+    nonce = __builtin_bswap64(nonce);
+    char init_bytes[sizeof(header_hash) + sizeof(nonce)];
+    std::memcpy(&init_bytes[0], header_hash.bytes, sizeof(header_hash));
+    std::memcpy(&init_bytes[sizeof(header_hash)], &nonce, sizeof(nonce));
+    hash512 s = keccak512(init_bytes, sizeof(init_bytes));
+    const uint32_t s_init = s.half_words[0];
+
+    union mix_t
+    {
+        hash512 hashes[2] = {{}, {}};
+        uint32_t hwords[32];
+        char bytes[128];
+    };
+    static constexpr size_t mix_hashes = sizeof(mix_t) / sizeof(hash512);
+    static constexpr size_t mix_hwords = sizeof(mix_t) / sizeof(uint32_t);
+
+    mix_t mix;
+    std::memcpy(&mix.bytes[0], s.bytes, sizeof(s));
+    std::memcpy(&mix.bytes[sizeof(mix) / 2], s.bytes, sizeof(s));
+
+    for (uint32_t i = 0; i < 64; ++i)
+    {
+        auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % (n / sizeof(mix)) * mix_hashes;
+        mix_t newdata;
+        newdata.hashes[0] = calculate_full_dataset_item(cache, static_cast<uint32_t>(p));
+        newdata.hashes[1] = calculate_full_dataset_item(cache, static_cast<uint32_t>(p + 1));
+
+        for (size_t j = 0; j < mix_hwords; ++j)
+            mix.hwords[j] = fnv(mix.hwords[j], newdata.hwords[j]);
+    }
+
+    hash256 cmix;
+    for (size_t i = 0; i < mix_hwords; i += 4)
+    {
+        uint32_t h1 = fnv(mix.hwords[i], mix.hwords[i + 1]);
+        uint32_t h2 = fnv(h1, mix.hwords[i + 2]);
+        uint32_t h3 = fnv(h2, mix.hwords[i + 3]);
+        cmix.hwords[i / 4] = h3;
+    }
+
+    char final_data[sizeof(s) + sizeof(cmix)];
+    std::memcpy(&final_data[0], s.bytes, sizeof(s));
+    std::memcpy(&final_data[sizeof(s)], cmix.bytes, sizeof(cmix));
+    return keccak256(final_data, sizeof(final_data));
+}
+
 
 const char* version() noexcept
 {

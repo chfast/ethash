@@ -220,3 +220,25 @@ TEST(ethash, full_dataset_items)
         EXPECT_EQ(to_hex(full_item), t.hash_hex) << "index: " << t.index;
     }
 }
+
+TEST(ethash, verify_pow)
+{
+    const uint32_t block_number = 2683077;
+    const uint32_t epoch_number = block_number / 30000;
+    const char* header_hash_hex = "0313d03c5ed78694c90ecb3d04190b82d5b222c75ba4cab83383dde4d11ed512";
+    const char* nonce_hex = "8c5eaec000788d41";
+    const char* mix_hex = "00000000000204882a6213f68fe89bc368df25c1ad999f82532a7433e99bc48e";
+//    const char* mix_hash_hex = "93e85c97b34ccd8091e09ddb513fdc9e680fa8898d4a0737205e60af710a3dcb";
+
+    uint64_t nonce = std::stoul(nonce_hex, nullptr, 16);
+    nonce = __builtin_bswap64(nonce);
+
+    hash256 header_hash = to_hash256(header_hash_hex);
+
+    size_t cache_size = calculate_light_cache_size(block_number / 30000);
+    hash256 seed = calculate_seed(block_number / 30000);
+    light_cache cache = make_light_cache(cache_size, seed);
+
+    hash256 mix = calculate_hash(epoch_number, cache, header_hash, nonce);
+    EXPECT_EQ(to_hex(mix), mix_hex);
+}

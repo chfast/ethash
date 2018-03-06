@@ -12,6 +12,7 @@ union hash256
     uint64_t words[4] = {
         0,
     };
+    uint32_t hwords[8];
     char bytes[32];
 };
 

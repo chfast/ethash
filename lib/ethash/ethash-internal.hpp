@@ -21,6 +21,9 @@ light_cache make_light_cache(size_t size, const hash256& seed);
 
 hash512 calculate_full_dataset_item(const light_cache& cache, uint32_t index);
 
+hash256 calculate_hash(
+    uint32_t epoch, const light_cache& cache, const hash256& header_hash, uint64_t nonce);
+
 const char* version() noexcept;
 
 }
