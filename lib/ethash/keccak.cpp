@@ -5,8 +5,8 @@
 
 // Declarations for keccak-tiny:
 
-extern "C" int sha3_256(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
-extern "C" int sha3_512(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
+extern "C" int sha3_256(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen) noexcept;
+extern "C" int sha3_512(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen) noexcept;
 
 namespace ethash
 {
