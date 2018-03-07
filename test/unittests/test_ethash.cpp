@@ -106,7 +106,6 @@ TEST(calculate_seed_test, last)
 {
     hash256 seed = calculate_seed(2048);
     std::string sh = to_hex(seed);
-    // FIXME: Compare with legacy ethash.
     EXPECT_EQ(sh, "20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920");
 }
 
@@ -183,7 +182,7 @@ TEST(ethash, full_dataset_items)
 {
     struct full_dataset_item_test_case
     {
-        uint32_t index;
+        size_t index;
         const char* hash_hex;
     };
 

@@ -20,26 +20,13 @@ namespace
 {
 inline uint32_t load_uint32(const hash512& item)
 {
-    // FIXME: Add support for big-endian architectures.
+    // TODO: Add support for big-endian architectures.
     return static_cast<uint32_t>(item.words[0]);
 }
 
 inline uint32_t fnv(uint32_t u, uint32_t v)
 {
     return (u * 0x01000193) ^ v;
-}
-
-inline uint64_t fnv(uint64_t u, uint64_t v)
-{
-    uint32_t ul = static_cast<uint32_t>(u);
-    uint32_t uh = static_cast<uint32_t>(u >> 32);
-    uint32_t vl = static_cast<uint32_t>(v);
-    uint32_t vh = static_cast<uint32_t>(v >> 32);
-
-    uint64_t l = fnv(ul, vl);
-    uint64_t h = fnv(uh, vh);
-
-    return (h << 32) | l;
 }
 
 inline hash512 fnv(const hash512& u, const hash512& v)
@@ -121,22 +108,24 @@ light_cache make_light_cache(size_t size, const hash256& seed)
     return cache;
 }
 
-hash512 calculate_full_dataset_item(const light_cache& cache, uint32_t index)
+hash512 calculate_full_dataset_item(const light_cache& cache, size_t index)
 {
     assert(cache.size() <= std::numeric_limits<uint32_t>::max());
 
-    const size_t n = cache.size();
-    static constexpr uint32_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
+    static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
+    const size_t num_cache_items = cache.size();
 
-    hash512 mix = cache[index % n];
-    mix.half_words[0] ^= index;  // TODO: Add BE support.
+    const uint32_t init = static_cast<uint32_t>(index);
+
+    hash512 mix = cache[index % num_cache_items];
+    mix.half_words[0] ^= init;  // TODO: Add BE support.
 
     mix = keccak512(mix.bytes, sizeof(mix));
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
-        uint32_t t = fnv(index ^ j, mix.half_words[j % num_half_words]);
-        size_t parent_index = t % n;
+        uint32_t t = fnv(init ^ j, mix.half_words[j % num_half_words]);
+        size_t parent_index = t % num_cache_items;
         mix = fnv(mix, cache[parent_index]);
     }
 
@@ -205,10 +194,9 @@ inline hash256 hash_kernel(const epoch_context& context, const hash256& header_h
 hash256 hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
 {
     static constexpr auto light_lookup = [](const epoch_context& context, size_t index) {
-        uint32_t i = static_cast<uint32_t>(index);  // FIXME: Fix the types to remove the cast.
         mix_t data;
-        data.hashes[0] = calculate_full_dataset_item(context.cache, i);
-        data.hashes[1] = calculate_full_dataset_item(context.cache, i + 1);
+        data.hashes[0] = calculate_full_dataset_item(context.cache, index);
+        data.hashes[1] = calculate_full_dataset_item(context.cache, index + 1);
         return data;
     };
 
@@ -220,16 +208,13 @@ hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t 
     assert(context.full_dataset != nullptr);
 
     static constexpr auto lazy_lookup = [](const epoch_context& context, size_t index) {
-        uint32_t i = static_cast<uint32_t>(index);  // FIXME: Fix the types to remove the cast.
-
         hash512& item0 = context.full_dataset[index];
         if (item0.words[0] == 0)
-            item0 = calculate_full_dataset_item(context.cache, i);
+            item0 = calculate_full_dataset_item(context.cache, index);
 
         hash512& item1 = context.full_dataset[index + 1];
         if (item1.words[0] == 0)
-            item1 = calculate_full_dataset_item(context.cache, i + 1);
-
+            item1 = calculate_full_dataset_item(context.cache, index + 1);
 
         mix_t data;
         data.hashes[0] = item0;
