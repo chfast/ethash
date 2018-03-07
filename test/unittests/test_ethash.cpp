@@ -167,14 +167,12 @@ TEST(ethash, light_cache)
 
     for (const auto& t : test_cases)
     {
-        const uint64_t size = calculate_light_cache_size(t.epoch_number);
-        const auto seed = calculate_seed(t.epoch_number);
-        const auto light_cache = make_light_cache(size, seed);
+        const epoch_context context{t.epoch_number};
 
         for (auto& u : t.item_tests)
         {
-            ASSERT_LT(u.index, light_cache.size());
-            EXPECT_EQ(to_hex(light_cache[u.index]), u.hash_hex)
+            ASSERT_LT(u.index, context.cache.size());
+            EXPECT_EQ(to_hex(context.cache[u.index]), u.hash_hex)
                 << "epoch: " << t.epoch_number << " item: " << u.index;
         }
     }
@@ -231,14 +229,11 @@ TEST(ethash, verify_pow)
 //    const char* mix_hash_hex = "93e85c97b34ccd8091e09ddb513fdc9e680fa8898d4a0737205e60af710a3dcb";
 
     uint64_t nonce = std::stoul(nonce_hex, nullptr, 16);
-    nonce = __builtin_bswap64(nonce);
 
     hash256 header_hash = to_hash256(header_hash_hex);
 
-    size_t cache_size = calculate_light_cache_size(block_number / 30000);
-    hash256 seed = calculate_seed(block_number / 30000);
-    light_cache cache = make_light_cache(cache_size, seed);
+    epoch_context context{epoch_number};
 
-    hash256 mix = calculate_hash(epoch_number, cache, header_hash, nonce);
+    hash256 mix = calculate_hash(context, header_hash, nonce);
     EXPECT_EQ(to_hex(mix), mix_hex);
 }

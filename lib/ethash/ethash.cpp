@@ -53,6 +53,14 @@ inline hash512 fnv(const hash512& u, const hash512& v)
 }
 
 
+epoch_context::epoch_context(uint32_t epoch_number)
+{
+    size_t cache_size = calculate_light_cache_size(epoch_number);
+    hash256 seed = calculate_seed(epoch_number);
+    cache = make_light_cache(cache_size, seed);
+    full_dataset_size = calculate_full_dataset_size(epoch_number);
+}
+
 uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept
 {
     // FIXME: Handle overflow.
@@ -135,11 +143,9 @@ hash512 calculate_full_dataset_item(const light_cache& cache, uint32_t index)
     return keccak512(mix.bytes, sizeof(mix));
 }
 
-hash256 calculate_hash(
-    uint32_t epoch, const light_cache& cache, const hash256& header_hash, uint64_t nonce)
+hash256 calculate_hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
 {
-    const auto n = calculate_full_dataset_size(epoch);
-    nonce = __builtin_bswap64(nonce);
+    const auto n = context.full_dataset_size;
     char init_bytes[sizeof(header_hash) + sizeof(nonce)];
     std::memcpy(&init_bytes[0], header_hash.bytes, sizeof(header_hash));
     std::memcpy(&init_bytes[sizeof(header_hash)], &nonce, sizeof(nonce));
@@ -163,8 +169,8 @@ hash256 calculate_hash(
     {
         auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % (n / sizeof(mix)) * mix_hashes;
         mix_t newdata;
-        newdata.hashes[0] = calculate_full_dataset_item(cache, static_cast<uint32_t>(p));
-        newdata.hashes[1] = calculate_full_dataset_item(cache, static_cast<uint32_t>(p + 1));
+        newdata.hashes[0] = calculate_full_dataset_item(context.cache, static_cast<uint32_t>(p));
+        newdata.hashes[1] = calculate_full_dataset_item(context.cache, static_cast<uint32_t>(p + 1));
 
         for (size_t j = 0; j < mix_hwords; ++j)
             mix.hwords[j] = fnv(mix.hwords[j], newdata.hwords[j]);
