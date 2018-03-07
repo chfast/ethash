@@ -35,5 +35,5 @@ add_subdirectory(lib/ethash)
 
 option(ETHASH_BUILD_TESTS "Build unit tests" ON)
 if(ETHASH_BUILD_TESTS)
-    add_subdirectory(test/unittests)
+    add_subdirectory(test)
 endif()
