@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace ethash
@@ -27,11 +28,13 @@ union hash512
 };
 
 using light_cache = std::vector<hash512>;
+using full_dataset_t = std::unique_ptr<hash512[]>;
 
 struct epoch_context
 {
     light_cache cache;
     size_t full_dataset_size;
+    full_dataset_t full_dataset;
 
     explicit epoch_context(uint32_t epoch_number);
 };

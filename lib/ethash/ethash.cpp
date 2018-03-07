@@ -143,6 +143,13 @@ hash512 calculate_full_dataset_item(const light_cache& cache, uint32_t index)
     return keccak512(mix.bytes, sizeof(mix));
 }
 
+void init_full_dataset(epoch_context& context)
+{
+    assert(context.full_dataset == nullptr);
+    const size_t num_items = context.full_dataset_size / sizeof(hash512);
+    context.full_dataset.reset(new hash512[num_items]);
+}
+
 namespace
 {
 union mix_t
@@ -206,6 +213,31 @@ hash256 hash_light(const epoch_context& context, const hash256& header_hash, uin
     };
 
     return hash_kernel(context, header_hash, nonce, light_lookup);
+}
+
+hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
+{
+    assert(context.full_dataset != nullptr);
+
+    static constexpr auto lazy_lookup = [](const epoch_context& context, size_t index) {
+        uint32_t i = static_cast<uint32_t>(index);  // FIXME: Fix the types to remove the cast.
+
+        hash512& item0 = context.full_dataset[index];
+        if (item0.words[0] == 0)
+            item0 = calculate_full_dataset_item(context.cache, i);
+
+        hash512& item1 = context.full_dataset[index + 1];
+        if (item1.words[0] == 0)
+            item1 = calculate_full_dataset_item(context.cache, i + 1);
+
+
+        mix_t data;
+        data.hashes[0] = item0;
+        data.hashes[1] = item1;
+        return data;
+    };
+
+    return hash_kernel(context, header_hash, nonce, lazy_lookup);
 }
 
 uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,

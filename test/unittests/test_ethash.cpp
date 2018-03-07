@@ -3,6 +3,7 @@
 
 #include <ethash/ethash.hpp>
 #include <ethash/ethash-internal.hpp>
+#include <ethash/params.hpp>
 
 #include "helpers.hpp"
 
@@ -219,21 +220,50 @@ TEST(ethash, full_dataset_items)
     }
 }
 
-TEST(ethash, verify_pow)
+namespace
 {
-    const uint32_t block_number = 2683077;
-    const uint32_t epoch_number = block_number / 30000;
-    const char* header_hash_hex = "0313d03c5ed78694c90ecb3d04190b82d5b222c75ba4cab83383dde4d11ed512";
-    const char* nonce_hex = "8c5eaec000788d41";
-    const char* mix_hex = "00000000000204882a6213f68fe89bc368df25c1ad999f82532a7433e99bc48e";
-//    const char* mix_hash_hex = "93e85c97b34ccd8091e09ddb513fdc9e680fa8898d4a0737205e60af710a3dcb";
+struct hash_test_case
+{
+    uint32_t block_number;
+    const char* header_hash_hex;
+    const char* nonce_hex;
+    const char* mix_hash_hex;
+    const char* mix_raw_hex;
+};
 
-    uint64_t nonce = std::stoul(nonce_hex, nullptr, 16);
+hash_test_case hash_test_cases[] = {
+    {2683077, "0313d03c5ed78694c90ecb3d04190b82d5b222c75ba4cab83383dde4d11ed512",
+        "8c5eaec000788d41", "00000000000204882a6213f68fe89bc368df25c1ad999f82532a7433e99bc48e",
+        "93e85c97b34ccd8091e09ddb513fdc9e680fa8898d4a0737205e60af710a3dcb"}};
+}
 
-    hash256 header_hash = to_hash256(header_hash_hex);
+TEST(ethash, verify_hash_light)
+{
+    for (const auto& t : hash_test_cases)
+    {
+        const uint32_t epoch_number = t.block_number / epoch_length;
+        const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
+        const hash256 header_hash = to_hash256(t.header_hash_hex);
 
-    epoch_context context{epoch_number};
+        epoch_context context{epoch_number};
 
-    hash256 mix = hash_light(context, header_hash, nonce);
-    EXPECT_EQ(to_hex(mix), mix_hex);
+        hash256 mix = hash_light(context, header_hash, nonce);
+        EXPECT_EQ(to_hex(mix), t.mix_hash_hex);
+    }
+}
+
+TEST(ethash, verify_hash)
+{
+    for (const auto& t : hash_test_cases)
+    {
+        const uint32_t epoch_number = t.block_number / epoch_length;
+        const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
+        const hash256 header_hash = to_hash256(t.header_hash_hex);
+
+        epoch_context context{epoch_number};
+        init_full_dataset(context);
+
+        hash256 mix = hash(context, header_hash, nonce);
+        EXPECT_EQ(to_hex(mix), t.mix_hash_hex);
+    }
 }
