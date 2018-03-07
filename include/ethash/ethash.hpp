@@ -8,8 +8,6 @@
 namespace ethash
 {
 
-uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept;
 
-uint64_t calculate_full_dataset_size(uint32_t epoch_number) noexcept;
 
 }

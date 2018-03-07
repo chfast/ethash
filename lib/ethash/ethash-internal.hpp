@@ -23,6 +23,10 @@ struct epoch_context
     explicit epoch_context(uint32_t epoch_number);
 };
 
+uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept;
+
+uint64_t calculate_full_dataset_size(uint32_t epoch_number) noexcept;
+
 hash256 calculate_seed(uint32_t epoch_number) noexcept;
 
 light_cache make_light_cache(size_t size, const hash256& seed);
