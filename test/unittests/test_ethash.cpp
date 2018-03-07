@@ -234,6 +234,6 @@ TEST(ethash, verify_pow)
 
     epoch_context context{epoch_number};
 
-    hash256 mix = calculate_hash(context, header_hash, nonce);
+    hash256 mix = hash_light(context, header_hash, nonce);
     EXPECT_EQ(to_hex(mix), mix_hex);
 }

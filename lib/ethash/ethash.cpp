@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
 #include "ethash-internal.hpp"
-#include <ethash/ethash.hpp>
 
 #include <cassert>
 #include <cstring>
+#include <functional>
 #include <limits>
 
 #include "keccak.hpp"
@@ -143,7 +143,21 @@ hash512 calculate_full_dataset_item(const light_cache& cache, uint32_t index)
     return keccak512(mix.bytes, sizeof(mix));
 }
 
-hash256 calculate_hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
+namespace
+{
+union mix_t
+{
+    hash512 hashes[2] = {{}, {}};
+    uint32_t hwords[32];
+    char bytes[128];
+};
+
+constexpr size_t mix_hashes = sizeof(mix_t) / sizeof(hash512);
+constexpr size_t mix_hwords = sizeof(mix_t) / sizeof(uint32_t);
+
+using lookup_fn = std::function<mix_t(const epoch_context&, size_t)>;
+
+inline hash256 hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce, lookup_fn lookup)
 {
     const auto n = context.full_dataset_size;
     char init_bytes[sizeof(header_hash) + sizeof(nonce)];
@@ -152,15 +166,6 @@ hash256 calculate_hash(const epoch_context& context, const hash256& header_hash,
     hash512 s = keccak512(init_bytes, sizeof(init_bytes));
     const uint32_t s_init = s.half_words[0];
 
-    union mix_t
-    {
-        hash512 hashes[2] = {{}, {}};
-        uint32_t hwords[32];
-        char bytes[128];
-    };
-    static constexpr size_t mix_hashes = sizeof(mix_t) / sizeof(hash512);
-    static constexpr size_t mix_hwords = sizeof(mix_t) / sizeof(uint32_t);
-
     mix_t mix;
     std::memcpy(&mix.bytes[0], s.bytes, sizeof(s));
     std::memcpy(&mix.bytes[sizeof(mix) / 2], s.bytes, sizeof(s));
@@ -168,9 +173,7 @@ hash256 calculate_hash(const epoch_context& context, const hash256& header_hash,
     for (uint32_t i = 0; i < 64; ++i)
     {
         auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % (n / sizeof(mix)) * mix_hashes;
-        mix_t newdata;
-        newdata.hashes[0] = calculate_full_dataset_item(context.cache, static_cast<uint32_t>(p));
-        newdata.hashes[1] = calculate_full_dataset_item(context.cache, static_cast<uint32_t>(p + 1));
+        mix_t newdata = lookup(context, p);
 
         for (size_t j = 0; j < mix_hwords; ++j)
             mix.hwords[j] = fnv(mix.hwords[j], newdata.hwords[j]);
@@ -190,14 +193,28 @@ hash256 calculate_hash(const epoch_context& context, const hash256& header_hash,
     std::memcpy(&final_data[sizeof(s)], cmix.bytes, sizeof(cmix));
     return keccak256(final_data, sizeof(final_data));
 }
+}
 
-uint64_t search(const epoch_context& context, const hash256& header_hash, uint64_t target,
+hash256 hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
+{
+    static constexpr auto light_lookup = [](const epoch_context& context, size_t index) {
+        uint32_t i = static_cast<uint32_t>(index);  // FIXME: Fix the types to remove the cast.
+        mix_t data;
+        data.hashes[0] = calculate_full_dataset_item(context.cache, i);
+        data.hashes[1] = calculate_full_dataset_item(context.cache, i + 1);
+        return data;
+    };
+
+    return hash_kernel(context, header_hash, nonce, light_lookup);
+}
+
+uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations)
 {
     const uint64_t end_nonce = start_nonce + iterations;
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
-        hash256 h = calculate_hash(context, header_hash, nonce);
+        hash256 h = hash_light(context, header_hash, nonce);
         if (h.words[0] < target)
             return nonce;
     }

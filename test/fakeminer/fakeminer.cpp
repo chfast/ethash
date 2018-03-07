@@ -17,7 +17,7 @@ int main()
     auto context = ethash::epoch_context{0};
 
     auto start_time = timer::now();
-    ethash::search(context, header_hash, 0, 0, n);
+    ethash::search_light(context, header_hash, 0, 0, n);
     auto ms = duration_cast<milliseconds>(timer::now() - start_time).count();
     auto hps = n * 1000 / ms;
 
