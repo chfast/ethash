@@ -39,6 +39,8 @@ struct epoch_context
     explicit epoch_context(uint32_t epoch_number);
 };
 
+void init_full_dataset(epoch_context& context);
+
 uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);
 
