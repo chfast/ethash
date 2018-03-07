@@ -191,6 +191,19 @@ hash256 calculate_hash(const epoch_context& context, const hash256& header_hash,
     return keccak256(final_data, sizeof(final_data));
 }
 
+uint64_t search(const epoch_context& context, const hash256& header_hash, uint64_t target,
+    uint64_t start_nonce, size_t iterations)
+{
+    const uint64_t end_nonce = start_nonce + iterations;
+    for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
+    {
+        hash256 h = calculate_hash(context, header_hash, nonce);
+        if (h.words[0] < target)
+            return nonce;
+    }
+    return 0;
+}
+
 
 const char* version() noexcept
 {

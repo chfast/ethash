@@ -5,23 +5,13 @@
 
 #pragma once
 
-#include "types.hpp"
+#include <ethash/ethash.hpp>
 
 #include <vector>
 #include <cstddef>
 
 namespace ethash
 {
-
-using light_cache = std::vector<hash512>;
-
-struct epoch_context
-{
-    light_cache cache;
-    size_t full_dataset_size;
-
-    explicit epoch_context(uint32_t epoch_number);
-};
 
 uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept;
 

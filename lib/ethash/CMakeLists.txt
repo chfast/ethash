@@ -6,7 +6,6 @@ add_library(
     keccak.hpp keccak.cpp
     keccak-tiny.c
     params.hpp
-    types.hpp
     utils.hpp utils.cpp
 )
 
