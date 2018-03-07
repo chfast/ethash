@@ -13,6 +13,8 @@
 #include "utils.hpp"
 #include <ethash-buildinfo.h>
 
+#include <iostream>
+
 
 namespace ethash
 {
@@ -208,6 +210,8 @@ hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t 
     assert(context.full_dataset != nullptr);
 
     static constexpr auto lazy_lookup = [](const epoch_context& context, size_t index) {
+        // TODO: not thead-safe.
+        // This is not thread-safe, add atomics here. Thread sanitizer is not able to report this.
         hash512& item0 = context.full_dataset[index];
         if (item0.words[0] == 0)
             item0 = calculate_full_dataset_item(context.cache, index);
