@@ -13,6 +13,14 @@ include(HunterGate)
 
 cable_configure_toolchain(DEFAULT cxx11)
 
+set(
+    HUNTER_CONFIGURATION_TYPES
+    Release
+    CACHE
+    STRING
+    "Build type of the 3rd party packages"
+)
+
 HunterGate(
     URL "https://github.com/ruslo/hunter/archive/v0.20.10.tar.gz"
     SHA1 "5e7b471fb4704f23638588e91f53f2394f1babb4"

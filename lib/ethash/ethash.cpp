@@ -73,7 +73,7 @@ hash256 calculate_seed(uint32_t epoch_number) noexcept
 {
     hash256 seed;
     for (size_t i = 0; i < epoch_number; ++i)
-        seed = keccak256(seed.bytes, sizeof(seed));
+        seed = keccak256(seed);
     return seed;
 }
 
@@ -81,13 +81,13 @@ light_cache make_light_cache(size_t size, const hash256& seed)
 {
     size_t n = size / sizeof(hash512);
 
-    hash512 item = keccak512(seed.bytes, sizeof(seed));
+    hash512 item = keccak512(seed);
     light_cache cache;
     cache.reserve(n);
     cache.emplace_back(item);
     for (size_t i = 1; i < n; ++i)
     {
-        item = keccak512(item.bytes, sizeof(item));
+        item = keccak512(item);
         cache.emplace_back(item);
     }
 
@@ -103,7 +103,7 @@ light_cache make_light_cache(size_t size, const hash256& seed)
             size_t w = (n + i - 1) % n;
 
             hash512 xored = bitwise_xor(cache[v], cache[w]);
-            cache[i] = keccak512(xored.bytes, sizeof(xored));
+            cache[i] = keccak512(xored);
         }
     }
 
@@ -122,7 +122,7 @@ hash512 calculate_full_dataset_item(const light_cache& cache, size_t index)
     hash512 mix = cache[index % num_cache_items];
     mix.half_words[0] ^= init;  // TODO: Add BE support.
 
-    mix = keccak512(mix.bytes, sizeof(mix));
+    mix = keccak512(mix);
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
@@ -131,7 +131,7 @@ hash512 calculate_full_dataset_item(const light_cache& cache, size_t index)
         mix = fnv(mix, cache[parent_index]);
     }
 
-    return keccak512(mix.bytes, sizeof(mix));
+    return keccak512(mix);
 }
 
 void init_full_dataset(epoch_context& context)
@@ -158,10 +158,12 @@ using lookup_fn = std::function<mix_t(const epoch_context&, size_t)>;
 inline hash256 hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce, lookup_fn lookup)
 {
     const auto n = context.full_dataset_size;
-    char init_bytes[sizeof(header_hash) + sizeof(nonce)];
-    std::memcpy(&init_bytes[0], header_hash.bytes, sizeof(header_hash));
-    std::memcpy(&init_bytes[sizeof(header_hash)], &nonce, sizeof(nonce));
-    hash512 s = keccak512(init_bytes, sizeof(init_bytes));
+
+    uint64_t init_data[5];
+    for (size_t i = 0; i < sizeof(header_hash) / sizeof(uint64_t); ++i)
+        init_data[i] = header_hash.words[i];
+    init_data[4] = nonce;
+    hash512 s = keccak<512>(init_data, 5);
     const uint32_t s_init = s.half_words[0];
 
     mix_t mix;
@@ -186,10 +188,10 @@ inline hash256 hash_kernel(const epoch_context& context, const hash256& header_h
         cmix.hwords[i / 4] = h3;
     }
 
-    char final_data[sizeof(s) + sizeof(cmix)];
+    uint64_t final_data[12];
     std::memcpy(&final_data[0], s.bytes, sizeof(s));
-    std::memcpy(&final_data[sizeof(s)], cmix.bytes, sizeof(cmix));
-    return keccak256(final_data, sizeof(final_data));
+    std::memcpy(&final_data[8], cmix.bytes, sizeof(cmix));
+    return keccak<256>(final_data, 12);
 }
 }
 

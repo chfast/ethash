@@ -3,8 +3,7 @@ set(include_dir ${PROJECT_SOURCE_DIR}/include)
 add_library(
     ethash
     ${include_dir}/ethash/ethash.hpp ethash-internal.hpp ethash.cpp
-    keccak.hpp keccak.cpp
-    keccak-tiny.c
+    keccak.hpp keccak.c
     params.hpp
     utils.hpp utils.cpp
 )
