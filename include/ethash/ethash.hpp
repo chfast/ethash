@@ -27,8 +27,16 @@ union hash512
     char bytes[64];
 };
 
+union hash1024
+{
+    hash512 hashes[2] = {{}, {}};
+    uint64_t words[16];
+    uint32_t hwords[32];
+    char bytes[128];
+};
+
 using light_cache = std::vector<hash512>;
-using full_dataset_t = std::unique_ptr<hash512[]>;
+using full_dataset_t = std::unique_ptr<hash1024[]>;
 
 struct epoch_context
 {

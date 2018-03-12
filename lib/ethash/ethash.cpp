@@ -26,12 +26,12 @@ inline uint32_t load_uint32(const hash512& item)
     return static_cast<uint32_t>(item.words[0]);
 }
 
-inline uint32_t fnv(uint32_t u, uint32_t v)
+inline uint32_t fnv(uint32_t u, uint32_t v) noexcept
 {
     return (u * 0x01000193) ^ v;
 }
 
-inline hash512 fnv(const hash512& u, const hash512& v)
+inline hash512 fnv(const hash512& u, const hash512& v) noexcept
 {
     hash512 r;
     for (size_t i = 0; i < sizeof(r) / sizeof(r.half_words[0]); ++i)
@@ -61,12 +61,14 @@ uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept
 
 uint64_t calculate_full_dataset_size(uint32_t epoch_number) noexcept
 {
+    static constexpr size_t item_size = sizeof(hash1024);
+
     // FIXME: Handle overflow.
     uint64_t size_upper_bound =
         full_dataset_init_size + uint64_t(epoch_number) * full_dataset_growth;
-    uint64_t num_items_upper_bound = size_upper_bound / mix_size;
+    uint64_t num_items_upper_bound = size_upper_bound / item_size;
     uint64_t num_items = find_largest_prime(num_items_upper_bound);
-    return num_items * mix_size;  //< This cannot overflow.
+    return num_items * item_size;  //< This cannot overflow.
 }
 
 hash256 calculate_seed(uint32_t epoch_number) noexcept
@@ -110,7 +112,7 @@ light_cache make_light_cache(size_t size, const hash256& seed)
     return cache;
 }
 
-hash512 calculate_full_dataset_item(const light_cache& cache, size_t index)
+hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) noexcept
 {
     assert(cache.size() <= std::numeric_limits<uint32_t>::max());
 
@@ -134,30 +136,32 @@ hash512 calculate_full_dataset_item(const light_cache& cache, size_t index)
     return keccak512(mix);
 }
 
+hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noexcept
+{
+    const light_cache& cache = context.cache;
+    hash1024 item;
+    // Counted in terms of 512-bit size items, so double the index.
+    item.hashes[0] = calculate_dataset_item_partial(cache, index * 2);
+    item.hashes[1] = calculate_dataset_item_partial(cache, index * 2 + 1);
+    return item;
+}
+
 void init_full_dataset(epoch_context& context)
 {
     assert(context.full_dataset == nullptr);
-    const size_t num_items = context.full_dataset_size / sizeof(hash512);
-    context.full_dataset.reset(new hash512[num_items]);
+    const size_t num_items = context.full_dataset_size / sizeof(hash1024);
+    context.full_dataset.reset(new hash1024[num_items]);
 }
 
 namespace
 {
-union mix_t
-{
-    hash512 hashes[2] = {{}, {}};
-    uint32_t hwords[32];
-    char bytes[128];
-};
 
-constexpr size_t mix_hashes = sizeof(mix_t) / sizeof(hash512);
-constexpr size_t mix_hwords = sizeof(mix_t) / sizeof(uint32_t);
-
-using lookup_fn = std::function<mix_t(const epoch_context&, size_t)>;
+using lookup_fn = std::function<hash1024(const epoch_context&, size_t)>;
 
 inline hash256 hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce, lookup_fn lookup)
 {
-    const auto n = context.full_dataset_size;
+    static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
+    const size_t num_items = context.full_dataset_size / sizeof(hash1024);
 
     uint64_t init_data[5];
     for (size_t i = 0; i < sizeof(header_hash) / sizeof(uint64_t); ++i)
@@ -166,14 +170,14 @@ inline hash256 hash_kernel(const epoch_context& context, const hash256& header_h
     hash512 s = keccak<512>(init_data, 5);
     const uint32_t s_init = s.half_words[0];
 
-    mix_t mix;
-    std::memcpy(&mix.bytes[0], s.bytes, sizeof(s));
-    std::memcpy(&mix.bytes[sizeof(mix) / 2], s.bytes, sizeof(s));
+    hash1024 mix;
+    mix.hashes[0] = s;
+    mix.hashes[1] = s;
 
     for (uint32_t i = 0; i < 64; ++i)
     {
-        auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % (n / sizeof(mix)) * mix_hashes;
-        mix_t newdata = lookup(context, p);
+        auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % num_items;
+        hash1024 newdata = lookup(context, p);
 
         for (size_t j = 0; j < mix_hwords; ++j)
             mix.hwords[j] = fnv(mix.hwords[j], newdata.hwords[j]);
@@ -197,14 +201,7 @@ inline hash256 hash_kernel(const epoch_context& context, const hash256& header_h
 
 hash256 hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
 {
-    static constexpr auto light_lookup = [](const epoch_context& context, size_t index) {
-        mix_t data;
-        data.hashes[0] = calculate_full_dataset_item(context.cache, index);
-        data.hashes[1] = calculate_full_dataset_item(context.cache, index + 1);
-        return data;
-    };
-
-    return hash_kernel(context, header_hash, nonce, light_lookup);
+    return hash_kernel(context, header_hash, nonce, calculate_dataset_item);
 }
 
 hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
@@ -214,18 +211,11 @@ hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t 
     static constexpr auto lazy_lookup = [](const epoch_context& context, size_t index) {
         // TODO: not thead-safe.
         // This is not thread-safe, add atomics here. Thread sanitizer is not able to report this.
-        hash512& item0 = context.full_dataset[index];
-        if (item0.words[0] == 0)
-            item0 = calculate_full_dataset_item(context.cache, index);
+        hash1024& item = context.full_dataset[index];
+        if (item.words[0] == 0)
+            item = calculate_dataset_item(context, index);
 
-        hash512& item1 = context.full_dataset[index + 1];
-        if (item1.words[0] == 0)
-            item1 = calculate_full_dataset_item(context.cache, index + 1);
-
-        mix_t data;
-        data.hashes[0] = item0;
-        data.hashes[1] = item1;
-        return data;
+        return item;
     };
 
     return hash_kernel(context, header_hash, nonce, lazy_lookup);

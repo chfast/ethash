@@ -17,7 +17,6 @@ constexpr static uint64_t full_dataset_init_size = 1 << 30;
 constexpr static uint64_t full_dataset_growth = 1 << 23;
 constexpr static uint32_t full_dataset_item_parents = 256;
 
-constexpr static size_t mix_size = 128;
 constexpr static size_t mixhash_size = 64;
 
 }

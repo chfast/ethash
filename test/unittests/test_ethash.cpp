@@ -214,7 +214,7 @@ TEST(ethash, full_dataset_items)
 
     for (const auto& t : test_cases)
     {
-        const hash512 full_item = calculate_full_dataset_item(fake_cache, t.index);
+        const hash512 full_item = calculate_dataset_item_partial(fake_cache, t.index);
         EXPECT_EQ(to_hex(full_item), t.hash_hex) << "index: " << t.index;
     }
 }

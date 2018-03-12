@@ -7,12 +7,12 @@
 
 #include <cstring>
 
-extern "C" void ethash_keccakf(uint64_t* state);
+extern "C" void ethash_keccakf(uint64_t* state) noexcept;
 
 namespace ethash
 {
 
-inline void keccak_load_block_into_state(uint64_t* state, const uint64_t* block, size_t block_size)
+inline void keccak_load_block_into_state(uint64_t* state, const uint64_t* block, size_t block_size) noexcept
 {
     for (size_t i = 0; i < (block_size / sizeof(uint64_t)); ++i)
         state[i] ^= block[i];  // TODO: Add BE support.
@@ -35,7 +35,7 @@ struct hash_selector<512>
 };
 
 template <size_t bits>
-inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t size)
+inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t size) noexcept
 {
     static constexpr size_t block_size = (1600 - bits * 2) / 8;
     static constexpr size_t block_words = block_size / sizeof(uint64_t);
@@ -68,17 +68,17 @@ inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t si
     return hash;
 }
 
-inline hash256 keccak256(const hash256& input)
+inline hash256 keccak256(const hash256& input) noexcept
 {
     return keccak<256>(input.words, sizeof(input) / sizeof(uint64_t));
 }
 
-inline hash512 keccak512(const hash256& input)
+inline hash512 keccak512(const hash256& input) noexcept
 {
     return keccak<512>(input.words, sizeof(input) / sizeof(uint64_t));
 }
 
-inline hash512 keccak512(const hash512& input)
+inline hash512 keccak512(const hash512& input) noexcept
 {
     return keccak<512>(input.words, sizeof(input) / sizeof(uint64_t));
 }
