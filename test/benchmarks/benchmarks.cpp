@@ -75,4 +75,17 @@ static void light_cache(benchmark::State& state)
 }
 BENCHMARK(light_cache)->Arg(1);
 
+
+static void calculate_dataset_item(benchmark::State& state)
+{
+    static ethash::epoch_context ctx{0};
+
+    for (auto _ : state)
+    {
+        auto item = ethash::calculate_dataset_item(ctx, 1234);
+        benchmark::DoNotOptimize(item.bytes);
+    }
+}
+BENCHMARK(calculate_dataset_item);
+
 BENCHMARK_MAIN();

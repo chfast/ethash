@@ -178,7 +178,7 @@ TEST(ethash, light_cache)
     }
 }
 
-TEST(ethash, full_dataset_items)
+TEST(ethash, dataset_partial_items)
 {
     struct full_dataset_item_test_case
     {
@@ -214,8 +214,81 @@ TEST(ethash, full_dataset_items)
 
     for (const auto& t : test_cases)
     {
-        const hash512 full_item = calculate_dataset_item_partial(fake_cache, t.index);
-        EXPECT_EQ(to_hex(full_item), t.hash_hex) << "index: " << t.index;
+        const hash512 item = calculate_dataset_item_partial(fake_cache, t.index);
+        EXPECT_EQ(to_hex(item), t.hash_hex) << "index: " << t.index;
+    }
+}
+
+TEST(ethash, dataset_items)
+{
+    struct full_dataset_item_test_case
+    {
+        size_t index;
+        const char* hash1_hex;
+        const char* hash2_hex;
+    };
+
+    // Number of items in the fake light cache.
+    static constexpr size_t fake_cache_items = 6133493;
+
+    // clang-format off
+    full_dataset_item_test_case test_cases[] = {
+        {0,
+            "4764f1f61f71532de83e1231658fce600c5bec86ab02815caaf08f51d7217262af084f8708dcec54388404d47d88626b7d3e565efa043ac5a2bd18aeab2dd118",
+            "a629c1513c01cd6eba6db3c3f836ea94c5905615c8d3d2a608105b38affe78b39059efca6ac97e98eb2a05106fe488ea0ba7eb18e1b1ebc5c43d11241010d8e0"},
+        {1,
+            "4b52a62634fe25a9c0b21bde997f6a767f2bfd022e516edb2349a5e044059b1ad549e0db9c25914cdcd14e6ef37a68ee4fe3f4411f42fa604b000a6723556bc4",
+            "0c9eddd366c87cdd6f9cdec373f227b2b922fd8024019b4c35c9337cb9e7d8d5b0fbd1808e026a4b7098fd23e73036f1ffe22eb189bc10c489318ccaf14ee43f"},
+        {13,
+            "cc1e4ad4e7e905109f4dc2b21857d54802c9e550f8724601b0ef5ac7255aa9d43cf39c8a5e64e55e55a9a2fe6dfbfd4e6c621cadf731d6bb98df1a370551d498",
+            "3329b0d19d3021f706a703d9b6c983523cfba653514f9806e2bed3996d7e290602a33b5372bec603ef3cd3febfe45fbdd420b89315ad87b14b6237799c8535e0"},
+        {171,
+            "0119b5d5886550162061180ba620044b93bf280081c0b9275343271c010a317a1ebaf492f2dc4b9d2dd62043d8cdf2dc621fc42f2eda9171a2c3f4f260cf1d70",
+            "f30adcb55ff0aff723d6b27b6467ee56ffafced8c6ed703e3532fb50bf61e752448c9c24e727b1352ab429f9aecdeca0fc019b152a67f5cec530d2a47b7438e3"},
+        {571,
+            "26be82d9c86e697afa5708bb457439d2874c11ee3b700e614f141b5689f2408981d13193e367f33279f667cfa8403c8d16b8c767b69663fe1a8ed3c756b164c7",
+            "790e7cc49c225a5a34cf307a41bb7e07a9145665b3e5161d65ef291dfec711eac7af401aac1908c85f476743dd796a886a1d822883421725832d9b4b3a0e3ae7"},
+        {620,
+            "37fc516fb90d1c924a73475fb4fb806ac2d5562c7506c54542570ef9ba4eafa76ae97f299e6f48cdc8d6b7b54e01474c927fd3ceec73136696b8b0463f4a962a",
+            "0e1581c55baba97493edf71f7e1363710d89eecb77e058f299d7aae5fe97a05a3f0d1b01c9e289bd6a5084a5fe9a22502299e8ceb9d7463465879b2834aa01f9"},
+        {514079,
+            "5189058ba850e4278a120f9f14b0220a107d8f714680cd5fcc6a99235264bc3f83cd90e10d48a59567c44cf40679aa6fec8af70cba0ede5bff26e71f1f5c2a9b",
+            "acef6860072fe7d2969862a96f0036a790a28a617e6953f69fefa04941f16f616005d3e0148e4c95e66d881bd0f439896ae97a5d0108df30b6cf3f3a1bfbac16"},
+        {852881,
+            "95f9eeafb89861f84fd494500d9a4834c07c018bf23735af846c6de710dc661f75d65fb58965a895dc3696547b4f66143b67e7ed46e735ce0179e76b5795d1d1",
+            "3fa43ef4cee22359664d872169338f4a037eb62eddef12e2f08552fd518ce16c6f014df131435878577abdf74f590c48ab6b0bc8fffc513ac70900accb7cf53a"},
+        {6133492,
+            "9d3828b4a054d2979f180380fa6cb254c56926b9a3cb5a5e684595f97024e474af2a5150bd2dd1da439e9ed5bbd5c30c49b31f758f4c973eb3efdf7dc573c0d8",
+            "6b7dd1c31cf0d79e6cf5879ff1b67205c8a66e0320000d2f5ae93b5e23f46bd389892ba4db620fa33d9d97233b7dd078471960500d214dfdfb786dc1a6cb5944"},
+        {6133493,
+            "7ca74fcd1ac8627d5e1b2c2c5313b465761ae8f04a7bb141522f3dfc37dcd81880c185fc1b5c270e1ab8356189a43deca47f51a31956b22aa2a47c4c85e6b270",
+            "d18db7d0119e91fb50866507541e310a58c243df6705eaa38a0d345023019e7cbb1014e889d28ec72a3332b974227d7299df48da2a720e4a92b1856c90b6dd2c"},
+        {211322105,
+            "415f7ec751e8a790dc5f1c0937026665014366ecb6d04e1b54f33482978d29d84a32d977a774138fd76333378485dd75811f725ef0e5de79aba5b3ad38060c99",
+            "1e98c227c3ff62d9bd4a7cfdfd5af8c461f1d840ff5d60bcd4fd0eae8927f956100dbab2e4e947a785a1aaa0132fbb05a95402c57ef7fd9184ebcd82c39e1ae0"},
+        {740620450,
+            "dba6544efccd33440ae256cf0b3aa4182e863d8cab841c8c3195dd67464ba8acffa6d28426e8dc519aa49f1898e82ceabb0a3b6cd30be6a51b57ca3d673dbcaa",
+            "b3201249c850f81327920b653f7c6e098ab332caf81ff5c74072dd87a1c2688944e742c36f397899be219ccddea6125c33f5c42b250bdbaf5e4d6e5638334277"},
+        {4294967295,
+            "63c457a719afc75260325f9de19e2979f9fa330656d9651a2e80c6a809d789dd71d2dbed91258f8bd4d872b8ca73bd7b7ddd39644f1b25e8eba628741d454daf",
+            "b47377a0c48b74caad00ea4c7e486cab7e0ffc5b7e08b67f61e93b68f3907b8a8e09b3ff57c1f7a0dc886ebb32a868926e0a066c44a53be707affaeddf7f039d"},
+    };
+    // clang-format on
+
+
+    hash512 fake_item;
+    std::fill(std::begin(fake_item.bytes), std::end(fake_item.bytes), 0b1010101);
+    light_cache fake_cache(fake_cache_items, fake_item);
+
+    // Mock the epoch context.
+    epoch_context context{0};
+    context.cache = std::move(fake_cache);
+
+    for (const auto& t : test_cases)
+    {
+        const hash1024 item = calculate_dataset_item(context, t.index);
+        EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
     }
 }
 
