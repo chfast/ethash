@@ -112,6 +112,7 @@ light_cache make_light_cache(size_t size, const hash256& seed)
     return cache;
 }
 
+/// TODO: Only used in tests or for reference, so can be removed or moved.
 hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) noexcept
 {
     assert(cache.size() <= std::numeric_limits<uint32_t>::max());
@@ -136,13 +137,47 @@ hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) n
     return keccak512(mix);
 }
 
+
+/// Calculates a full dataset item
+///
+/// This consist of two 512-bit items produced by calculate_dataset_item_partial().
+/// Here the computation is done interleaved for better performance.
 hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noexcept
 {
     const light_cache& cache = context.cache;
+
+    static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
+    const size_t num_cache_items = cache.size();
+
+    const size_t index0 = index * 2;
+    const size_t index1 = index * 2 + 1;
+
+    const uint32_t init0 = static_cast<uint32_t>(index0);
+    const uint32_t init1 = static_cast<uint32_t>(index1);
+
+    hash512 mix0 = cache[index0 % num_cache_items];
+    mix0.half_words[0] ^= init0;  // TODO: Add BE support.
+    mix0 = keccak512(mix0);
+
+    hash512 mix1 = cache[index1 % num_cache_items];
+    mix1.half_words[0] ^= init1;  // TODO: Add BE support.
+    mix1 = keccak512(mix1);
+
+    for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
+    {
+        uint32_t t0 = fnv(init0 ^ j, mix0.half_words[j % num_half_words]);
+        size_t parent_index0 = t0 % num_cache_items;
+        mix0 = fnv(mix0, cache[parent_index0]);
+
+        uint32_t t1 = fnv(init1 ^ j, mix1.half_words[j % num_half_words]);
+        size_t parent_index1 = t1 % num_cache_items;
+        mix1 = fnv(mix1, cache[parent_index1]);
+    }
+
     hash1024 item;
     // Counted in terms of 512-bit size items, so double the index.
-    item.hashes[0] = calculate_dataset_item_partial(cache, index * 2);
-    item.hashes[1] = calculate_dataset_item_partial(cache, index * 2 + 1);
+    item.hashes[0] = keccak512(mix0);
+    item.hashes[1] = keccak512(mix1);
     return item;
 }
 
