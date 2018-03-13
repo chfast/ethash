@@ -190,7 +190,7 @@ namespace
 
 using lookup_fn = std::function<hash1024(const epoch_context&, size_t)>;
 
-inline hash256 hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce, lookup_fn lookup)
+inline hash256 hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce, const lookup_fn& lookup)
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
     const size_t num_items = context.full_dataset_size / sizeof(hash1024);

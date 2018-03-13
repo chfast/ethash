@@ -8,6 +8,7 @@
 #include <cstring>
 
 extern "C" void ethash_keccakf(uint64_t* state) noexcept;
+extern "C" void ethash_double_keccakf(uint64_t* state) noexcept;
 
 namespace ethash
 {
@@ -93,8 +94,9 @@ inline hash1024 double_keccak(const hash1024& input) noexcept
     auto data0 = &input.hashes[0].bytes;
     auto data1 = &input.hashes[1].bytes;
 
-    uint64_t state0[25] = {};
-    uint64_t state1[25] = {};
+    uint64_t state[50] = {};
+    uint64_t* state0 = &state[0];
+    uint64_t* state1 = &state[25];
 
 //    while (size >= block_words)
 //    {
@@ -120,8 +122,7 @@ inline hash1024 double_keccak(const hash1024& input) noexcept
 
     keccak_load_block_into_state(state0, block0, block_size);
     keccak_load_block_into_state(state1, block1, block_size);
-    ethash_keccakf(state0);
-    ethash_keccakf(state1);
+    ethash_double_keccakf(state);
 
     hash1024 hash;
     std::memcpy(hash.hashes[0].bytes, state0, size * sizeof(uint64_t));
