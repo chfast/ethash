@@ -14,7 +14,7 @@ using timer = std::chrono::steady_clock;
 
 int main(int argc, const char* argv[])
 {
-    size_t num_iterations = 5000;
+    size_t num_iterations = 10000;
     uint32_t epoch = 0;
     size_t num_threads = 1;
     uint64_t start_nonce = 0;
@@ -36,33 +36,47 @@ int main(int argc, const char* argv[])
             start_nonce = std::stoul(argv[++i]);
     }
 
+    // clang-format off
+    std::cout << "fakeminer benchmark"
+              << "\n  iterations:  " << num_iterations
+              << "\n  threads:     " << num_threads
+              << "\n  start nonce: " << start_nonce
+              << std::endl;
+    // clang-format on
+
+
     const ethash::hash256 header_hash{};
     const size_t iterations_per_thread = num_iterations / num_threads;
 
     auto context = ethash::epoch_context{epoch};
-
-    auto start_time = timer::now();
-
-    if (light)
-        ethash::search_light(context, header_hash, 0, start_nonce, num_iterations);
-    else
-    {
+    if (!light)
         ethash::init_full_dataset(context);
 
-        std::vector<std::future<void>> futures;
+    using runner_fn = std::function<void(const ethash::hash256&, uint64_t, size_t)>;
+    const runner_fn full_runner = [&context](const ethash::hash256& header_hash,
+                                      uint64_t start_nonce, size_t iterations) {
+        ethash::search(context, header_hash, 0, start_nonce, iterations);
+    };
+    const runner_fn light_runner = [&context](const ethash::hash256& header_hash,
+                                       uint64_t start_nonce, size_t iterations) {
+        ethash::search_light(context, header_hash, 0, start_nonce, iterations);
+    };
 
-        for (size_t t = 0; t < num_threads; ++t)
-        {
-            futures.emplace_back(std::async(
-                std::launch::async, [&context, header_hash, start_nonce, iterations_per_thread] {
-                    ethash::search(context, header_hash, 0, start_nonce, iterations_per_thread);
-                }));
-            start_nonce += iterations_per_thread;
-        }
+    const auto& runner = light ? light_runner : full_runner;
 
-        for (auto& future : futures)
-            future.wait();
+
+    std::vector<std::future<void>> futures;
+    auto start_time = timer::now();
+
+    for (size_t t = 0; t < num_threads; ++t)
+    {
+        futures.emplace_back(std::async(
+            std::launch::async, runner, header_hash, start_nonce, iterations_per_thread));
+        start_nonce += iterations_per_thread;
     }
+
+    for (auto& future : futures)
+        future.wait();
 
     auto ms = duration_cast<milliseconds>(timer::now() - start_time).count();
     auto hps = num_iterations * 1000 / ms;
