@@ -155,30 +155,27 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
     const uint32_t init0 = static_cast<uint32_t>(index0);
     const uint32_t init1 = static_cast<uint32_t>(index1);
 
-    hash512 mix0 = cache[index0 % num_cache_items];
-    mix0.half_words[0] ^= init0;  // TODO: Add BE support.
-    mix0 = keccak512(mix0);
+    hash1024 mix;
+    mix.hashes[0] = cache[index0 % num_cache_items];
+    mix.hashes[0].half_words[0] ^= init0;  // TODO: Add BE support.
 
-    hash512 mix1 = cache[index1 % num_cache_items];
-    mix1.half_words[0] ^= init1;  // TODO: Add BE support.
-    mix1 = keccak512(mix1);
+    mix.hashes[1] = cache[index1 % num_cache_items];
+    mix.hashes[1].half_words[0] ^= init1;  // TODO: Add BE support.
+
+    mix = double_keccak(mix);
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
-        uint32_t t0 = fnv(init0 ^ j, mix0.half_words[j % num_half_words]);
+        uint32_t t0 = fnv(init0 ^ j, mix.hashes[0].half_words[j % num_half_words]);
         size_t parent_index0 = t0 % num_cache_items;
-        mix0 = fnv(mix0, cache[parent_index0]);
+        mix.hashes[0] = fnv(mix.hashes[0], cache[parent_index0]);
 
-        uint32_t t1 = fnv(init1 ^ j, mix1.half_words[j % num_half_words]);
+        uint32_t t1 = fnv(init1 ^ j, mix.hashes[1].half_words[j % num_half_words]);
         size_t parent_index1 = t1 % num_cache_items;
-        mix1 = fnv(mix1, cache[parent_index1]);
+        mix.hashes[1] = fnv(mix.hashes[1], cache[parent_index1]);
     }
 
-    hash1024 item;
-    // Counted in terms of 512-bit size items, so double the index.
-    item.hashes[0] = keccak512(mix0);
-    item.hashes[1] = keccak512(mix1);
-    return item;
+    return double_keccak(mix);
 }
 
 void init_full_dataset(epoch_context& context)

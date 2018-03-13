@@ -48,6 +48,35 @@ static void hash512_64(benchmark::State& state)
 BENCHMARK(hash512_64);
 
 
+static void double_hash_naive(benchmark::State& state)
+{
+    ethash::hash1024 hash;
+    benchmark::ClobberMemory();
+
+    for (auto _ : state)
+    {
+        hash.hashes[0] = ethash::keccak512(hash.hashes[0]);
+        hash.hashes[1] = ethash::keccak512(hash.hashes[1]);
+        benchmark::DoNotOptimize(hash.bytes);
+    }
+}
+BENCHMARK(double_hash_naive);
+
+
+static void double_hash_optimized(benchmark::State& state)
+{
+    ethash::hash1024 hash;
+    benchmark::ClobberMemory();
+
+    for (auto _ : state)
+    {
+        hash = ethash::double_keccak(hash);
+        benchmark::DoNotOptimize(hash.bytes);
+    }
+}
+BENCHMARK(double_hash_optimized);
+
+
 static void seed(benchmark::State& state)
 {
     const auto epoch_number = static_cast<uint32_t>(state.range(0));
