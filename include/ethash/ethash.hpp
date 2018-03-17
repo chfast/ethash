@@ -34,6 +34,9 @@ void destroy_epoch_context(epoch_context* context) noexcept;
 bool init_full_dataset(epoch_context& context) noexcept;
 
 
+hash256 hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
+
+hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
 
 uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);

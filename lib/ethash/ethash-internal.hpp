@@ -54,9 +54,5 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
 
 hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) noexcept;
 
-hash256 hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
-
-hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
-
 const char* version() noexcept;
 }
