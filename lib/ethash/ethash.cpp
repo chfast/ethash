@@ -41,13 +41,15 @@ inline hash512 fnv(const hash512& u, const hash512& v) noexcept
 }
 }
 
-
-epoch_context::epoch_context(uint32_t epoch_number)
+epoch_context create_epoch_context(uint32_t epoch_number)
 {
-    size_t cache_size = calculate_light_cache_size(epoch_number);
+    const size_t cache_size = calculate_light_cache_size(epoch_number);
     hash256 seed = calculate_seed(epoch_number);
-    cache = make_light_cache(cache_size, seed);
-    full_dataset_size = calculate_full_dataset_size(epoch_number);
+
+    epoch_context context = {};
+    context.cache = make_light_cache(cache_size, seed);
+    context.full_dataset_size = calculate_full_dataset_size(epoch_number);
+    return context;
 }
 
 uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept

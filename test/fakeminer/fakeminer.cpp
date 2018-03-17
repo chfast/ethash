@@ -48,7 +48,7 @@ int main(int argc, const char* argv[])
     const ethash::hash256 header_hash{};
     const size_t iterations_per_thread = num_iterations / num_threads;
 
-    auto context = ethash::epoch_context{epoch};
+    auto context = ethash::create_epoch_context(epoch);
     if (!light)
         ethash::init_full_dataset(context);
 

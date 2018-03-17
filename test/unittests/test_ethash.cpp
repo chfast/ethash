@@ -12,6 +12,22 @@
 
 using namespace ethash;
 
+namespace
+{
+    /// Creates the epoch context of the correct size but filled with fake data.
+    epoch_context create_epoch_context_mock(uint32_t epoch_number)
+    {
+        hash512 fill;
+        std::fill_n(fill.words, 8, 0xe14a54aaaaaaaaaa);
+        const size_t cache_size = calculate_light_cache_size(epoch_number);
+
+        epoch_context context = {};
+        context.cache = light_cache(cache_size, fill);
+        context.full_dataset_size = calculate_full_dataset_size(epoch_number);
+        return context;
+    }
+}
+
 class calculate_light_cache_size_test
   : public ::testing::TestWithParam<std::pair<uint32_t, uint64_t>>
 {
@@ -168,7 +184,7 @@ TEST(ethash, light_cache)
 
     for (const auto& t : test_cases)
     {
-        const epoch_context context{t.epoch_number};
+        const epoch_context context = create_epoch_context(t.epoch_number);
 
         for (auto& u : t.item_tests)
         {
@@ -282,7 +298,7 @@ TEST(ethash, dataset_items)
     light_cache fake_cache(fake_cache_items, fake_item);
 
     // Mock the epoch context.
-    epoch_context context{0};
+    epoch_context context = create_epoch_context(0);
     context.cache = std::move(fake_cache);
 
     for (const auto& t : test_cases)
@@ -318,7 +334,7 @@ TEST(ethash, verify_hash_light)
         const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 
-        epoch_context context{epoch_number};
+        epoch_context context = create_epoch_context(epoch_number);
 
         hash256 mix = hash_light(context, header_hash, nonce);
         EXPECT_EQ(to_hex(mix), t.mix_hash_hex);
@@ -333,7 +349,7 @@ TEST(ethash, verify_hash)
         const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 
-        epoch_context context{epoch_number};
+        epoch_context context = create_epoch_context(epoch_number);
         init_full_dataset(context);
 
         hash256 mix = hash(context, header_hash, nonce);
@@ -348,17 +364,31 @@ TEST(ethash, small_dataset)
 
     constexpr size_t num_treads = 8;
     constexpr size_t num_dataset_items = 501;
-    constexpr uint64_t target = uint64_t(1) << 51;
+    constexpr uint64_t target = uint64_t(1) << 48;
 
-    // TODO: Find a way to create fake fast light caches.
-    epoch_context context{0};
+    epoch_context context = create_epoch_context_mock(0);
     context.full_dataset_size = num_dataset_items * sizeof(hash1024);
     init_full_dataset(context);
 
     std::array<std::future<uint64_t>, num_treads> futures;
     for (auto& f : futures)
-        f = std::async(std::launch::async, [&] { return search(context, {}, target, 1, 40000); });
+        f = std::async(std::launch::async, [&] { return search(context, {}, target, 4892, 30000); });
 
     for (auto& f : futures)
-        EXPECT_EQ(f.get(), 36816);
+        EXPECT_EQ(f.get(), 27777);
+}
+
+TEST(ethash, small_dataset_light)
+{
+    constexpr size_t num_dataset_items = 501;
+    constexpr uint64_t target = uint64_t(1) << 55;
+
+    epoch_context context = create_epoch_context_mock(0);
+    context.full_dataset_size = num_dataset_items * sizeof(hash1024);
+
+    uint64_t solution = search_light(context, {}, target, 4990, 10);
+    EXPECT_EQ(solution, 4999);
+
+    solution = search_light(context, {}, target, 5000, 10);
+    EXPECT_EQ(solution, 0);
 }

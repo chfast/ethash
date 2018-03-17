@@ -107,7 +107,7 @@ BENCHMARK(light_cache)->Arg(1);
 
 static void calculate_dataset_item(benchmark::State& state)
 {
-    static ethash::epoch_context ctx{0};
+    static ethash::epoch_context ctx = ethash::create_epoch_context(0);
 
     for (auto _ : state)
     {

@@ -44,9 +44,9 @@ struct epoch_context
     light_cache cache;
     size_t full_dataset_size;
     full_dataset_t full_dataset;
-
-    explicit epoch_context(uint32_t epoch_number);
 };
+
+epoch_context create_epoch_context(uint32_t epoch_number);
 
 void init_full_dataset(epoch_context& context);
 
