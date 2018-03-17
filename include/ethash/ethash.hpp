@@ -23,7 +23,17 @@ epoch_context* create_epoch_context(uint32_t epoch_number) noexcept;
 
 void destroy_epoch_context(epoch_context* context) noexcept;
 
-void init_full_dataset(epoch_context& context);
+
+/// Init full dataset in the epoch context.
+///
+/// This allocates the memory for the full dataset and inits dataset items
+/// marked as "not-generated".
+///
+/// @param context  The epoch context.
+/// @return  Returns true if memory allocations succeeded, false otherwise.
+bool init_full_dataset(epoch_context& context) noexcept;
+
+
 
 uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);

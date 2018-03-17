@@ -198,11 +198,12 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
     return double_keccak(mix);
 }
 
-void init_full_dataset(epoch_context& context)
+bool init_full_dataset(epoch_context& context) noexcept
 {
     assert(context.full_dataset == nullptr);
     const size_t num_items = context.full_dataset_size / sizeof(hash1024);
-    context.full_dataset.reset(new hash1024[num_items]);
+    context.full_dataset.reset(new (std::nothrow) hash1024[num_items]);
+    return context.full_dataset != nullptr;
 }
 
 namespace

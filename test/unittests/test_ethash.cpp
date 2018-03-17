@@ -398,3 +398,14 @@ TEST(ethash, small_dataset_light)
     solution = search_light(context, {}, target, 5000, 10);
     EXPECT_EQ(solution, 0);
 }
+
+TEST(ethash, init_full_dataset_oom)
+{
+    auto mock_context = create_epoch_context_mock(0);
+
+    constexpr uint64_t max = std::numeric_limits<size_t>::max();
+    uint64_t big_size = uint64_t(1) << 40;
+    size_t size = static_cast<size_t>(std::min(big_size, max));
+    mock_context.full_dataset_size = size;
+    EXPECT_FALSE(init_full_dataset(mock_context));
+}
