@@ -39,17 +39,35 @@ inline hash512 fnv(const hash512& u, const hash512& v) noexcept
 
     return r;
 }
+
+hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
+{
+    // TODO: Nicely optimized by clang, horribly by GCC.
+
+    hash512 z;
+    for (size_t i = 0; i < sizeof(z) / sizeof(z.words[0]); ++i)
+        z.words[i] = x.words[i] ^ y.words[i];
+    return z;
+}
 }
 
-epoch_context create_epoch_context(uint32_t epoch_number)
+epoch_context* create_epoch_context(uint32_t epoch_number) noexcept
 {
     const size_t cache_size = calculate_light_cache_size(epoch_number);
     hash256 seed = calculate_seed(epoch_number);
 
-    epoch_context context = {};
-    context.cache = make_light_cache(cache_size, seed);
-    context.full_dataset_size = calculate_full_dataset_size(epoch_number);
+    epoch_context* context = new (std::nothrow) epoch_context;
+    if (!context)
+        return nullptr;  // Signal out-of-memory by returning null pointer.
+
+    context->cache = make_light_cache(cache_size, seed);
+    context->full_dataset_size = calculate_full_dataset_size(epoch_number);
     return context;
+}
+
+void destroy_epoch_context(epoch_context* context) noexcept
+{
+    delete context;
 }
 
 uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept

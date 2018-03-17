@@ -4,8 +4,7 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
-#include <vector>
+#include <cstddef>
 
 namespace ethash
 {
@@ -18,35 +17,11 @@ union hash256
     char bytes[32];
 };
 
-union hash512
-{
-    uint64_t words[8] = {
-        0,
-    };
-    uint32_t half_words[16];
-    char bytes[64];
-};
+struct epoch_context;
 
-union hash1024
-{
-    // TODO: Is the array worse than 2 fields for memory aliasing?
-    hash512 hashes[2] = {{}, {}};
-    uint64_t words[16];
-    uint32_t hwords[32];
-    char bytes[128];
-};
+epoch_context* create_epoch_context(uint32_t epoch_number) noexcept;
 
-using light_cache = std::vector<hash512>;
-using full_dataset_t = std::unique_ptr<hash1024[]>;
-
-struct epoch_context
-{
-    light_cache cache;
-    size_t full_dataset_size;
-    full_dataset_t full_dataset;
-};
-
-epoch_context create_epoch_context(uint32_t epoch_number);
+void destroy_epoch_context(epoch_context* context) noexcept;
 
 void init_full_dataset(epoch_context& context);
 

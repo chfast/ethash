@@ -184,14 +184,16 @@ TEST(ethash, light_cache)
 
     for (const auto& t : test_cases)
     {
-        const epoch_context context = create_epoch_context(t.epoch_number);
+        auto* context = create_epoch_context(t.epoch_number);
 
         for (auto& u : t.item_tests)
         {
-            ASSERT_LT(u.index, context.cache.size());
-            EXPECT_EQ(to_hex(context.cache[u.index]), u.hash_hex)
+            ASSERT_LT(u.index, context->cache.size());
+            EXPECT_EQ(to_hex(context->cache[u.index]), u.hash_hex)
                 << "epoch: " << t.epoch_number << " item: " << u.index;
         }
+
+        destroy_epoch_context(context);
     }
 }
 
@@ -298,7 +300,7 @@ TEST(ethash, dataset_items)
     light_cache fake_cache(fake_cache_items, fake_item);
 
     // Mock the epoch context.
-    epoch_context context = create_epoch_context(0);
+    epoch_context context = create_epoch_context_mock(0);
     context.cache = std::move(fake_cache);
 
     for (const auto& t : test_cases)
@@ -334,10 +336,12 @@ TEST(ethash, verify_hash_light)
         const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 
-        epoch_context context = create_epoch_context(epoch_number);
+        epoch_context* context = create_epoch_context(epoch_number);
 
-        hash256 mix = hash_light(context, header_hash, nonce);
+        hash256 mix = hash_light(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(mix), t.mix_hash_hex);
+
+        destroy_epoch_context(context);
     }
 }
 
@@ -349,11 +353,13 @@ TEST(ethash, verify_hash)
         const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 
-        epoch_context context = create_epoch_context(epoch_number);
-        init_full_dataset(context);
+        epoch_context* context = create_epoch_context(epoch_number);
+        init_full_dataset(*context);
 
-        hash256 mix = hash(context, header_hash, nonce);
+        hash256 mix = hash(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(mix), t.mix_hash_hex);
+
+        destroy_epoch_context(context);
     }
 }
 

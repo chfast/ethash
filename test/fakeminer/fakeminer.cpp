@@ -7,6 +7,7 @@
 #include <future>
 #include <iostream>
 #include <unordered_map>
+#include <vector>
 
 
 using namespace std::chrono;
@@ -48,18 +49,18 @@ int main(int argc, const char* argv[])
     const ethash::hash256 header_hash{};
     const size_t iterations_per_thread = num_iterations / num_threads;
 
-    auto context = ethash::create_epoch_context(epoch);
+    auto* context = ethash::create_epoch_context(epoch);
     if (!light)
-        ethash::init_full_dataset(context);
+        ethash::init_full_dataset(*context);
 
     using runner_fn = std::function<void(const ethash::hash256&, uint64_t, size_t)>;
-    const runner_fn full_runner = [&context](const ethash::hash256& header_hash,
+    const runner_fn full_runner = [context](const ethash::hash256& header_hash,
                                       uint64_t start_nonce, size_t iterations) {
-        ethash::search(context, header_hash, 0, start_nonce, iterations);
+        ethash::search(*context, header_hash, 0, start_nonce, iterations);
     };
-    const runner_fn light_runner = [&context](const ethash::hash256& header_hash,
+    const runner_fn light_runner = [context](const ethash::hash256& header_hash,
                                        uint64_t start_nonce, size_t iterations) {
-        ethash::search_light(context, header_hash, 0, start_nonce, iterations);
+        ethash::search_light(*context, header_hash, 0, start_nonce, iterations);
     };
 
     const auto& runner = light ? light_runner : full_runner;
@@ -77,6 +78,8 @@ int main(int argc, const char* argv[])
 
     for (auto& future : futures)
         future.wait();
+
+    ethash::destroy_epoch_context(context);
 
     auto ms = duration_cast<milliseconds>(timer::now() - start_time).count();
     auto hps = num_iterations * 1000 / ms;

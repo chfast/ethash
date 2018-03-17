@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <ethash/ethash.hpp>
+#include "ethash-internal.hpp"
 
 #include <cstring>
 

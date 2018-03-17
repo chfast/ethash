@@ -43,14 +43,4 @@ size_t find_largest_prime(size_t upper_bound) noexcept
 
     return n;
 }
-
-hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
-{
-    // TODO: Nicely optimized by clang, horribly by GCC.
-
-    hash512 z;
-    for (size_t i = 0; i < sizeof(z) / sizeof(z.words[0]); ++i)
-        z.words[i] = x.words[i] ^ y.words[i];
-    return z;
-}
 }
