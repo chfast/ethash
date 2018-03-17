@@ -241,11 +241,12 @@ hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t 
     assert(context.full_dataset != nullptr);
 
     static constexpr auto lazy_lookup = [](const epoch_context& context, size_t index) {
-        // TODO: not thead-safe.
-        // This is not thread-safe, add atomics here. Thread sanitizer is not able to report this.
         hash1024& item = context.full_dataset[index];
         if (item.words[0] == 0)
+        {
+            // TODO: Copy elision here makes it thread-safe?
             item = calculate_dataset_item(context, index);
+        }
 
         return item;
     };

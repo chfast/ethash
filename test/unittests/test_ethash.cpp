@@ -8,6 +8,7 @@
 #include "helpers.hpp"
 
 #include <gtest/gtest.h>
+#include <future>
 
 using namespace ethash;
 
@@ -338,4 +339,26 @@ TEST(ethash, verify_hash)
         hash256 mix = hash(context, header_hash, nonce);
         EXPECT_EQ(to_hex(mix), t.mix_hash_hex);
     }
+}
+
+TEST(ethash, small_dataset)
+{
+    // This test creates an extremely small dataset for full search to discover
+    // sync issues between threads.
+
+    constexpr size_t num_treads = 8;
+    constexpr size_t num_dataset_items = 501;
+    constexpr uint64_t target = uint64_t(1) << 51;
+
+    // TODO: Find a way to create fake fast light caches.
+    epoch_context context{0};
+    context.full_dataset_size = num_dataset_items * sizeof(hash1024);
+    init_full_dataset(context);
+
+    std::array<std::future<uint64_t>, num_treads> futures;
+    for (auto& f : futures)
+        f = std::async(std::launch::async, [&] { return search(context, {}, target, 1, 40000); });
+
+    for (auto& f : futures)
+        EXPECT_EQ(f.get(), 36816);
 }
