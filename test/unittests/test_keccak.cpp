@@ -55,6 +55,20 @@ TEST(keccak512, hello_world)
         "9f42bc5dea973247f1a0a2e1045cb3fbe8db72");
 }
 
+TEST(keccak, double512)
+{
+    hash1024 input = {};
+    input.bytes[0] = 126;
+    input.bytes[127] = 127;
+    hash1024 output = double_keccak(input);
+    EXPECT_EQ(to_hex(output.hashes[0]),
+        "7e62a25d706e921aaec4d4916c8822126f4470bd6d4d802e1f288d3b89356fee0e13907a71809810566cf71ae8"
+        "25306fc3197a83e6d315a04e61f28029799a98");
+    EXPECT_EQ(to_hex(output.hashes[1]),
+        "67525363f9cfa5b0ee6553a542b335a1d47048e4e614960537f737e5f951d162504ee77f6f76e16ea19b2a9fb8"
+        "3e5056e6ace516f9f488e072e65bb997a6de02");
+}
+
 TEST(helpers, to_hex)
 {
     hash256 h;

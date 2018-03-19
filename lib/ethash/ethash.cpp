@@ -13,19 +13,10 @@
 #include "utils.hpp"
 #include <ethash-buildinfo.h>
 
-#include <iostream>
-
-
 namespace ethash
 {
 namespace
 {
-inline uint32_t load_uint32(const hash512& item)
-{
-    // TODO: Add support for big-endian architectures.
-    return static_cast<uint32_t>(item.words[0]);
-}
-
 inline uint32_t fnv(uint32_t u, uint32_t v) noexcept
 {
     return (u * 0x01000193) ^ v;
@@ -118,14 +109,14 @@ light_cache make_light_cache(size_t size, const hash256& seed)
         for (size_t i = 0; i < n; ++i)
         {
             // Fist index: 4 first bytes of the item as little-endian integer.
-            size_t t = load_uint32(cache[i]);
+            size_t t = fix_endianness(cache[i].half_words[0]);
             size_t v = t % n;
 
             // Second index.
             size_t w = (n + i - 1) % n;
 
-            hash512 xored = bitwise_xor(cache[v], cache[w]);
-            cache[i] = keccak512(xored);
+            // Pipelining functions returning structs gives small performance boost.
+            cache[i] = keccak512(bitwise_xor(cache[v], cache[w]));
         }
     }
 
@@ -143,18 +134,19 @@ hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) n
     const uint32_t init = static_cast<uint32_t>(index);
 
     hash512 mix = cache[index % num_cache_items];
-    mix.half_words[0] ^= init;  // TODO: Add BE support.
-
+    mix.half_words[0] ^= fix_endianness(init);
     mix = keccak512(mix);
+    mix = fix_endianness32(mix);  // Covert bytes to 32-bit words.
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
         uint32_t t = fnv(init ^ j, mix.half_words[j % num_half_words]);
         size_t parent_index = t % num_cache_items;
-        mix = fnv(mix, cache[parent_index]);
+        // TODO: Fix endianness when generating the cache item?
+        mix = fnv(mix, fix_endianness32(cache[parent_index]));
     }
 
-    return keccak512(mix);
+    return keccak512(fix_endianness32(mix));
 }
 
 
@@ -177,30 +169,33 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
 
     hash1024 mix;
     mix.hashes[0] = cache[index0 % num_cache_items];
-    mix.hashes[0].half_words[0] ^= init0;  // TODO: Add BE support.
-
     mix.hashes[1] = cache[index1 % num_cache_items];
-    mix.hashes[1].half_words[0] ^= init1;  // TODO: Add BE support.
+
+    mix.hashes[0].half_words[0] ^= fix_endianness(init0);
+    mix.hashes[1].half_words[0] ^= fix_endianness(init1);
 
     mix = double_keccak(mix);
+
+    mix = fix_endianness32(mix);  // Covert bytes to 32-bit words.
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
         uint32_t t0 = fnv(init0 ^ j, mix.hashes[0].half_words[j % num_half_words]);
         size_t parent_index0 = t0 % num_cache_items;
-        mix.hashes[0] = fnv(mix.hashes[0], cache[parent_index0]);
+        mix.hashes[0] = fnv(mix.hashes[0], fix_endianness32(cache[parent_index0]));
 
         uint32_t t1 = fnv(init1 ^ j, mix.hashes[1].half_words[j % num_half_words]);
         size_t parent_index1 = t1 % num_cache_items;
-        mix.hashes[1] = fnv(mix.hashes[1], cache[parent_index1]);
+        mix.hashes[1] = fnv(mix.hashes[1], fix_endianness32(cache[parent_index1]));
     }
 
-    return double_keccak(mix);
+    return double_keccak(fix_endianness32(mix));  // Covert 32-bit words back to bytes and hash.
 }
 
 bool init_full_dataset(epoch_context& context) noexcept
 {
     assert(context.full_dataset == nullptr);
+
     const size_t num_items = context.full_dataset_size / sizeof(hash1024);
     context.full_dataset.reset(new (std::nothrow) hash1024[num_items]);
     return context.full_dataset != nullptr;
@@ -211,7 +206,8 @@ namespace
 
 using lookup_fn = std::function<hash1024(const epoch_context&, size_t)>;
 
-inline hash256 hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce, const lookup_fn& lookup)
+inline hash256 hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce,
+    const lookup_fn& lookup)
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
     const size_t num_items = context.full_dataset_size / sizeof(hash1024);
@@ -219,18 +215,22 @@ inline hash256 hash_kernel(const epoch_context& context, const hash256& header_h
     uint64_t init_data[5];
     for (size_t i = 0; i < sizeof(header_hash) / sizeof(uint64_t); ++i)
         init_data[i] = header_hash.words[i];
-    init_data[4] = nonce;
-    hash512 s = keccak<512>(init_data, 5);
-    const uint32_t s_init = s.half_words[0];
+    init_data[4] = fix_endianness(nonce);
+
+    // Do not convert it to array of native 32-bit words, because bytes are
+    // needed in the end.
+    const hash512 s = keccak<512>(init_data, 5);
+
+    const uint32_t s_init = fix_endianness(s.half_words[0]);
 
     hash1024 mix;
-    mix.hashes[0] = s;
-    mix.hashes[1] = s;
+    mix.hashes[0] = fix_endianness32(s);
+    mix.hashes[1] = fix_endianness32(s);
 
     for (uint32_t i = 0; i < 64; ++i)
     {
         auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % num_items;
-        hash1024 newdata = lookup(context, p);
+        hash1024 newdata = fix_endianness32(lookup(context, p));
 
         for (size_t j = 0; j < mix_hwords; ++j)
             mix.hwords[j] = fnv(mix.hwords[j], newdata.hwords[j]);
@@ -244,6 +244,7 @@ inline hash256 hash_kernel(const epoch_context& context, const hash256& header_h
         uint32_t h3 = fnv(h2, mix.hwords[i + 3]);
         cmix.hwords[i / 4] = h3;
     }
+    cmix = fix_endianness32(cmix);
 
     uint64_t final_data[12];
     std::memcpy(&final_data[0], s.bytes, sizeof(s));
@@ -282,7 +283,7 @@ uint64_t search_light(const epoch_context& context, const hash256& header_hash, 
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         hash256 h = hash_light(context, header_hash, nonce);
-        if (h.words[0] < target)
+        if (fix_endianness(h.words[0]) < target)
             return nonce;
     }
     return 0;
@@ -295,7 +296,7 @@ uint64_t search(const epoch_context& context, const hash256& header_hash, uint64
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         hash256 h = hash(context, header_hash, nonce);
-        if (h.words[0] < target)
+        if (fix_endianness(h.words[0]) < target)
             return nonce;
     }
     return 0;

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "endianness.hpp"
 #include "ethash-internal.hpp"
 
 #include <cstring>
@@ -16,7 +17,7 @@ namespace ethash
 inline void keccak_load_block_into_state(uint64_t* state, const uint64_t* block, size_t block_size) noexcept
 {
     for (size_t i = 0; i < (block_size / sizeof(uint64_t)); ++i)
-        state[i] ^= block[i];  // TODO: Add BE support.
+        state[i] ^= fix_endianness(block[i]);
 }
 
 template <size_t bits>
@@ -65,8 +66,8 @@ inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t si
     ethash_keccakf(state);
 
     typename hash_selector<bits>::type hash;
-    std::memcpy(hash.bytes, state, sizeof(hash));
-    return hash;
+    std::memcpy(&hash, state, sizeof(hash));
+    return fix_endianness64(hash);
 }
 
 inline hash256 keccak256(const hash256& input) noexcept
@@ -94,17 +95,10 @@ inline hash1024 double_keccak(const hash1024& input) noexcept
     auto data0 = &input.hashes[0].bytes;
     auto data1 = &input.hashes[1].bytes;
 
+    // TODO: De-alias the state.
     uint64_t state[50] = {};
     uint64_t* state0 = &state[0];
     uint64_t* state1 = &state[25];
-
-//    while (size >= block_words)
-//    {
-//        keccak_load_block_into_state(state, data, block_size);
-//        ethash_keccakf(state);
-//        data += block_words;
-//        size -= block_words;
-//    }
 
     // Final block:
     uint64_t block0[block_words] = {};
@@ -125,9 +119,9 @@ inline hash1024 double_keccak(const hash1024& input) noexcept
     ethash_double_keccakf(state);
 
     hash1024 hash;
-    std::memcpy(hash.hashes[0].bytes, state0, size * sizeof(uint64_t));
-    std::memcpy(hash.hashes[1].bytes, state1, size * sizeof(uint64_t));
-    return hash;
+    std::memcpy(&hash.hashes[0], state0, sizeof(hash.hashes[0]));
+    std::memcpy(&hash.hashes[1], state1, sizeof(hash.hashes[1]));
+    return fix_endianness64(hash);
 }
 
 }

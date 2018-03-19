@@ -1,6 +1,7 @@
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
+#include <ethash/endianness.hpp>
 #include <ethash/ethash.hpp>
 #include <ethash/ethash-internal.hpp>
 #include <ethash/params.hpp>
@@ -14,18 +15,19 @@ using namespace ethash;
 
 namespace
 {
-    /// Creates the epoch context of the correct size but filled with fake data.
-    epoch_context create_epoch_context_mock(uint32_t epoch_number)
-    {
-        hash512 fill;
-        std::fill_n(fill.words, 8, 0xe14a54aaaaaaaaaa);
-        const size_t cache_size = calculate_light_cache_size(epoch_number);
+/// Creates the epoch context of the correct size but filled with fake data.
+epoch_context create_epoch_context_mock(uint32_t epoch_number)
+{
+    // Prepare a constant endianness-independent cache item.
+    hash512 fill;
+    std::fill_n(fill.words, sizeof(hash512) / sizeof(uint64_t), fix_endianness(0xe14a54a1b2c3d4e5));
+    const size_t cache_size = calculate_light_cache_size(epoch_number);
 
-        epoch_context context = {};
-        context.cache = light_cache(cache_size, fill);
-        context.full_dataset_size = calculate_full_dataset_size(epoch_number);
-        return context;
-    }
+    epoch_context context = {};
+    context.cache = light_cache(cache_size, fill);
+    context.full_dataset_size = calculate_full_dataset_size(epoch_number);
+    return context;
+}
 }
 
 class calculate_light_cache_size_test
@@ -197,7 +199,7 @@ TEST(ethash, light_cache)
     }
 }
 
-TEST(ethash, dataset_partial_items)
+TEST(ethash, fake_dataset_partial_items)
 {
     struct full_dataset_item_test_case
     {
@@ -205,40 +207,35 @@ TEST(ethash, dataset_partial_items)
         const char* hash_hex;
     };
 
-    // Number of items in the fake light cache.
-    static constexpr size_t fake_cache_items = 6133493;
-
     // clang-format off
     full_dataset_item_test_case test_cases[] = {
-        {0,          "4764f1f61f71532de83e1231658fce600c5bec86ab02815caaf08f51d7217262af084f8708dcec54388404d47d88626b7d3e565efa043ac5a2bd18aeab2dd118"},
-        {1,          "a629c1513c01cd6eba6db3c3f836ea94c5905615c8d3d2a608105b38affe78b39059efca6ac97e98eb2a05106fe488ea0ba7eb18e1b1ebc5c43d11241010d8e0"},
-        {13,         "efce2a208a0beb57fb1789a9158da9a4eafbb5a50aa17c8ef352cf339ae1db0ddeed32e41d7a74a7a870d255714d93f906c5a6a8ff3129931d47e04ce2da5a32"},
-        {171,        "973cdf0cbb58c21352d9aaf384141af3946f17016ad5b02bc1ab581e262534dc1bad6bebf91cf874733b798b3d2098dafeeb55629a6bc93cc1ec25fa6ca78927"},
-        {571,        "9d9688735fb83b4f1efec9a2863bcd494f97c337b72cbbb35a86484ff3013417751547cdbc641851a02240745f671aae943654d5b54aafb258cb440fea107aa5"},
-        {620,        "cf121f8cdc19828904c0ff761ee1515cc231f250dfff206b25067f597418921f1b63455376121171fb657ad21a8135d8da26ee7baf5bfc302a77e89b57e3a56a"},
-        {514079,     "38f5350e9b28531f80355e47260c09bfc3f6d6da07050343fed9c08902e2347065584dc30a08228b0d2f780e4c157fffbf0b2177c546192f824ca3531632a4b7"},
-        {852881,     "992879fea4525e8c44b1c2eb6a885b32a24efd4eacf6353604d4c688ba56d15c5b50c04672d583f35ac24a8509b8f925a96f5078d41e3675149742da2e992dee"},
-        {6133492,    "713275b1fa7dc300093efa48b8a6047776832ee747cb80784669157d8b35d52665f28eb57f3148e9b6e46b60e47eb587d4495febf4734e6ae8387aa3e80db94e"},
-        {6133493,    "009b0b6154046fc82c78d3e712924227415b0663e9c5fbb5310e3580e36861cc381dd135b24b8e746018fc9a4dcc2962fb432bbe2f5abfabc09b182f15df6b50"},
-        {211322105,  "95aee5086722951be65ae6440aaebd0dda6d17cdb3057cdb99f917cfae36c6fba7be47084d90224239cce7c763196eec27dfda31bb786e284b07e540ae3f4162"},
-        {740620450,  "cc65a8f1ad9d6ca3c8df787a2ff0191e05b1307fc2dbe5aff7ec2d2549ba0d4f5416f82fccb005245fef876643c840f66d9df7d596826bd22a2dc7c4952901c2"},
-        {4294967295, "b47377a0c48b74caad00ea4c7e486cab7e0ffc5b7e08b67f61e93b68f3907b8a8e09b3ff57c1f7a0dc886ebb32a868926e0a066c44a53be707affaeddf7f039d"},
+        {0,          "cc40bef17615acac264c8fedc4df8ca02b949f8cef3e3d08b6711acb8a5254941249cdf50be5fccf0082e587f5520546db85250d853e98ee01fedb87252222c5"},
+        {1,          "03489165b412bfe8085f73902383ae2fff5aa2882835f5f4dc68826f3c52172b98dfb0a94bacde60634d5aaa0b89ef2e7ac0fe024d4bf2ef9d3ff2569aeb1aa3"},
+        {13,         "f90b200ec5dc92625fca180f97667aff09f93194b7c5f17fcb08ae7fc97198f24dd6f2c8d72ac76ffe435f506368978a8a784a4d89cad374ec58ce13a0e67689"},
+        {171,        "0e538e98a6a0c2c114560777cfb48814bb8b5c314ed03d0c60367588daea53c6d87184f72fbc951c57305b67d766f2361220a6a4907018bd3bc70f69f8bcf87c"},
+        {571,        "1cb34c582cc4a2ea96473349670703675ac6e4a6cfd5777ad5f496df1467456635227532821d5e07fb288a30180c5c483457ca57ffb3b1f3ddcbc4113bcc38cb"},
+        {620,        "05c230cf73242696b4810ff5ddd522d07b63c83e54eb0da17b691f79db5247c9bac577b8af56462d86bbbff7a767634483b697c93d98c4950e2a856ef673b6fa"},
+        {514079,     "949b9be7de5b3c009f5d8185b511bd3ddf29dfbf453905c91083cbfc01098455ad73d41a3b4af742509e3ae6cad96024b8ac5337a9c2f1a418c3875537b390a4"},
+        {852881,     "e67f0331c7bd43d215988c862bfac14424e0d56fd6603cc281691f5ae229b6652b0adb311dc5dbdc124d66f90e699c16ed1c0f04efa03f9fd14888c42d841585"},
+        {6133492,    "94b4c2bb240f039943d5612243be303d87c523ee2c319cd094960671716403dd2735cd7305a13d4b85d12e75997b2f6dfeaf77fcee0dd3e2c7b72135ca585bc9"},
+        {6133493,    "aed4fd3f4d641fb3ad4cc5d8602a6c4b7b40ee2ca6cb694a679662992c744603e97a7dfc1b6ed94820556d9a7bfca3afb91175ab55837cad31a508dd8084100d"},
+        {211322105,  "51c99716a2193f38f42c49c96e915db7a304c1d0ee9458e207d221c4ec287fc01a692d99433ea5fa99b3c9a71d899bb4bc88bcddbb9da1c1f3cbb62738c0a4b0"},
+        {740620450,  "aa6a733cff55c9d1cc9058a1cd919076fe06cc9dea4f2db9aa17414dc60cc80087637f8536894335532b019da8066ac28ab76cfcd9236924e19328c777fa11be"},
+        {4294967295, "8e4fdb5dc602598f10a42b5061132eec05299380db872a3caf04aa21e3d4970350394dfbd58c5ab54571b1be0cc9001d788c6b14cbf003d7decc2aaef1232b8c"},
     };
     // clang-format on
 
-
-    hash512 fake_item;
-    std::fill(std::begin(fake_item.bytes), std::end(fake_item.bytes), 0b1010101);
-    light_cache fake_cache(fake_cache_items, fake_item);
+    // Mock the epoch context.
+    epoch_context context = create_epoch_context_mock(0);
 
     for (const auto& t : test_cases)
     {
-        const hash512 item = calculate_dataset_item_partial(fake_cache, t.index);
+        const hash512 item = calculate_dataset_item_partial(context.cache, t.index);
         EXPECT_EQ(to_hex(item), t.hash_hex) << "index: " << t.index;
     }
 }
 
-TEST(ethash, dataset_items)
+TEST(ethash, fake_dataset_items)
 {
     struct full_dataset_item_test_case
     {
@@ -247,61 +244,52 @@ TEST(ethash, dataset_items)
         const char* hash2_hex;
     };
 
-    // Number of items in the fake light cache.
-    static constexpr size_t fake_cache_items = 6133493;
-
     // clang-format off
     full_dataset_item_test_case test_cases[] = {
         {0,
-            "4764f1f61f71532de83e1231658fce600c5bec86ab02815caaf08f51d7217262af084f8708dcec54388404d47d88626b7d3e565efa043ac5a2bd18aeab2dd118",
-            "a629c1513c01cd6eba6db3c3f836ea94c5905615c8d3d2a608105b38affe78b39059efca6ac97e98eb2a05106fe488ea0ba7eb18e1b1ebc5c43d11241010d8e0"},
+            "cc40bef17615acac264c8fedc4df8ca02b949f8cef3e3d08b6711acb8a5254941249cdf50be5fccf0082e587f5520546db85250d853e98ee01fedb87252222c5",
+            "03489165b412bfe8085f73902383ae2fff5aa2882835f5f4dc68826f3c52172b98dfb0a94bacde60634d5aaa0b89ef2e7ac0fe024d4bf2ef9d3ff2569aeb1aa3"},
         {1,
-            "4b52a62634fe25a9c0b21bde997f6a767f2bfd022e516edb2349a5e044059b1ad549e0db9c25914cdcd14e6ef37a68ee4fe3f4411f42fa604b000a6723556bc4",
-            "0c9eddd366c87cdd6f9cdec373f227b2b922fd8024019b4c35c9337cb9e7d8d5b0fbd1808e026a4b7098fd23e73036f1ffe22eb189bc10c489318ccaf14ee43f"},
+            "9d05d44ed96bcaef3c94806b360a828ae04e78208cd496ffeaa72bc2ffd0932daf92ffae790030474e8382a5d527c97696edafa58536b0ab86f5401cf8b34e5c",
+            "88202c073303c41d7df6d03ec001a53a3d13f86e9265190b46d3c6587fab9e2773265f7165b131347a28346f2c74e3240cb46967626eb2aa22df61b9608ba66b"},
         {13,
-            "cc1e4ad4e7e905109f4dc2b21857d54802c9e550f8724601b0ef5ac7255aa9d43cf39c8a5e64e55e55a9a2fe6dfbfd4e6c621cadf731d6bb98df1a370551d498",
-            "3329b0d19d3021f706a703d9b6c983523cfba653514f9806e2bed3996d7e290602a33b5372bec603ef3cd3febfe45fbdd420b89315ad87b14b6237799c8535e0"},
+            "02e5420afa905efcf10f46e61f5dddb19f47aca443fba979ded7310e1ac467dd11e5862f3cb474b78591d145cb6dabe302e87625d6e61d5e5b97962fabb2435e",
+            "eba863b9003b8b805504bf8dd0f9fcd9950206d7a866a0eeb089130b84c36b803fe57eecafc25251ed3e68c57862298c988dbede2656ca6a82cbbbf0c9aefb3c"},
         {171,
-            "0119b5d5886550162061180ba620044b93bf280081c0b9275343271c010a317a1ebaf492f2dc4b9d2dd62043d8cdf2dc621fc42f2eda9171a2c3f4f260cf1d70",
-            "f30adcb55ff0aff723d6b27b6467ee56ffafced8c6ed703e3532fb50bf61e752448c9c24e727b1352ab429f9aecdeca0fc019b152a67f5cec530d2a47b7438e3"},
+            "23837067d9ae9a5f4dbe5c30ad86e28379a73276000d23fb096cb4a6bb406b3e5d7639e7c9650ee3814dec0d6a7d1b51ce10b41e2ddb9f8ea7fa2e6ac73320b1",
+            "cdba9bccd4cb9bf7ecd48eb6ff3ae288cb56be91d25b8bb3b6681a93cc6ea254bc24ed0b1235fcbde16356ba2dc193ee8103d9dca681cf1aa4014911a71ac452"},
         {571,
-            "26be82d9c86e697afa5708bb457439d2874c11ee3b700e614f141b5689f2408981d13193e367f33279f667cfa8403c8d16b8c767b69663fe1a8ed3c756b164c7",
-            "790e7cc49c225a5a34cf307a41bb7e07a9145665b3e5161d65ef291dfec711eac7af401aac1908c85f476743dd796a886a1d822883421725832d9b4b3a0e3ae7"},
+            "922e3fc9b1741567df72b68531345e7f37c9ec64885101e587035ff5968db7163fc3d66851aa459911d432779acab42ca65c233d4d193e0fb39aedca1b8f7631",
+            "9fa4cbdcb6b208f5cc86328a60657fb3818dab7fd496d5494ebda842902f251bce587a38928e5450d899899e769280df001a3bfc20b04a0ade4c6f6d82c8c174"},
         {620,
-            "37fc516fb90d1c924a73475fb4fb806ac2d5562c7506c54542570ef9ba4eafa76ae97f299e6f48cdc8d6b7b54e01474c927fd3ceec73136696b8b0463f4a962a",
-            "0e1581c55baba97493edf71f7e1363710d89eecb77e058f299d7aae5fe97a05a3f0d1b01c9e289bd6a5084a5fe9a22502299e8ceb9d7463465879b2834aa01f9"},
+            "601668d81c7f8b0268d404f96528fa4d29226c3c84c4520f0d234d21e83be004571a8839826e102b4ef6c090480ef35a85f45700e5d2efbbb4c1721a797b2a39",
+            "437fae4b69f3c25224c115cd74d600f008c3668c2815d27d2afb564d941412d0381ff7320ccc97c37238b6ebc54bf907dfccc6cf9ad8d9ca8662bda15c15f64b"},
         {514079,
-            "5189058ba850e4278a120f9f14b0220a107d8f714680cd5fcc6a99235264bc3f83cd90e10d48a59567c44cf40679aa6fec8af70cba0ede5bff26e71f1f5c2a9b",
-            "acef6860072fe7d2969862a96f0036a790a28a617e6953f69fefa04941f16f616005d3e0148e4c95e66d881bd0f439896ae97a5d0108df30b6cf3f3a1bfbac16"},
+            "259bc18e5cb2a4e5897c106fb9f3fe1480f8b48b86077673e3e9affa24f8ca5d3e307370ae56534aa8ebd88ade50aef7f9e941c173d18d189fc528bd5f6141b9",
+            "6918d14a2fa8f7b0cf54297b949301770743b00a359ef428174dc8d2b8dc686fddfa79cd3bd9e46654d3848a37f9fe733e95b708132db1764eaa3b39db703040"},
         {852881,
-            "95f9eeafb89861f84fd494500d9a4834c07c018bf23735af846c6de710dc661f75d65fb58965a895dc3696547b4f66143b67e7ed46e735ce0179e76b5795d1d1",
-            "3fa43ef4cee22359664d872169338f4a037eb62eddef12e2f08552fd518ce16c6f014df131435878577abdf74f590c48ab6b0bc8fffc513ac70900accb7cf53a"},
+            "95080490fe6781eda38979e23baba0915c7a4d441bd2a790fa930139ad99865ca890a06623b9ddfaaacc1fc17420b8d443ca53b89c4a3716aa5d6d088ca89a27",
+            "5e639f40eb575f2677e1141a99e3bec90121067ffb7ed8340bdc889d8d128ea78414dc56f5148229d9fc1d5517352b6f96afd5d3a655095a05b85ce157bebd31"},
         {6133492,
-            "9d3828b4a054d2979f180380fa6cb254c56926b9a3cb5a5e684595f97024e474af2a5150bd2dd1da439e9ed5bbd5c30c49b31f758f4c973eb3efdf7dc573c0d8",
-            "6b7dd1c31cf0d79e6cf5879ff1b67205c8a66e0320000d2f5ae93b5e23f46bd389892ba4db620fa33d9d97233b7dd078471960500d214dfdfb786dc1a6cb5944"},
+            "cd7482a6294a547e770f02dd73c76a6606370cd1177b773aa1cd66868a76f3a817e0c39c76f54d8894ec7b5ebddf8606a0b20249f93d1e3defa325ba81aa4cd8",
+            "c4a4dfcc85f6ef120871ab28e676806e6f080a0dd897fc648fb9dfd9df7fcae91e20c7f6d4ea161e15ec27542005dfc4293acab0365c98fec1f104b47b09f47f"},
         {6133493,
-            "7ca74fcd1ac8627d5e1b2c2c5313b465761ae8f04a7bb141522f3dfc37dcd81880c185fc1b5c270e1ab8356189a43deca47f51a31956b22aa2a47c4c85e6b270",
-            "d18db7d0119e91fb50866507541e310a58c243df6705eaa38a0d345023019e7cbb1014e889d28ec72a3332b974227d7299df48da2a720e4a92b1856c90b6dd2c"},
+            "1a7d2bdfb9f60d83d86dc5404e1115ddee6029fbc48d854afbc18bedadeb6951d81391615d5d73d96e431f492dd66c5de56d4f71ca80915283170dcf9401d75b",
+            "be530488cce0d1b7c1eca2361e43426960e413a93649aeec5dd74562da06cb1399e685c00705bea21f2ba4369b0fbcd0404052e4ea27aeab00f03343a38ab15c"},
         {211322105,
-            "415f7ec751e8a790dc5f1c0937026665014366ecb6d04e1b54f33482978d29d84a32d977a774138fd76333378485dd75811f725ef0e5de79aba5b3ad38060c99",
-            "1e98c227c3ff62d9bd4a7cfdfd5af8c461f1d840ff5d60bcd4fd0eae8927f956100dbab2e4e947a785a1aaa0132fbb05a95402c57ef7fd9184ebcd82c39e1ae0"},
+            "b7f04034d7a5ceb52074327a241b708ced97910b5a0f2b8e56464603ce678498659cf0db3866d39bbf8924d3efb5b23e4c2f5be6ff4b096a67f213e87137235f",
+            "67ecd7b90665ad13c8de3092e798984413aac3bd37ab9f5a6583e341a7d2888679131f1afff253a6e0c524b2ec6dae8a0e607ea137e854e9ed2bb1ca572dd6aa"},
         {740620450,
-            "dba6544efccd33440ae256cf0b3aa4182e863d8cab841c8c3195dd67464ba8acffa6d28426e8dc519aa49f1898e82ceabb0a3b6cd30be6a51b57ca3d673dbcaa",
-            "b3201249c850f81327920b653f7c6e098ab332caf81ff5c74072dd87a1c2688944e742c36f397899be219ccddea6125c33f5c42b250bdbaf5e4d6e5638334277"},
+            "7e4a3533ef6f0d9fa7e41b8304e08fe9e52556334cad0cc861337bd1155bbea211cf0b0198b4f08567cc47fcc964bbbdfb2f851437da1edba7c6f4bd3fd61a3a",
+            "f20969bd0407bb76560e7c099224a1ea185214808950519fafdcd02ba2874e9b4ebf1797cafb3b80e903b13a87ddac5d54d67ed58acf49bb12e03b81eb6c99af"},
         {4294967295,
-            "63c457a719afc75260325f9de19e2979f9fa330656d9651a2e80c6a809d789dd71d2dbed91258f8bd4d872b8ca73bd7b7ddd39644f1b25e8eba628741d454daf",
-            "b47377a0c48b74caad00ea4c7e486cab7e0ffc5b7e08b67f61e93b68f3907b8a8e09b3ff57c1f7a0dc886ebb32a868926e0a066c44a53be707affaeddf7f039d"},
+            "21471504c1f31007c14acd107a8ade1aad6c2a6c2ad879b3aca3b12517105483502d0e3e902acf3b128d294c0a69f2cc199bf8813be1f8bb4b5625822b70ec09",
+            "8e4fdb5dc602598f10a42b5061132eec05299380db872a3caf04aa21e3d4970350394dfbd58c5ab54571b1be0cc9001d788c6b14cbf003d7decc2aaef1232b8c"},
     };
     // clang-format on
 
-
-    hash512 fake_item;
-    std::fill(std::begin(fake_item.bytes), std::end(fake_item.bytes), 0b1010101);
-    light_cache fake_cache(fake_cache_items, fake_item);
-
     // Mock the epoch context.
     epoch_context context = create_epoch_context_mock(0);
-    context.cache = std::move(fake_cache);
 
     for (const auto& t : test_cases)
     {
@@ -309,6 +297,75 @@ TEST(ethash, dataset_items)
         EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
         EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
     }
+}
+
+
+
+TEST(ethash, dataset_items_epoch13)
+{
+    struct full_dataset_item_test_case
+    {
+        size_t index;
+        const char* hash1_hex;
+        const char* hash2_hex;
+    };
+
+    // clang-format off
+    full_dataset_item_test_case test_cases[] = {
+        {0,
+            "6526a7e7ab092dfd21ebe6ffa1225370886a9a9fc828f929775de6a2737a3b9d1bb728bd23a61478e9fbf837d317829292d469cbb1a90a29058c0f604aeee5a6",
+            "a2fe2a6253d8642b5dcc6a211b7f4d6ee9b60ac235ee2c9d64a064ea20e47fe4cdad99aa9c7dd5e2d71e58b7957ff91062d1f1c014cd4453db2ddb094056529b"},
+        {1,
+            "7a03a5f8e028db852542ce2f10d25b7dcdf9a25c3898aabe78b881ef58e56ffaedb24c870184a6f0513a65f09066e9f9224baf6f684e0c54e7ef400004ec9fb8",
+            "639f251bbee0b1114e687ea651717eb69c0b76bc673dd4c9d697f41c307d66bdbe92b26df3dda209f25d6784c7a1db5902c18323285255684359728f5ca6da31"},
+        {13,
+            "63886d5b8967584addad94d45d194209bdf05e34b11894575ad292bf6da94117224b6e0d7b57791438ff701d3a0d2a80f261cc2ebde97e3bfc8574bb3519593c",
+            "afec130195473d4389d0ea13ec33ba8048a4075043fd2f2bc502f534f4f600ddb3417e53a9f23918c5e134049ed2b8561f1165d8543852f7e9792fa6332c268c"},
+        {171,
+            "a3dabfb475532cbc59d8b6732e73f108bba7b325b90e32690f00ea08f8977a94774106b08314763d403b153bc27fb58d5b2b84955e3069e2e6e63718bc2d3a26",
+            "056c1c4861d530aa6aa962cfd8256828661c93a3985d4dfa88011b496e94b031e86650183c706488984d0d0302ed79d5c1ac977dc6881006cb2b0b6b76542067"},
+        {571,
+            "14276428b23db295620e56dc2212c4f75f4dc20545ad0d2fe5f08e7c99b5fb372bb342f098525e30ff49f2b66891d9973101c8b4579269311afbc6c0a8822bbd",
+            "1ed369ce428c0c768c9fcc45089e830e603baa3b6fb81f60ef4b652ac19ab90ce3b3b007fb5fc289bc822e82e3b6b9aaef51258cd6bfecf23c30ed576a246d6a"},
+        {620,
+            "d3df66afb0b84a35b6ddb32d1b04a30c814cad357c0e46bffa2f6cbf0d95c76eef10b3b59fdce344924981cfdacdf93accecfa6ffe8b5041640e83feccb26a9c",
+            "fb97636b8e8b9bb593ab2d0235bc803608901cb3484e277761d376baf03d6986caf24f00a37a5a970a5b0de551cc27d45b9bf6ce3986b18cd78d98c028e956b1"},
+        {514079,
+            "279fe53aec52daf6341580b4c43841b39157b66144733ddaa3b11886a9bc3a61892af817e0f1ff9ac374351aa7cc16f7ac55bbc0cd53aaa72747db9fe07d9938",
+            "793b56c9baafe3638d9b3bfdf09f136d9b01bf206919df571e3e6de7320822f6d1567c69240b28181d797d0ab53b342f17dcb9746bdc0afb75fd115e7aa244ec"},
+        {852881,
+            "9f877290e5ba25760b6719e12c06e7e8e36b5d2510354ec3e269e04c36146bd8c7f5a1aa4df47c7a0f1f139bdfb5a1a7108b7eadd41d7acb40532c4cff1619d1",
+            "a0b6e119086c1f26aa578c678374e59b49388941fe9a119d00a7c82214702d5626b810df756fb399a5cf54cb09ce6aa25ed99ebe3bcc92178c9180cf956189a5"},
+        {6133492,
+            "539f72291dd31e5234081057904daff0329bf0099726c20fa1f1b31377ac84acc60d64c29206ccc0191a5f797293c151f0d506fa2ef5daf70654654c349fbf70",
+            "764e27dd47579073a74f92ef843a11219629583ab6b9b4907dcededbacbea1ed8b3f7a36336dc9a39839faf4d5095e50d9632e9e23819d7f85daa0f87a6a2efa"},
+        {6133493,
+            "379a030e94c3718a7220dcc9865e600eea2bb049aa251e26d812c952fa9bedecfc2e9a04d421810d5ef2500e9d5a4a44d8d6e731414a7bd94268333f23368c59",
+            "609f6d9d852794d11cf748bdb1784662ee0080fed4c18683a74ef4fdb3a5c243c9b3981b87fe912ac8860ff1a021e115dae2c96f14de6387c802c9910290ead3"},
+        {211322105,
+            "b3bb7286d9840720319aa6dd4bc7f8b55cc38b1ff0151c4a46ffb4b2a99c6eeb966bde5efc7f3f0c3a753c338238e37e119b75e6c553f2aab575238e1ba07880",
+            "0b89a30d5ed6bf1959c6e4d265ddf941bed6ce579493726c7d98de68267bb0eccfb0dbdf7a2d0d45d900d7588995212a8618ea679ab08425922b5042a0fdb95c"},
+        {740620450,
+            "df0c2e2f4df033a64b1bcd207c30c7ce48c7d8ca8edd1284c87a91d54372ed0cb513d1876b1dbef6fc06c496941039cba6c50676596d6379152689d9841c97e4",
+            "357bacef5baf4687c87e7ff07d5ab104ce39badcf9633c22ee31c3c3de0887b296f9385ea27573cb94bc3423cc39ab2a733be97a98e860290c31e94f03f39814"},
+        {4294967295,
+            "11fab5bafdf0e29f199cad053a542f777fcd8b4fb8a0203bf720b9a01718e8c76d0e374e979ebf0e1faf8ce992638a5e92ea8be8000c47e8307acad261df1abb",
+            "164ff9a893a162319f9ccb4294e33fb6ae50ea05d02a753fd4797662676c1fad6d70b11db6d4aa0298d6aa695c9be8dea3dad70f953368cb11b283eb145d17e3"},
+    };
+    // clang-format on
+
+
+    // Create example epoch context.
+    epoch_context* context = create_epoch_context(13);
+
+    for (const auto& t : test_cases)
+    {
+        const hash1024 item = calculate_dataset_item(*context, t.index);
+        EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
+    }
+
+    destroy_epoch_context(context);
 }
 
 namespace
@@ -370,7 +427,7 @@ TEST(ethash, small_dataset)
 
     constexpr size_t num_treads = 8;
     constexpr size_t num_dataset_items = 501;
-    constexpr uint64_t target = uint64_t(1) << 48;
+    constexpr uint64_t target = uint64_t(1) << 50;
 
     epoch_context context = create_epoch_context_mock(0);
     context.full_dataset_size = num_dataset_items * sizeof(hash1024);
@@ -378,10 +435,10 @@ TEST(ethash, small_dataset)
 
     std::array<std::future<uint64_t>, num_treads> futures;
     for (auto& f : futures)
-        f = std::async(std::launch::async, [&] { return search(context, {}, target, 4892, 30000); });
+        f = std::async(std::launch::async, [&] { return search(context, {}, target, 1, 11000); });
 
     for (auto& f : futures)
-        EXPECT_EQ(f.get(), 27777);
+        EXPECT_EQ(f.get(), 10498);
 }
 
 TEST(ethash, small_dataset_light)
@@ -392,10 +449,10 @@ TEST(ethash, small_dataset_light)
     epoch_context context = create_epoch_context_mock(0);
     context.full_dataset_size = num_dataset_items * sizeof(hash1024);
 
-    uint64_t solution = search_light(context, {}, target, 4990, 10);
-    EXPECT_EQ(solution, 4999);
+    uint64_t solution = search_light(context, {}, target, 475, 10);
+    EXPECT_EQ(solution, 482);
 
-    solution = search_light(context, {}, target, 5000, 10);
+    solution = search_light(context, {}, target, 483, 10);
     EXPECT_EQ(solution, 0);
 }
 
