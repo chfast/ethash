@@ -82,7 +82,7 @@ int main(int argc, const char* argv[])
     ethash::destroy_epoch_context(context);
 
     auto ms = duration_cast<milliseconds>(timer::now() - start_time).count();
-    auto hps = num_iterations * 1000 / ms;
+    auto hps = static_cast<decltype(ms)>(num_iterations) * 1000 / ms;
 
     std::cout << ((ms + 999) / 1000) << " s\n" << hps << " H/s\n";
     return 0;
