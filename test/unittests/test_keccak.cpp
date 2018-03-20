@@ -19,14 +19,14 @@ static const char keccack512_of_empty[] =
     "\x13\xb4\x35\xf0\x91\xef\x27\x69\xfb\x16\x0c\xda\xb3\x3d\x36\x70\x68\x0e";
 
 
-TEST(keccak256, empty)
+TEST(keccak, empty_256)
 {
     hash256 h = keccak<256>(nullptr, 0);
     std::string strh{h.bytes, sizeof(h)};
     EXPECT_EQ(strh, std::string(keccak256_of_empty, sizeof(h)));
 }
 
-TEST(keccak256, hello_world)
+TEST(keccak, hello_world_256)
 {
     std::string hello_world{"Hello World! "};
     for (int i = 0; i < 4; ++i)
@@ -36,14 +36,14 @@ TEST(keccak256, hello_world)
     EXPECT_EQ(to_hex(h), "0d660e6953b0fbbd6476864d4474b2f1aa943358cd4d723af30110f6c465faaf");
 }
 
-TEST(keccak512, empty)
+TEST(keccak, empty_512)
 {
     hash512 h = keccak<512>(nullptr, 0);
     std::string strh{h.bytes, sizeof(h)};
     EXPECT_EQ(strh, std::string(keccack512_of_empty, sizeof(h)));
 }
 
-TEST(keccak512, hello_world)
+TEST(keccak, hello_world_512)
 {
     std::string hello_world{"Hello World! "};
     for (int i = 0; i < 4; ++i)

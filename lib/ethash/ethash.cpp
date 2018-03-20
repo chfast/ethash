@@ -213,8 +213,7 @@ inline hash256 hash_kernel(const epoch_context& context, const hash256& header_h
     const size_t num_items = context.full_dataset_size / sizeof(hash1024);
 
     uint64_t init_data[5];
-    for (size_t i = 0; i < sizeof(header_hash) / sizeof(uint64_t); ++i)
-        init_data[i] = header_hash.words[i];
+    std::memcpy(&init_data, &header_hash, sizeof(header_hash));
     init_data[4] = fix_endianness(nonce);
 
     // Do not convert it to array of native 32-bit words, because bytes are

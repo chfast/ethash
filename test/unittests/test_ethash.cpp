@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
 #include <ethash/endianness.hpp>
-#include <ethash/ethash.hpp>
 #include <ethash/ethash-internal.hpp>
+#include <ethash/ethash.hpp>
 #include <ethash/params.hpp>
 
 #include "helpers.hpp"
@@ -300,7 +300,6 @@ TEST(ethash, fake_dataset_items)
 }
 
 
-
 TEST(ethash, dataset_items_epoch13)
 {
     struct full_dataset_item_test_case
@@ -376,13 +375,11 @@ struct hash_test_case
     const char* header_hash_hex;
     const char* nonce_hex;
     const char* mix_hash_hex;
-    const char* mix_raw_hex;
 };
 
 hash_test_case hash_test_cases[] = {
     {2683077, "0313d03c5ed78694c90ecb3d04190b82d5b222c75ba4cab83383dde4d11ed512",
-        "8c5eaec000788d41", "00000000000204882a6213f68fe89bc368df25c1ad999f82532a7433e99bc48e",
-        "93e85c97b34ccd8091e09ddb513fdc9e680fa8898d4a0737205e60af710a3dcb"}};
+        "8c5eaec000788d41", "00000000000204882a6213f68fe89bc368df25c1ad999f82532a7433e99bc48e"}};
 }
 
 TEST(ethash, verify_hash_light)
