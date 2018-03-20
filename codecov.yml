@@ -1,0 +1,5 @@
+comment:
+  layout: "reach, diff"
+ignore:
+  - "test/benchmarks/*"
+  - "test/fakeminer/*"
