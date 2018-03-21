@@ -34,7 +34,7 @@ defaults:
     run:
       name: "Build"
       working_directory: ~/build
-      command: cmake --build . -- -j $BUILD_PARALLEL_JOBS VERBOSE=1
+      command: cmake --build . -- -j $BUILD_PARALLEL_JOBS
 
   test: &test
     run:
@@ -93,12 +93,11 @@ jobs:
       - *test
       - *upload-coverage-data
 
-  mips64-build:
+  mips64:
     environment:
-      - BUILD_TYPE: Debug
       - BUILD_PARALLEL_JOBS: 2
       - TEST_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DTOOLCHAIN=mips64
+      - CMAKE_OPTIONS: -DTOOLCHAIN=mips64 -DCMAKE_EXE_LINKER_FLAGS=-static
     docker:
       - image: ethereum/cpp-build-env
     steps:
@@ -106,24 +105,19 @@ jobs:
       - *update-submodules
       - *install-mips64
       - *configure
-      - *build
-      - persist_to_workspace:
-          root: ~/build/test/unittests
-          paths:
-            - ethash-test
-
-  mips64-test:
-    machine:
-      enabled: true
-    steps:
-      - attach_workspace:
-          at: /tmp
+      - run:
+          name: "Build ethash-test for mips64"
+          working_directory: ~/build
+          command: |
+            cmake --build . --target ethash-test -- -j $BUILD_PARALLEL_JOBS
+      - store_artifacts:
+          path: ~/build/test/unittests/ethash-test
+          destination: ethash-test
       - run:
           name: "Test mips64"
-          command: |
-            sudo apt -q update
-            sudo apt -qy install qemu g++-mips64-linux-gnuabi64
-            qemu-mips64 -L /usr/mips64-linux-gnuabi64 /tmp/ethash-test
+          working_directory: ~/build
+          command: |  # Software emulation in qemu will not handle threads.
+            qemu-mips64 test/unittests/ethash-test --gtest_filter='-*_multithreaded.*'
 
 
 workflows:
@@ -132,7 +126,4 @@ workflows:
     jobs:
       - linux-gcc6-coverage
       - linux-clang5
-      - mips64-build
-    #   - mips64-test:
-        #   requires:
-            # - mips64-build
+      - mips64

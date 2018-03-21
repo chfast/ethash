@@ -417,7 +417,7 @@ TEST(ethash, verify_hash)
     }
 }
 
-TEST(ethash, small_dataset)
+TEST(ethash_multithreaded, small_dataset)
 {
     // This test creates an extremely small dataset for full search to discover
     // sync issues between threads.
