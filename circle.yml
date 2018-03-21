@@ -1,0 +1,138 @@
+defaults:
+
+  environment-info: &environment-info
+    run:
+      name: "Environment info"
+      command: |
+        echo CXX: $CXX
+        $CXX --version
+        $CXX --version > compiler.version
+
+  update-submodules: &update-submodules
+    run:
+      name: "Update git submodules"
+      command: |
+        git submodule update --init --recursive
+
+  install-mips64: &install-mips64
+    run:
+      name: "Install mips64 toolchain"
+      command: |
+        sudo apt -q update
+        sudo apt -qy install g++-mips64-linux-gnuabi64 qemu
+
+  configure: &configure
+    run:
+      name: "Configure"
+      # Build "out-of-source" to have better coverage report
+      # (ninja is using relative paths otherwise).
+      working_directory: ~/build
+      command: |
+        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE $CMAKE_OPTIONS
+
+  build: &build
+    run:
+      name: "Build"
+      working_directory: ~/build
+      command: cmake --build . -- -j $BUILD_PARALLEL_JOBS VERBOSE=1
+
+  test: &test
+    run:
+      name: "Test"
+      working_directory: ~/build
+      command: |
+        test/unittests/ethash-test
+
+  test-mips64: &test-mips64
+    run:
+      name: "Test (mips64)"
+      working_directory: ~/build
+      command: |
+        qemu-mips64 -L /usr/mips64-linux-gnuabi64 test/unittests/ethash-test
+
+  upload-coverage-data: &upload-coverage-data
+    run:
+      name: "Upload coverage data"
+      command: |
+        codecov --required --gcov-exec "$GCOV" --gcov-root ~/build
+
+
+version: 2
+jobs:
+
+  linux-clang5:
+    environment:
+      - CXX: clang++-5.0
+      - CC:  clang-5.0
+      - BUILD_PARALLEL_JOBS: 2
+      - TEST_PARALLEL_JOBS: 2
+    docker:
+      - image: ethereum/cpp-build-env
+    steps:
+      - checkout
+      - *update-submodules
+      - *configure
+      - *build
+      - *test
+
+  linux-gcc6-coverage:
+    environment:
+      - CXX: g++-6
+      - CC:  gcc-6
+      - GCOV: gcov-6
+      - BUILD_PARALLEL_JOBS: 2
+      - TEST_PARALLEL_JOBS: 2
+      - CMAKE_OPTIONS: -DCOVERAGE=ON
+    docker:
+      - image: ethereum/cpp-build-env
+    steps:
+      - checkout
+      - *update-submodules
+      - *configure
+      - *build
+      - *test
+      - *upload-coverage-data
+
+  mips64-build:
+    environment:
+      - BUILD_TYPE: Debug
+      - BUILD_PARALLEL_JOBS: 2
+      - TEST_PARALLEL_JOBS: 2
+      - CMAKE_OPTIONS: -DTOOLCHAIN=mips64
+    docker:
+      - image: ethereum/cpp-build-env
+    steps:
+      - checkout
+      - *update-submodules
+      - *install-mips64
+      - *configure
+      - *build
+      - persist_to_workspace:
+          root: ~/build/test/unittests
+          paths:
+            - ethash-test
+
+  mips64-test:
+    machine:
+      enabled: true
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: "Test mips64"
+          command: |
+            sudo apt -q update
+            sudo apt -qy install qemu g++-mips64-linux-gnuabi64
+            qemu-mips64 -L /usr/mips64-linux-gnuabi64 /tmp/ethash-test
+
+
+workflows:
+  version: 2
+  ethash:
+    jobs:
+      - linux-gcc6-coverage
+      - linux-clang5
+      - mips64-build
+    #   - mips64-test:
+        #   requires:
+            # - mips64-build
