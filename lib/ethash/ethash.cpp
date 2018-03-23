@@ -42,7 +42,7 @@ hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 }
 }
 
-epoch_context* create_epoch_context(uint32_t epoch_number) noexcept
+epoch_context* create_epoch_context(int epoch_number) noexcept
 {
     const size_t cache_size = calculate_light_cache_size(epoch_number);
     hash256 seed = calculate_seed(epoch_number);
@@ -61,7 +61,7 @@ void destroy_epoch_context(epoch_context* context) noexcept
     delete context;
 }
 
-uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept
+uint64_t calculate_light_cache_size(int epoch_number) noexcept
 {
     // FIXME: Handle overflow.
     uint64_t size_upper_bound = light_cache_init_size + uint64_t(epoch_number) * light_cache_growth;
@@ -70,7 +70,7 @@ uint64_t calculate_light_cache_size(uint32_t epoch_number) noexcept
     return num_items * mixhash_size;  //< This cannot overflow.
 }
 
-uint64_t calculate_full_dataset_size(uint32_t epoch_number) noexcept
+uint64_t calculate_full_dataset_size(int epoch_number) noexcept
 {
     static constexpr size_t item_size = sizeof(hash1024);
 
@@ -82,10 +82,10 @@ uint64_t calculate_full_dataset_size(uint32_t epoch_number) noexcept
     return num_items * item_size;  //< This cannot overflow.
 }
 
-hash256 calculate_seed(uint32_t epoch_number) noexcept
+hash256 calculate_seed(int epoch_number) noexcept
 {
     hash256 seed;
-    for (size_t i = 0; i < epoch_number; ++i)
+    for (int i = 0; i < epoch_number; ++i)
         seed = keccak256(seed);
     return seed;
 }

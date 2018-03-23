@@ -32,7 +32,7 @@ cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug Release Re
 cable_configure_compiler()
 if(CABLE_COMPILER_GNULIKE)
     # Do not allow lossy type conversions.
-    add_compile_options(-Wconversion)
+    add_compile_options(-Wconversion -Wsign-conversion)
 
     if(NOT CMAKE_CROSSCOMPILING)
         # Tune for currently most common CPUs (flag not supported in mips64 cross-compiler).

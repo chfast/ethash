@@ -8,8 +8,6 @@
 
 namespace ethash
 {
-static constexpr uint32_t epoch_length = 30000;
-
 constexpr static uint64_t light_cache_init_size = 1 << 24;
 constexpr static uint64_t light_cache_growth = 1 << 17;
 constexpr static size_t light_cache_rounds = 3;

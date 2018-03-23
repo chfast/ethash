@@ -16,7 +16,7 @@ using namespace ethash;
 namespace
 {
 /// Creates the epoch context of the correct size but filled with fake data.
-epoch_context create_epoch_context_mock(uint32_t epoch_number)
+epoch_context create_epoch_context_mock(int epoch_number)
 {
     // Prepare a constant endianness-independent cache item.
     hash512 fill;
@@ -31,18 +31,18 @@ epoch_context create_epoch_context_mock(uint32_t epoch_number)
 }
 
 class calculate_light_cache_size_test
-  : public ::testing::TestWithParam<std::pair<uint32_t, uint64_t>>
+  : public ::testing::TestWithParam<std::pair<int, uint64_t>>
 {
 };
 
 class calculate_full_dataset_size_test
-  : public ::testing::TestWithParam<std::pair<uint32_t, uint64_t>>
+  : public ::testing::TestWithParam<std::pair<int, uint64_t>>
 {
 };
 
 TEST_P(calculate_light_cache_size_test, test)
 {
-    uint32_t epoch_number;
+    int epoch_number;
     uint64_t expected_size;
     std::tie(epoch_number, expected_size) = GetParam();
 
@@ -53,7 +53,7 @@ TEST_P(calculate_light_cache_size_test, test)
 /// Test pairs for calculate_light_cache_size() are taken from generated ethash
 /// light cache sizes, picked at random.
 /// See https://github.com/ethereum/wiki/wiki/Ethash#data-sizes.
-static std::pair<uint32_t, uint64_t> light_cache_sizes[] = {{0, 16776896}, {14, 18611392},
+static std::pair<int, uint64_t> light_cache_sizes[] = {{0, 16776896}, {14, 18611392},
     {17, 19004224}, {56, 24116672}, {158, 37486528}, {203, 43382848}, {211, 44433344},
     {272, 52427968}, {350, 62651584}, {412, 70778816}, {464, 77593664}, {530, 86244416},
     {656, 102760384}, {657, 102890432}, {658, 103021888}, {739, 113639104}, {751, 115212224},
@@ -70,7 +70,7 @@ INSTANTIATE_TEST_CASE_P(
 
 TEST_P(calculate_full_dataset_size_test, test)
 {
-    uint32_t epoch_number;
+    int epoch_number;
     uint64_t expected_size;
     std::tie(epoch_number, expected_size) = GetParam();
 
@@ -81,7 +81,7 @@ TEST_P(calculate_full_dataset_size_test, test)
 /// Test pairs for calculate_full_dataset_size() are taken from generated ethash
 /// full dataset sizes, picked at random.
 /// See https://github.com/ethereum/wiki/wiki/Ethash#data-sizes.
-static std::pair<uint32_t, uint64_t> full_dataset_sizes[] = {{0, 1073739904}, {14, 1191180416},
+static std::pair<int, uint64_t> full_dataset_sizes[] = {{0, 1073739904}, {14, 1191180416},
     {17, 1216345216}, {56, 1543503488}, {158, 2399139968}, {203, 2776625536}, {211, 2843734144},
     {272, 3355440512}, {350, 4009751168}, {412, 4529846144}, {464, 4966054784}, {530, 5519703424},
     {656, 6576662912}, {657, 6585055616}, {658, 6593443456}, {739, 7272921472}, {751, 7373585792},
@@ -134,6 +134,17 @@ TEST(ethash, version)
     EXPECT_EQ(version(), expected_version);
 }
 
+TEST(ethash, get_epoch_number)
+{
+    EXPECT_EQ(get_epoch_number(0), 0);
+    EXPECT_EQ(get_epoch_number(1), 0);
+    EXPECT_EQ(get_epoch_number(29999), 0);
+    EXPECT_EQ(get_epoch_number(30000), 1);
+    EXPECT_EQ(get_epoch_number(30001), 1);
+    EXPECT_EQ(get_epoch_number(30001), 1);
+    EXPECT_EQ(get_epoch_number(5000000), 166);
+}
+
 TEST(ethash, light_cache)
 {
     struct light_cache_test_case
@@ -144,7 +155,7 @@ TEST(ethash, light_cache)
             const char* hash_hex;
         };
 
-        uint32_t epoch_number;
+        int epoch_number;
         std::vector<item_test> item_tests;
     };
 
@@ -371,7 +382,7 @@ namespace
 {
 struct hash_test_case
 {
-    uint32_t block_number;
+    int block_number;
     const char* header_hash_hex;
     const char* nonce_hex;
     const char* mix_hash_hex;
@@ -394,7 +405,7 @@ TEST(ethash, verify_hash_light)
 {
     for (const auto& t : hash_test_cases)
     {
-        const uint32_t epoch_number = t.block_number / epoch_length;
+        const int epoch_number = t.block_number / epoch_length;
         const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 
@@ -412,7 +423,7 @@ TEST(ethash, verify_hash)
 {
     for (const auto& t : hash_test_cases)
     {
-        const uint32_t epoch_number = t.block_number / epoch_length;
+        const int epoch_number = t.block_number / epoch_length;
         const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 

@@ -79,7 +79,7 @@ BENCHMARK(double_hash_optimized);
 
 static void seed(benchmark::State& state)
 {
-    const auto epoch_number = static_cast<uint32_t>(state.range(0));
+    const int epoch_number = state.range(0);
 
     for (auto _ : state)
     {
@@ -92,7 +92,7 @@ BENCHMARK(seed)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
 
 static void light_cache(benchmark::State& state)
 {
-    const auto epoch_number = static_cast<uint32_t>(state.range(0));
+    const int epoch_number = state.range(0);
     const auto size = ethash::calculate_light_cache_size(epoch_number);
     const auto seed = ethash::calculate_seed(epoch_number);
 

@@ -16,7 +16,7 @@ using timer = std::chrono::steady_clock;
 int main(int argc, const char* argv[])
 {
     size_t num_iterations = 10000;
-    uint32_t epoch = 0;
+    int epoch = 0;
     size_t num_threads = 1;
     uint64_t start_nonce = 0;
     bool light = false;
@@ -30,7 +30,7 @@ int main(int argc, const char* argv[])
         else if (arg == "-i" && i + 1 < argc)
             num_iterations = std::stoul(argv[++i]);
         else if (arg == "-e" && i + 1 < argc)
-            epoch = static_cast<uint32_t>(std::stoul(argv[++i]));
+            epoch = std::stoi(argv[++i]);
         else if (arg == "-t" && i + 1 < argc)
             num_threads = std::stoul(argv[++i]);
         else if (arg == "-n" && i + 1 < argc)
