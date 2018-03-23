@@ -33,6 +33,11 @@ cable_configure_compiler()
 if(CABLE_COMPILER_GNULIKE)
     # Do not allow lossy type conversions.
     add_compile_options(-Wconversion)
+
+    if(NOT CMAKE_CROSSCOMPILING)
+        # Tune for currently most common CPUs (flag not supported in mips64 cross-compiler).
+        add_compile_options(-mtune=generic)
+    endif()
 endif()
 
 cable_add_buildinfo_library(PREFIX ethash)
