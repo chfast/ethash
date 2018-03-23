@@ -206,7 +206,7 @@ namespace
 
 using lookup_fn = std::function<hash1024(const epoch_context&, size_t)>;
 
-inline hash256 hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce,
+inline result hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce,
     const lookup_fn& lookup)
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
@@ -235,29 +235,30 @@ inline hash256 hash_kernel(const epoch_context& context, const hash256& header_h
             mix.hwords[j] = fnv(mix.hwords[j], newdata.hwords[j]);
     }
 
-    hash256 cmix;
+    hash256 mix_hash;
     for (size_t i = 0; i < mix_hwords; i += 4)
     {
         uint32_t h1 = fnv(mix.hwords[i], mix.hwords[i + 1]);
         uint32_t h2 = fnv(h1, mix.hwords[i + 2]);
         uint32_t h3 = fnv(h2, mix.hwords[i + 3]);
-        cmix.hwords[i / 4] = h3;
+        mix_hash.hwords[i / 4] = h3;
     }
-    cmix = fix_endianness32(cmix);
+    mix_hash = fix_endianness32(mix_hash);
 
     uint64_t final_data[12];
     std::memcpy(&final_data[0], s.bytes, sizeof(s));
-    std::memcpy(&final_data[8], cmix.bytes, sizeof(cmix));
-    return keccak<256>(final_data, 12);
+    std::memcpy(&final_data[8], mix_hash.bytes, sizeof(mix_hash));
+    hash256 final_hash = keccak<256>(final_data, 12);
+    return {.final_hash = final_hash, .mix_hash = mix_hash};
 }
 }
 
-hash256 hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
+result hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
 {
     return hash_kernel(context, header_hash, nonce, calculate_dataset_item);
 }
 
-hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
+result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
 {
     assert(context.full_dataset != nullptr);
 
@@ -281,8 +282,8 @@ uint64_t search_light(const epoch_context& context, const hash256& header_hash, 
     const uint64_t end_nonce = start_nonce + iterations;
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
-        hash256 h = hash_light(context, header_hash, nonce);
-        if (fix_endianness(h.words[0]) < target)
+        result r = hash_light(context, header_hash, nonce);
+        if (fix_endianness(r.final_hash.words[0]) < target)
             return nonce;
     }
     return 0;
@@ -294,8 +295,8 @@ uint64_t search(const epoch_context& context, const hash256& header_hash, uint64
     const uint64_t end_nonce = start_nonce + iterations;
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
-        hash256 h = hash(context, header_hash, nonce);
-        if (fix_endianness(h.words[0]) < target)
+        result r = hash(context, header_hash, nonce);
+        if (fix_endianness(r.final_hash.words[0]) < target)
             return nonce;
     }
     return 0;

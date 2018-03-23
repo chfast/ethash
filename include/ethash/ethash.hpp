@@ -17,6 +17,12 @@ union hash256
     char bytes[32];
 };
 
+struct result
+{
+    hash256 final_hash;
+    hash256 mix_hash;
+};
+
 struct epoch_context;
 
 epoch_context* create_epoch_context(uint32_t epoch_number) noexcept;
@@ -34,9 +40,9 @@ void destroy_epoch_context(epoch_context* context) noexcept;
 bool init_full_dataset(epoch_context& context) noexcept;
 
 
-hash256 hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
+result hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
 
-hash256 hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
+result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
 
 uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);
