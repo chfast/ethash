@@ -51,6 +51,7 @@ epoch_context* create_epoch_context(int epoch_number) noexcept
     if (!context)
         return nullptr;  // Signal out-of-memory by returning null pointer.
 
+    context->epoch_number = epoch_number;
     context->cache = make_light_cache(cache_size, seed);
     context->full_dataset_size = calculate_full_dataset_size(epoch_number);
     return context;

@@ -37,6 +37,7 @@ using full_dataset_t = std::unique_ptr<hash1024[]>;
 
 struct epoch_context
 {
+    int epoch_number = -1;
     light_cache cache;
     size_t full_dataset_size;
     full_dataset_t full_dataset;
