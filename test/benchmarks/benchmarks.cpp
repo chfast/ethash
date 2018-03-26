@@ -121,4 +121,4 @@ static void calculate_dataset_item(benchmark::State& state)
 }
 BENCHMARK(calculate_dataset_item);
 
-BENCHMARK_MAIN();
+BENCHMARK_MAIN()

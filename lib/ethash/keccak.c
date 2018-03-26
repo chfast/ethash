@@ -33,7 +33,7 @@ static inline uint64_t rol(uint64_t x, unsigned s)
 
 void ethash_keccakf(uint64_t* a)
 {
-    uint64_t b[5] = {};
+    uint64_t b[5] = {0};
 
     for (int i = 0; i < 24; ++i)
     {
@@ -65,7 +65,7 @@ void ethash_double_keccakf(uint64_t* state)
 
     uint64_t* a = state;
     {
-        uint64_t b[5] = {};
+        uint64_t b[5] = {0};
 
         for (int i = 0; i < 24; ++i)
         {
@@ -93,7 +93,7 @@ void ethash_double_keccakf(uint64_t* state)
 
     a = state + 25;
     {
-        uint64_t b[5] = {};
+        uint64_t b[5] = {0};
 
         for (int i = 0; i < 24; ++i)
         {

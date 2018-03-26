@@ -250,7 +250,7 @@ inline result hash_kernel(const epoch_context& context, const hash256& header_ha
     std::memcpy(&final_data[0], s.bytes, sizeof(s));
     std::memcpy(&final_data[8], mix_hash.bytes, sizeof(mix_hash));
     hash256 final_hash = keccak<256>(final_data, 12);
-    return {.final_hash = final_hash, .mix_hash = mix_hash};
+    return {final_hash, mix_hash};
 }
 }
 
