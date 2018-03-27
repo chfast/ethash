@@ -496,12 +496,18 @@ TEST(ethash, verify_hash_light)
         const int epoch_number = t.block_number / epoch_length;
         const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
+        const hash256 mix_hash = to_hash256(t.mix_hash_hex);
+        const std::string target_hex{t.final_hash_hex, 16};
+        const uint64_t target = std::stoul(target_hex, nullptr, 16) + 1;
 
         epoch_context* context = create_epoch_context(epoch_number);
 
         result r = hash_light(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_hash_hex);
+
+        bool v = verify(*context, header_hash, mix_hash, nonce, target);
+        EXPECT_TRUE(v);
 
         destroy_epoch_context(context);
     }

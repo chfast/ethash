@@ -277,6 +277,22 @@ result hash(const epoch_context& context, const hash256& header_hash, uint64_t n
     return hash_kernel(context, header_hash, nonce, lazy_lookup);
 }
 
+bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
+    uint64_t nonce, uint64_t target)
+{
+    // TODO: Not optimal strategy.
+    // First we should check if mix -> final transition is correct,
+    // then check if the mix itself is valid.
+
+    result r = hash_light(context, header_hash, nonce);
+
+    if (std::memcmp(&r.mix_hash, &mix_hash, sizeof(mix_hash)) != 0)
+        return false;
+
+    // The final hash in BE order. Covert the top word to native integer.
+    return from_be(r.final_hash.words[0]) < target;
+}
+
 uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations)
 {
@@ -284,6 +300,7 @@ uint64_t search_light(const epoch_context& context, const hash256& header_hash, 
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash_light(context, header_hash, nonce);
+        // FIXME: Must be converted from BE, not from LE.
         if (fix_endianness(r.final_hash.words[0]) < target)
             return nonce;
     }
@@ -297,6 +314,7 @@ uint64_t search(const epoch_context& context, const hash256& header_hash, uint64
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash(context, header_hash, nonce);
+        // FIXME: Must be converted from BE, not from LE.
         if (fix_endianness(r.final_hash.words[0]) < target)
             return nonce;
     }

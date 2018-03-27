@@ -58,6 +58,11 @@ inline const hash256& fix_endianness64(const hash256& h)
     return h;
 }
 
+inline uint64_t from_be(uint64_t x)
+{
+    return __builtin_bswap64(x);
+}
+
 #elif __BYTE_ORDER == __BIG_ENDIAN
 
 inline uint32_t fix_endianness(uint32_t x)
@@ -110,6 +115,11 @@ inline hash256 fix_endianness64(hash256 hash)
     for (auto& w : hash.words)
         w = fix_endianness(w);
     return hash;
+}
+
+inline uint64_t from_be(uint64_t x)
+{
+    return x;
 }
 
 #endif
