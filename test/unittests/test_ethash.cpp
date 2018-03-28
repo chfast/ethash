@@ -484,11 +484,11 @@ TEST(ethash, verify_hash_light)
     for (const auto& t : hash_test_cases)
     {
         const int epoch_number = t.block_number / epoch_length;
-        const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
+        const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
         const hash256 mix_hash = to_hash256(t.mix_hash_hex);
         const std::string target_hex{t.final_hash_hex, 16};
-        const uint64_t target = std::stoul(target_hex, nullptr, 16) + 1;
+        const uint64_t target = std::stoull(target_hex, nullptr, 16) + 1;
 
         epoch_context* context = create_epoch_context(epoch_number);
 
@@ -508,7 +508,7 @@ TEST(ethash, verify_hash)
     for (const auto& t : hash_test_cases)
     {
         const int epoch_number = t.block_number / epoch_length;
-        const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
+        const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 
         epoch_context* context = create_epoch_context(epoch_number);

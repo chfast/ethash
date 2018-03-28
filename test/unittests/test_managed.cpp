@@ -20,7 +20,7 @@ TEST(managed, verify)
         const hash256 header_hash = to_hash256(t.header_hash_hex);
         const hash256 mix_hash = to_hash256(t.mix_hash_hex);
         const hash256 final_hash = to_hash256(t.final_hash_hex);
-        const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
+        const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
         const uint64_t target = final_hash.words[0] + 1;
         const bool valid = managed::verify(t.block_number, header_hash, mix_hash, nonce, target);
         EXPECT_TRUE(valid);
@@ -40,7 +40,7 @@ TEST(managed_multithreaded, verify_all)
                 const hash256 header_hash = to_hash256(t.header_hash_hex);
                 const hash256 mix_hash = to_hash256(t.mix_hash_hex);
                 const hash256 final_hash = to_hash256(t.final_hash_hex);
-                const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
+                const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
                 const uint64_t target = final_hash.words[0] + 1;
                 const bool valid =
                     managed::verify(t.block_number, header_hash, mix_hash, nonce, target);
@@ -62,7 +62,7 @@ TEST(managed_multithreaded, verify_parallel)
             const hash256 header_hash = to_hash256(t.header_hash_hex);
             const hash256 mix_hash = to_hash256(t.mix_hash_hex);
             const hash256 final_hash = to_hash256(t.final_hash_hex);
-            const uint64_t nonce = std::stoul(t.nonce_hex, nullptr, 16);
+            const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
             const uint64_t target = final_hash.words[0] + 1;
             return managed::verify(t.block_number, header_hash, mix_hash, nonce, target);
         }));
