@@ -11,14 +11,12 @@ include(CableCompilerSettings)
 include(CableToolchains)
 include(HunterGate)
 
+include(defaults/HunterCacheServers)
+
 cable_configure_toolchain(DEFAULT cxx11)
 
 set(HUNTER_CONFIGURATION_TYPES Release
     CACHE STRING "Build type of the Hunter packages")
-
-set(HUNTER_CACHE_SERVERS
-    "https://github.com/ethereum/hunter-cache;https://github.com/ingenue/hunter-cache"
-    CACHE STRING "Hunter cache servers")
 
 HunterGate(
     URL "https://github.com/ruslo/hunter/archive/v0.20.10.tar.gz"

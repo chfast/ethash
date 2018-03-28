@@ -3,14 +3,20 @@ version: "{build}"
 branches:
   only:
   - master
+  - appveyor
+  - hunter
 configuration:
   - Release
 environment:
   HUNTER_CACHE_TOKEN:
     secure: agYfiC1OKfHnGOJQolOBorIRovVTgDW3TJ8JOb2+0XZiAnNwbrtPegxaaFM8/VWu
 
-install: |
-  git submodule update --init
+install:
+  - git submodule update --init
+
+  # Python 3
+  - set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
+  - pip install requests
 
 before_build: |
   if not exist build mkdir build
