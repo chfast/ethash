@@ -72,4 +72,11 @@ uint64_t search_light(const epoch_context& context, const hash256& header_hash, 
 
 uint64_t search(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);
+
+
+namespace managed
+{
+bool verify(int block_number, const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
+    uint64_t target);
+}
 }

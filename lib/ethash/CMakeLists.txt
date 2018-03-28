@@ -4,6 +4,7 @@ add_library(
     ethash
     endianness.hpp
     ${include_dir}/ethash/ethash.hpp ethash-internal.hpp ethash.cpp
+    managed.cpp
     keccak.hpp keccak.c
     params.hpp
     utils.hpp utils.cpp
