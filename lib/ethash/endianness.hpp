@@ -12,7 +12,26 @@
 
 #include "ethash-internal.hpp"
 
+#if _WIN32
+
+#include <stdlib.h>
+
+#define bswap32 _byteswap_ulong
+#define bswap64 _byteswap_uint64
+
+// On Windows assume little endian.
+#define __LITTLE_ENDIAN 1234
+#define __BIG_ENDIAN 4321
+#define __BYTE_ORDER __LITTLE_ENDIAN
+
+#else
+
 #include <endian.h>
+
+#define bswap32 __builtin_bswap32
+#define bswap64 __builtin_bswap64
+
+#endif
 
 namespace ethash
 {
@@ -60,19 +79,19 @@ inline const hash256& fix_endianness64(const hash256& h)
 
 inline uint64_t from_be(uint64_t x)
 {
-    return __builtin_bswap64(x);
+    return bswap64(x);
 }
 
 #elif __BYTE_ORDER == __BIG_ENDIAN
 
 inline uint32_t fix_endianness(uint32_t x)
 {
-    return __builtin_bswap32(x);
+    return bswap32(x);
 }
 
 inline uint64_t fix_endianness(uint64_t x)
 {
-    return __builtin_bswap64(x);
+    return bswap64(x);
 }
 
 inline hash1024 fix_endianness32(hash1024 hash)

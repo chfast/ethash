@@ -5,6 +5,9 @@ branches:
   - master
 configuration:
   - Release
+environment:
+  HUNTER_CACHE_TOKEN:
+    secure: agYfiC1OKfHnGOJQolOBorIRovVTgDW3TJ8JOb2+0XZiAnNwbrtPegxaaFM8/VWu
 
 install: |
   git submodule update --init

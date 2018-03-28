@@ -16,7 +16,8 @@ cable_configure_toolchain(DEFAULT cxx11)
 set(HUNTER_CONFIGURATION_TYPES Release
     CACHE STRING "Build type of the Hunter packages")
 
-set(HUNTER_CACHE_SERVERS https://github.com/ethereum/hunter-cache
+set(HUNTER_CACHE_SERVERS
+    "https://github.com/ethereum/hunter-cache;https://github.com/ingenue/hunter-cache"
     CACHE STRING "Hunter cache servers")
 
 HunterGate(
