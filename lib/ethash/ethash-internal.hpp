@@ -26,10 +26,12 @@ union hash512
 union hash1024
 {
     // TODO: Is the array worse than 2 fields for memory aliasing?
-    hash512 hashes[2] = {{}, {}};
+    hash512 hashes[2];
     uint64_t words[16];
     uint32_t hwords[32];
     char bytes[128];
+
+    constexpr hash1024() : hashes{{}, {}} {}
 };
 
 using light_cache = std::vector<hash512>;

@@ -34,6 +34,17 @@ epoch_context create_epoch_context_mock(int epoch_number)
 }
 }
 
+
+TEST(hash, hash1024_init)
+{
+    ethash::hash1024 hash;
+    ASSERT_EQ(hash.words[0], 0);
+    ASSERT_EQ(hash.words[1], 0);
+    ASSERT_EQ(hash.words[14], 0);
+    ASSERT_EQ(hash.words[15], 0);
+}
+
+
 class calculate_light_cache_size_test
   : public ::testing::TestWithParam<std::pair<int, uint64_t>>
 {
