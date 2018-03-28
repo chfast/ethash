@@ -6,7 +6,10 @@
 #include <ethash/ethash-internal.hpp>
 #include <ethash/keccak.hpp>
 
+#pragma warning(push)
+#pragma warning(disable: 4141)
 #include <benchmark/benchmark.h>
+#pragma warning(pop)
 
 
 static void hash256(benchmark::State& state)
