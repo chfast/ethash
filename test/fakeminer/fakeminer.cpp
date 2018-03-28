@@ -6,6 +6,7 @@
 #include <chrono>
 #include <future>
 #include <iostream>
+#include <string>
 #include <unordered_map>
 #include <vector>
 

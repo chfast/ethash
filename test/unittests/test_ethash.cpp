@@ -13,6 +13,8 @@
 #include "test_cases.hpp"
 
 #include <gtest/gtest.h>
+
+#include <array>
 #include <future>
 
 using namespace ethash;
