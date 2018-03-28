@@ -27,3 +27,6 @@ build:
   project: c:/projects/ethash/build/ethash.sln
   parallel: true
   verbosity: minimal
+
+after_build: |
+  C:\projects\ethash\build\test\unittests\Release\ethash-test.exe

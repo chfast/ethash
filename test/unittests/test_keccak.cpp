@@ -84,7 +84,7 @@ TEST(helpers, to_hex)
     h.bytes[9] = 9;
     h.bytes[10] = 10;
 
-    h.bytes[31] = char(0xff);
+    h.bytes[31] = -1;
 
     auto s = to_hex(h);
     EXPECT_EQ(s, "000102030405060708090a0000000000000000000000000000000000000000ff");
