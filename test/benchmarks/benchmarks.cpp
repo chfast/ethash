@@ -92,7 +92,7 @@ static void seed(benchmark::State& state)
         benchmark::DoNotOptimize(seed.bytes);
     }
 }
-BENCHMARK(seed)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK(seed)->Arg(1)->Arg(10)->Arg(100)->Arg(1000)->Arg(10000);
 
 
 static void light_cache(benchmark::State& state)
