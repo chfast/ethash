@@ -64,23 +64,32 @@ void destroy_epoch_context(epoch_context* context) noexcept
 
 uint64_t calculate_light_cache_size(int epoch_number) noexcept
 {
-    // FIXME: Handle overflow.
-    uint64_t size_upper_bound = light_cache_init_size + uint64_t(epoch_number) * light_cache_growth;
-    uint64_t num_items_upper_bound = size_upper_bound / mixhash_size;
-    uint64_t num_items = find_largest_prime(num_items_upper_bound);
-    return num_items * mixhash_size;  //< This cannot overflow.
+    static constexpr int item_size = sizeof(hash512);
+    static constexpr int num_items_init = light_cache_init_size / item_size;
+    static constexpr int num_items_growth = light_cache_growth / item_size;
+    static_assert(
+        light_cache_init_size % item_size == 0, "light_cache_init_size not multiple of item size");
+    static_assert(
+        light_cache_growth % item_size == 0, "light_cache_growth not multiple of item size");
+
+    int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
+    int num_items = find_largest_prime(num_items_upper_bound);
+    return static_cast<uint64_t>(num_items) * item_size;
 }
 
 uint64_t calculate_full_dataset_size(int epoch_number) noexcept
 {
-    static constexpr size_t item_size = sizeof(hash1024);
+    static constexpr int item_size = sizeof(hash1024);
+    static constexpr int num_items_init = full_dataset_init_size / item_size;
+    static constexpr int num_items_growth = full_dataset_growth / item_size;
+    static_assert(full_dataset_init_size % item_size == 0,
+        "full_dataset_init_size not multiple of item size");
+    static_assert(
+        full_dataset_growth % item_size == 0, "full_dataset_growth not multiple of item size");
 
-    // FIXME: Handle overflow.
-    uint64_t size_upper_bound =
-        full_dataset_init_size + uint64_t(epoch_number) * full_dataset_growth;
-    uint64_t num_items_upper_bound = size_upper_bound / item_size;
-    uint64_t num_items = find_largest_prime(num_items_upper_bound);
-    return num_items * item_size;  //< This cannot overflow.
+    int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
+    int num_items = find_largest_prime(num_items_upper_bound);
+    return static_cast<uint64_t>(num_items) * item_size;
 }
 
 hash256 calculate_seed(int epoch_number) noexcept

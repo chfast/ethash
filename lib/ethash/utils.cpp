@@ -7,18 +7,15 @@
 
 namespace ethash
 {
-bool is_prime(size_t number) noexcept
+bool is_prime(int number) noexcept
 {
-    // FIXME: For 64-bit numbers this implementation is not feasible, but we
-    //        need more than 32-bits anyway (size_t is bad type).
-
     if (number <= 1)
         return false;
 
     if (number % 2 == 0 && number > 2)
         return false;
 
-    for (size_t d = 3; (d * d) <= number; d += 2)
+    for (int d = 3; (d * d) <= number; d += 2)
     {
         if (number % d == 0)
             return false;
@@ -27,11 +24,11 @@ bool is_prime(size_t number) noexcept
     return true;
 }
 
-size_t find_largest_prime(size_t upper_bound) noexcept
+int find_largest_prime(int upper_bound) noexcept
 {
     assert(upper_bound > 2);
 
-    size_t n = upper_bound;
+    int n = upper_bound;
 
     // If even number, skip it.
     if (n % 2 == 0)

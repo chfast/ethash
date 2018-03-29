@@ -8,13 +8,10 @@
 
 namespace ethash
 {
-constexpr static uint64_t light_cache_init_size = 1 << 24;
-constexpr static uint64_t light_cache_growth = 1 << 17;
+constexpr static int light_cache_init_size = 1 << 24;
+constexpr static int light_cache_growth = 1 << 17;
 constexpr static size_t light_cache_rounds = 3;
-constexpr static uint64_t full_dataset_init_size = 1 << 30;
-constexpr static uint64_t full_dataset_growth = 1 << 23;
+constexpr static int full_dataset_init_size = 1 << 30;
+constexpr static int full_dataset_growth = 1 << 23;
 constexpr static uint32_t full_dataset_item_parents = 256;
-
-constexpr static size_t mixhash_size = 64;
-
 }
