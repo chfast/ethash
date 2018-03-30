@@ -38,6 +38,14 @@ epoch_context create_epoch_context_mock(int epoch_number)
 }
 
 
+TEST(hash, hash256_from_bytes)
+{
+    const uint8_t bytes[32] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+    auto h = hash256::from_bytes(bytes);
+    EXPECT_EQ(to_hex(h), "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+}
+
 TEST(hash, hash1024_init)
 {
     ethash::hash1024 hash;

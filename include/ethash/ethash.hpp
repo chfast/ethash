@@ -13,8 +13,8 @@
 
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 namespace ethash
 {
@@ -28,6 +28,17 @@ union hash256
     };
     uint32_t hwords[8];
     char bytes[32];
+
+    /// Named constructor from bytes.
+    ///
+    /// @param bytes  A pointer to array of at least 32 bytes.
+    /// @return       The constructed hash.
+    static hash256 from_bytes(const uint8_t bytes[32]) noexcept
+    {
+        hash256 h;
+        std::memcpy(&h, bytes, sizeof(h));
+        return h;
+    }
 };
 
 struct result
