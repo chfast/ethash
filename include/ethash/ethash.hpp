@@ -74,6 +74,17 @@ uint64_t search(const epoch_context& context, const hash256& header_hash, uint64
     uint64_t start_nonce, size_t iterations);
 
 
+/// Tries to find the epoch number matching the given seed hash.
+///
+/// Mining pool protocols (many variants of stratum and "getwork") send out
+/// seed hash instead of epoch number to workers. This function tries to recover
+/// the epoch number from this seed hash.
+///
+/// @param seed  Ethash seed hash.
+/// @return      The epoch number or -1 if not found.
+int find_epoch_number(const hash256& seed) noexcept;
+
+
 namespace managed
 {
 bool verify(int block_number, const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,

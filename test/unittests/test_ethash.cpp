@@ -7,6 +7,7 @@
 #include <ethash/endianness.hpp>
 #include <ethash/ethash-internal.hpp>
 #include <ethash/ethash.hpp>
+#include <ethash/keccak.hpp>
 #include <ethash/params.hpp>
 
 #include "helpers.hpp"
@@ -150,11 +151,130 @@ TEST(ethash, calculate_seed_171)
     EXPECT_EQ(sh, "a9b0e0c9aca72c07ba06b5bbdae8b8f69e61878301508473379bb4f71807d707");
 }
 
-TEST(ethash, calculate_seed_2018)
+TEST(ethash, calculate_seed_2048)
 {
     hash256 seed = calculate_seed(2048);
     std::string sh = to_hex(seed);
     EXPECT_EQ(sh, "20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920");
+}
+
+TEST(ethash, calculate_seed_29998)
+{
+    hash256 seed = calculate_seed(29998);
+    std::string sh = to_hex(seed);
+    EXPECT_EQ(sh, "1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164");
+}
+
+TEST(ethash, calculate_seed_29999)
+{
+    hash256 seed = calculate_seed(29999);
+    std::string sh = to_hex(seed);
+    EXPECT_EQ(sh, "ee1d0f61b054dff0f3025ebba821d405c8dc19a983e582e9fa5436fc3e7a07d8");
+}
+
+TEST(ethash, find_epoch_number_29998)
+{
+    hash256 seed = to_hash256("1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164");
+
+    int epoch = find_epoch_number(seed);
+    EXPECT_EQ(epoch, 29998);
+}
+
+TEST(ethash, find_epoch_number_double_ascending)
+{
+    hash256 seed_29998 =
+        to_hash256("1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164");
+    hash256 seed_29999 =
+        to_hash256("ee1d0f61b054dff0f3025ebba821d405c8dc19a983e582e9fa5436fc3e7a07d8");
+
+    int epoch = find_epoch_number(seed_29998);
+    EXPECT_EQ(epoch, 29998);
+
+    // The second call should be fast.
+    epoch = find_epoch_number(seed_29999);
+    EXPECT_EQ(epoch, 29999);
+}
+
+TEST(ethash, find_epoch_number_double_descending)
+{
+    hash256 seed_29998 =
+        to_hash256("1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164");
+    hash256 seed_29999 =
+        to_hash256("ee1d0f61b054dff0f3025ebba821d405c8dc19a983e582e9fa5436fc3e7a07d8");
+
+    int epoch = find_epoch_number(seed_29999);
+    EXPECT_EQ(epoch, 29999);
+
+    // The second call should be fast.
+    epoch = find_epoch_number(seed_29998);
+    EXPECT_EQ(epoch, 29998);
+}
+
+TEST(ethash, find_epoch_number_sequential)
+{
+    hash256 seed;
+    for (int i = 0; i < 30000; ++i)
+    {
+        auto e = find_epoch_number(seed);
+        EXPECT_EQ(e, i);
+        seed = keccak256(seed);
+    }
+}
+
+TEST(ethash, find_epoch_number_sequential_gap)
+{
+    constexpr int start_epoch = 200;
+    hash256 seed = calculate_seed(start_epoch);
+    for (int i = start_epoch; i < 30000; ++i)
+    {
+        auto e = find_epoch_number(seed);
+        EXPECT_EQ(e, i);
+        seed = keccak256(seed);
+    }
+}
+
+TEST(ethash, find_epoch_number_descending)
+{
+    for (int i = 2050; i >= 0; --i)
+    {
+        auto seed = calculate_seed(i);
+        auto e = find_epoch_number(seed);
+        EXPECT_EQ(e, i);
+    }
+}
+
+TEST(ethash, find_epoch_number_invalid)
+{
+    hash256 fake_seed;
+    fake_seed.hwords[0] = 1;
+    int epoch = find_epoch_number(fake_seed);
+    EXPECT_EQ(epoch, -1);
+}
+
+TEST(ethash, find_epoch_number_epoch_too_high)
+{
+    hash256 seed = calculate_seed(30000);
+    int epoch = find_epoch_number(seed);
+    EXPECT_EQ(epoch, -1);
+}
+
+TEST(ethash_multithreaded, find_epoch_number_sequential)
+{
+    auto fn = [] {
+        hash256 seed;
+        for (int i = 0; i < 30000; ++i)
+        {
+            auto e = find_epoch_number(seed);
+            EXPECT_EQ(e, i);
+            seed = keccak256(seed);
+        }
+    };
+
+    std::array<std::future<void>, 4> futures;
+    for (auto& f : futures)
+        f = std::async(std::launch::async, fn);
+    for (auto& f : futures)
+        f.wait();
 }
 
 TEST(ethash, version)

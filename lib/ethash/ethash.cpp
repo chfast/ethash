@@ -100,6 +100,48 @@ hash256 calculate_seed(int epoch_number) noexcept
     return seed;
 }
 
+int find_epoch_number(const hash256& seed) noexcept
+{
+    static constexpr int num_tries = 30000;  // Divisible by 16.
+
+    // Thread-local cache of the last search.
+    static thread_local int cached_epoch_number = 0;
+    static thread_local hash256 cached_seed;
+
+    // Load from memory once (memory will be clobbered by keccak256()).
+    uint32_t seed_part = seed.hwords[0];
+    const int e = cached_epoch_number;
+    hash256 s = cached_seed;
+
+    if (s.hwords[0] == seed_part)
+        return e;
+
+    // Try the next seed, will match for sequential epoch access.
+    s = keccak256(s);
+    if (s.hwords[0] == seed_part)
+    {
+        cached_seed = s;
+        cached_epoch_number = e + 1;
+        return e + 1;
+    }
+
+    // Search for matching seed starting from epoch 0.
+    s = {};
+    for (int i = 0; i < num_tries; ++i)
+    {
+        if (s.hwords[0] == seed_part)
+        {
+            cached_seed = s;
+            cached_epoch_number = i;
+            return i;
+        }
+
+        s = keccak256(s);
+    }
+
+    return -1;
+}
+
 light_cache make_light_cache(size_t size, const hash256& seed)
 {
     size_t n = size / sizeof(hash512);
