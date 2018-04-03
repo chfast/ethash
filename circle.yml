@@ -28,13 +28,15 @@ defaults:
       # (ninja is using relative paths otherwise).
       working_directory: ~/build
       command: |
-        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE $CMAKE_OPTIONS
+        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=/tmp/local $CMAKE_OPTIONS
 
   build: &build
     run:
       name: "Build"
       working_directory: ~/build
-      command: cmake --build . -- -j $BUILD_PARALLEL_JOBS
+      command: |
+        cmake --build . -- -j $BUILD_PARALLEL_JOBS
+        cmake --build . --target install
 
   test: &test
     run:
@@ -42,6 +44,15 @@ defaults:
       working_directory: ~/build
       command: |
         test/unittests/ethash-test
+
+  test-cmake-config: &test-cmake-config
+    run:
+      name: "Test CMake config"
+      working_directory: ~/project/test/integration/cmake-config
+      command: |
+        cmake -DCMAKE_PREFIX_PATH=/tmp/local .
+        cmake --build .
+        ./ethash-cmake-config-test
 
   test-mips64: &test-mips64
     run:
@@ -74,6 +85,7 @@ jobs:
       - *configure
       - *build
       - *test
+      - *test-cmake-config
 
   linux-gcc6-coverage:
     environment:
