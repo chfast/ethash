@@ -1,16 +1,60 @@
+# Copyright 2018 Pawel Bylica.
+# Licensed under the Apache License, Version 2.0. See the LICENSE file.
+
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
 set(include_dir ${PROJECT_SOURCE_DIR}/include)
 
 add_library(
     ethash
     endianness.hpp
-    ${include_dir}/ethash/ethash.hpp ethash-internal.hpp ethash.cpp
+    ${include_dir}/ethash/ethash.hpp
+    ethash-internal.hpp
+    ethash.cpp
     managed.cpp
-    keccak.hpp keccak.c
+    keccak.hpp
+    keccak.c
     params.hpp
-    utils.hpp utils.cpp
+    utils.hpp
+    utils.cpp
 )
 
-target_include_directories(ethash PUBLIC ${include_dir})
+target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
+
+write_basic_package_version_file(ethashConfigVersion.cmake COMPATIBILITY SameMajorVersion)
+
+configure_package_config_file(
+    ../../cmake/Config.cmake.in
+    ethashConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ethash
+)
+
+install(
+    TARGETS ethash
+    EXPORT ethashTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(
+    EXPORT ethashTargets
+    NAMESPACE ethash::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ethash
+)
+
+install(
+    DIRECTORY
+    ${include_dir}/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+    FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/ethashConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/ethashConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ethash
+)
 
 get_filename_component(ETHASH_PRIVATE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.. ABSOLUTE)
 set(ETHASH_PRIVATE_INCLUDE_DIR ${ETHASH_PRIVATE_INCLUDE_DIR} PARENT_SCOPE)
