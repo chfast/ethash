@@ -313,7 +313,7 @@ result hash(const epoch_context& context, const hash256& header_hash, uint64_t n
 {
     assert(context.full_dataset != nullptr);
 
-    static constexpr auto lazy_lookup = [](const epoch_context& context, size_t index) {
+    static const auto lazy_lookup = [](const epoch_context& context, size_t index) {
         hash1024& item = context.full_dataset[index];
         if (item.words[0] == 0)
         {

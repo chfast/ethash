@@ -7,7 +7,7 @@
 #include <ethash/keccak.hpp>
 
 #pragma warning(push)
-#pragma warning(disable: 4141)
+#pragma warning(disable: 4141 4800)
 #include <benchmark/benchmark.h>
 #pragma warning(pop)
 

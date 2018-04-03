@@ -105,6 +105,34 @@ jobs:
       - *test
       - *upload-coverage-data
 
+  linux-gcc4.8:
+    environment:
+      - CXX: g++-4.8
+      - CC:  gcc-4.8
+      - BUILD_PARALLEL_JOBS: 2
+      - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF
+    docker:
+      - image: ethereum/cpp-build-env
+    steps:
+      - checkout
+      - *update-submodules
+      - *configure
+      - *build
+
+  linux-clang3.8:
+    environment:
+      - CXX: clang++-3.8
+      - CC:  clang-3.8
+      - BUILD_PARALLEL_JOBS: 2
+      - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF
+    docker:
+      - image: ethereum/cpp-build-env:experimental
+    steps:
+      - checkout
+      - *update-submodules
+      - *configure
+      - *build
+
   mips64:
     environment:
       - BUILD_PARALLEL_JOBS: 2
@@ -138,4 +166,6 @@ workflows:
     jobs:
       - linux-gcc6-coverage
       - linux-clang5
+      - linux-gcc4.8
+      - linux-clang3.8
       - mips64
