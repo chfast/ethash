@@ -285,12 +285,6 @@ TEST(ethash_multithreaded, find_epoch_number_sequential)
         f.wait();
 }
 
-TEST(ethash, version)
-{
-    std::string expected_version{"0.1.0.dev0"};
-    EXPECT_EQ(version(), expected_version);
-}
-
 TEST(ethash, get_epoch_number)
 {
     EXPECT_EQ(get_epoch_number(0), 0);

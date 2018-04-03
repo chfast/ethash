@@ -11,7 +11,6 @@
 #include "keccak.hpp"
 #include "params.hpp"
 #include "utils.hpp"
-#include <ethash-buildinfo.h>
 
 namespace ethash
 {
@@ -370,10 +369,5 @@ uint64_t search(const epoch_context& context, const hash256& header_hash, uint64
             return nonce;
     }
     return 0;
-}
-
-const char* version() noexcept
-{
-    return ethash_get_buildinfo()->project_version;
 }
 }

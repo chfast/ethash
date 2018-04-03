@@ -11,7 +11,6 @@ add_library(
 )
 
 target_include_directories(ethash PUBLIC ${include_dir})
-target_link_libraries(ethash PRIVATE ethash-buildinfo)
 
 get_filename_component(ETHASH_PRIVATE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.. ABSOLUTE)
 set(ETHASH_PRIVATE_INCLUDE_DIR ${ETHASH_PRIVATE_INCLUDE_DIR} PARENT_SCOPE)

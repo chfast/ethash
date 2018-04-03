@@ -56,6 +56,4 @@ light_cache make_light_cache(size_t size, const hash256& seed);
 hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noexcept;
 
 hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) noexcept;
-
-const char* version() noexcept;
 }

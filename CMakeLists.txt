@@ -5,7 +5,6 @@ cmake_minimum_required(VERSION 3.5)
 
 include(cmake/cable/bootstrap.cmake)
 
-include(CableBuildInfo)
 include(CableBuildType)
 include(CableCompilerSettings)
 include(CableToolchains)
@@ -38,8 +37,6 @@ if(CABLE_COMPILER_GNULIKE)
         add_compile_options(-mtune=generic)
     endif()
 endif()
-
-cable_add_buildinfo_library(PREFIX ethash)
 
 add_subdirectory(lib/ethash)
 
