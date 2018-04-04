@@ -592,6 +592,8 @@ TEST(ethash_multithreaded, small_dataset)
 
     for (auto& f : futures)
         EXPECT_EQ(f.get(), 10498);
+
+    std::free(context.full_dataset);
 }
 
 TEST(ethash, small_dataset_light)
@@ -609,14 +611,9 @@ TEST(ethash, small_dataset_light)
     EXPECT_EQ(solution, 0);
 }
 
-TEST(ethash, DISABLED_init_full_dataset_oom)
+TEST(ethash, init_full_dataset_oom)
 {
-    // FIXME: Does trick does not work on macOS. Replace it with malloc hooks.
     auto mock_context = create_epoch_context_mock(0);
-
-    constexpr uint64_t max = std::numeric_limits<size_t>::max();
-    uint64_t big_size = uint64_t(1) << 40;
-    size_t size = static_cast<size_t>(std::min(big_size, max));
-    mock_context.full_dataset_size = size;
+    mock_context.full_dataset_size = std::numeric_limits<size_t>::max();
     EXPECT_FALSE(init_full_dataset(mock_context));
 }

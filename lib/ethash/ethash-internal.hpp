@@ -35,7 +35,6 @@ union hash1024
 };
 
 using light_cache = std::vector<hash512>;
-using full_dataset_t = std::unique_ptr<hash1024[]>;
 
 uint64_t calculate_light_cache_size(int epoch_number) noexcept;
 
@@ -55,5 +54,5 @@ extern "C" struct ethash_epoch_context
     int epoch_number = -1;
     ethash::light_cache cache;
     size_t full_dataset_size;
-    ethash::full_dataset_t full_dataset;
+    ethash::hash1024* full_dataset = nullptr;
 };

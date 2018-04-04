@@ -4,6 +4,7 @@
 #include "ethash-internal.hpp"
 
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 #include <functional>
 #include <limits>
@@ -228,7 +229,7 @@ bool init_full_dataset(ethash_epoch_context& context) noexcept
     assert(context.full_dataset == nullptr);
 
     const size_t num_items = context.full_dataset_size / sizeof(hash1024);
-    context.full_dataset.reset(new (std::nothrow) hash1024[num_items]);
+    context.full_dataset = reinterpret_cast<hash1024*>(std::calloc(num_items, sizeof(hash1024)));
     return context.full_dataset != nullptr;
 }
 
@@ -371,5 +372,6 @@ extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) n
 
 extern "C" void ethash_destroy_epoch_context(ethash_epoch_context* context) noexcept
 {
+    std::free(context->full_dataset);
     delete context;
 }
