@@ -23,7 +23,7 @@ using namespace ethash;
 namespace
 {
 /// Creates the epoch context of the correct size but filled with fake data.
-epoch_context create_epoch_context_mock(int epoch_number)
+ethash_epoch_context create_epoch_context_mock(int epoch_number)
 {
     // Prepare a constant endianness-independent cache item.
     hash512 fill;
@@ -31,7 +31,7 @@ epoch_context create_epoch_context_mock(int epoch_number)
     std::fill_n(fill.words, sizeof(hash512) / sizeof(uint64_t), fix_endianness(fill_word));
     const size_t cache_size = calculate_light_cache_size(epoch_number);
 
-    epoch_context context = {};
+    ethash_epoch_context context = {};
     context.cache = light_cache(cache_size, fill);
     context.full_dataset_size = calculate_full_dataset_size(epoch_number);
     return context;
@@ -349,7 +349,7 @@ TEST(ethash, light_cache)
 
     for (const auto& t : test_cases)
     {
-        auto* context = create_epoch_context(t.epoch_number);
+        auto* context = ethash_create_epoch_context(t.epoch_number);
 
         for (auto& u : t.item_tests)
         {
@@ -358,7 +358,7 @@ TEST(ethash, light_cache)
                 << "epoch: " << t.epoch_number << " item: " << u.index;
         }
 
-        destroy_epoch_context(context);
+        ethash_destroy_epoch_context(context);
     }
 }
 
@@ -389,7 +389,7 @@ TEST(ethash, fake_dataset_partial_items)
     // clang-format on
 
     // Mock the epoch context.
-    epoch_context context = create_epoch_context_mock(0);
+    ethash_epoch_context context = create_epoch_context_mock(0);
 
     for (const auto& t : test_cases)
     {
@@ -452,7 +452,7 @@ TEST(ethash, fake_dataset_items)
     // clang-format on
 
     // Mock the epoch context.
-    epoch_context context = create_epoch_context_mock(0);
+    ethash_epoch_context context = create_epoch_context_mock(0);
 
     for (const auto& t : test_cases)
     {
@@ -518,7 +518,7 @@ TEST(ethash, dataset_items_epoch13)
 
 
     // Create example epoch context.
-    epoch_context* context = create_epoch_context(13);
+    ethash_epoch_context* context = ethash_create_epoch_context(13);
 
     for (const auto& t : test_cases)
     {
@@ -527,7 +527,7 @@ TEST(ethash, dataset_items_epoch13)
         EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
     }
 
-    destroy_epoch_context(context);
+    ethash_destroy_epoch_context(context);
 }
 
 TEST(ethash, verify_hash_light)
@@ -541,7 +541,7 @@ TEST(ethash, verify_hash_light)
         const std::string target_hex{t.final_hash_hex, 16};
         const uint64_t target = std::stoull(target_hex, nullptr, 16) + 1;
 
-        epoch_context* context = create_epoch_context(epoch_number);
+        ethash_epoch_context* context = ethash_create_epoch_context(epoch_number);
 
         result r = hash_light(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
@@ -550,7 +550,7 @@ TEST(ethash, verify_hash_light)
         bool v = verify(*context, header_hash, mix_hash, nonce, target);
         EXPECT_TRUE(v);
 
-        destroy_epoch_context(context);
+        ethash_destroy_epoch_context(context);
     }
 }
 
@@ -562,14 +562,14 @@ TEST(ethash, verify_hash)
         const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 
-        epoch_context* context = create_epoch_context(epoch_number);
+        ethash_epoch_context* context = ethash_create_epoch_context(epoch_number);
         init_full_dataset(*context);
 
         result r = hash(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_hash_hex);
 
-        destroy_epoch_context(context);
+        ethash_destroy_epoch_context(context);
     }
 }
 
@@ -582,7 +582,7 @@ TEST(ethash_multithreaded, small_dataset)
     constexpr size_t num_dataset_items = 501;
     constexpr uint64_t target = uint64_t(1) << 50;
 
-    epoch_context context = create_epoch_context_mock(0);
+    ethash_epoch_context context = create_epoch_context_mock(0);
     context.full_dataset_size = num_dataset_items * sizeof(hash1024);
     init_full_dataset(context);
 
@@ -599,7 +599,7 @@ TEST(ethash, small_dataset_light)
     constexpr size_t num_dataset_items = 501;
     constexpr uint64_t target = uint64_t(1) << 55;
 
-    epoch_context context = create_epoch_context_mock(0);
+    ethash_epoch_context context = create_epoch_context_mock(0);
     context.full_dataset_size = num_dataset_items * sizeof(hash1024);
 
     uint64_t solution = search_light(context, {}, target, 475, 10);

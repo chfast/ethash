@@ -41,26 +41,6 @@ hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 }
 }
 
-epoch_context* create_epoch_context(int epoch_number) noexcept
-{
-    const size_t cache_size = calculate_light_cache_size(epoch_number);
-    hash256 seed = calculate_seed(epoch_number);
-
-    epoch_context* context = new (std::nothrow) epoch_context;
-    if (!context)
-        return nullptr;  // Signal out-of-memory by returning null pointer.
-
-    context->epoch_number = epoch_number;
-    context->cache = make_light_cache(cache_size, seed);
-    context->full_dataset_size = calculate_full_dataset_size(epoch_number);
-    return context;
-}
-
-void destroy_epoch_context(epoch_context* context) noexcept
-{
-    delete context;
-}
-
 uint64_t calculate_light_cache_size(int epoch_number) noexcept
 {
     static constexpr int item_size = sizeof(hash512);
@@ -205,7 +185,7 @@ hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) n
 ///
 /// This consist of two 512-bit items produced by calculate_dataset_item_partial().
 /// Here the computation is done interleaved for better performance.
-hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noexcept
+hash1024 calculate_dataset_item(const ethash_epoch_context& context, size_t index) noexcept
 {
     const light_cache& cache = context.cache;
 
@@ -243,7 +223,7 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
     return double_keccak(fix_endianness32(mix));  // Covert 32-bit words back to bytes and hash.
 }
 
-bool init_full_dataset(epoch_context& context) noexcept
+bool init_full_dataset(ethash_epoch_context& context) noexcept
 {
     assert(context.full_dataset == nullptr);
 
@@ -255,9 +235,9 @@ bool init_full_dataset(epoch_context& context) noexcept
 namespace
 {
 
-using lookup_fn = std::function<hash1024(const epoch_context&, size_t)>;
+using lookup_fn = std::function<hash1024(const ethash_epoch_context&, size_t)>;
 
-inline result hash_kernel(const epoch_context& context, const hash256& header_hash, uint64_t nonce,
+inline result hash_kernel(const ethash_epoch_context& context, const hash256& header_hash, uint64_t nonce,
     const lookup_fn& lookup)
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
@@ -304,16 +284,16 @@ inline result hash_kernel(const epoch_context& context, const hash256& header_ha
 }
 }
 
-result hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
+result hash_light(const ethash_epoch_context& context, const hash256& header_hash, uint64_t nonce)
 {
     return hash_kernel(context, header_hash, nonce, calculate_dataset_item);
 }
 
-result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
+result hash(const ethash_epoch_context& context, const hash256& header_hash, uint64_t nonce)
 {
     assert(context.full_dataset != nullptr);
 
-    static const auto lazy_lookup = [](const epoch_context& context, size_t index) {
+    static const auto lazy_lookup = [](const ethash_epoch_context& context, size_t index) {
         hash1024& item = context.full_dataset[index];
         if (item.words[0] == 0)
         {
@@ -327,7 +307,7 @@ result hash(const epoch_context& context, const hash256& header_hash, uint64_t n
     return hash_kernel(context, header_hash, nonce, lazy_lookup);
 }
 
-bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
+bool verify(const ethash_epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
     uint64_t nonce, uint64_t target)
 {
     // TODO: Not optimal strategy.
@@ -343,8 +323,8 @@ bool verify(const epoch_context& context, const hash256& header_hash, const hash
     return from_be(r.final_hash.words[0]) < target;
 }
 
-uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
-    uint64_t start_nonce, size_t iterations)
+uint64_t search_light(const ethash_epoch_context& context, const hash256& header_hash,
+    uint64_t target, uint64_t start_nonce, size_t iterations)
 {
     const uint64_t end_nonce = start_nonce + iterations;
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
@@ -357,7 +337,7 @@ uint64_t search_light(const epoch_context& context, const hash256& header_hash, 
     return 0;
 }
 
-uint64_t search(const epoch_context& context, const hash256& header_hash, uint64_t target,
+uint64_t search(const ethash_epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations)
 {
     const uint64_t end_nonce = start_nonce + iterations;
@@ -370,4 +350,26 @@ uint64_t search(const epoch_context& context, const hash256& header_hash, uint64
     }
     return 0;
 }
+}
+
+using namespace ethash;
+
+extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
+{
+    const size_t cache_size = calculate_light_cache_size(epoch_number);
+    hash256 seed = calculate_seed(epoch_number);
+
+    ethash_epoch_context* context = new (std::nothrow) ethash_epoch_context;
+    if (!context)
+        return nullptr;  // Signal out-of-memory by returning null pointer.
+
+    context->epoch_number = epoch_number;
+    context->cache = make_light_cache(cache_size, seed);
+    context->full_dataset_size = calculate_full_dataset_size(epoch_number);
+    return context;
+}
+
+extern "C" void ethash_destroy_epoch_context(ethash_epoch_context* context) noexcept
+{
+    delete context;
 }

@@ -109,11 +109,11 @@ BENCHMARK(light_cache)->Arg(1);
 
 static void calculate_dataset_item(benchmark::State& state)
 {
-    static auto deleter = [](ethash::epoch_context* context) {
-        ethash::destroy_epoch_context(context);
+    static auto deleter = [](ethash_epoch_context* context) {
+        ethash_destroy_epoch_context(context);
     };
-    static std::unique_ptr<ethash::epoch_context, decltype(deleter)> ctx{
-        ethash::create_epoch_context(0), deleter};
+    static std::unique_ptr<ethash_epoch_context, decltype(deleter)> ctx{
+        ethash_create_epoch_context(0), deleter};
 
     for (auto _ : state)
     {
@@ -134,11 +134,11 @@ static void verify(benchmark::State& state)
     const uint64_t nonce = 0x4617a20003ba3f25;
     const uint64_t target = 0x0000000000001a5b + 1;
 
-    static auto deleter = [](ethash::epoch_context* context) {
-        ethash::destroy_epoch_context(context);
+    static auto deleter = [](ethash_epoch_context* context) {
+        ethash_destroy_epoch_context(context);
     };
-    static std::unique_ptr<ethash::epoch_context, decltype(deleter)> ctx{
-        ethash::create_epoch_context(ethash::get_epoch_number(block_number)), deleter};
+    static std::unique_ptr<ethash_epoch_context, decltype(deleter)> ctx{
+        ethash_create_epoch_context(ethash::get_epoch_number(block_number)), deleter};
 
     for (auto _ : state)
         ethash::verify(*ctx, header_hash, mix_hash, nonce, target);

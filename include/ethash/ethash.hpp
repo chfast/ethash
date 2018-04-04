@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <ethash/ethash.h>
+
 #include <cstdint>
 #include <cstring>
 
@@ -47,18 +49,12 @@ struct result
     hash256 mix_hash;
 };
 
-struct epoch_context;
-
 
 /// Calculates the epoch number out of the block number.
 inline int get_epoch_number(int block_number)
 {
     return block_number / epoch_length;
 }
-
-epoch_context* create_epoch_context(int epoch_number) noexcept;
-
-void destroy_epoch_context(epoch_context* context) noexcept;
 
 
 /// Init full dataset in the epoch context.
@@ -68,20 +64,20 @@ void destroy_epoch_context(epoch_context* context) noexcept;
 ///
 /// @param context  The epoch context.
 /// @return  Returns true if memory allocations succeeded, false otherwise.
-bool init_full_dataset(epoch_context& context) noexcept;
+bool init_full_dataset(ethash_epoch_context& context) noexcept;
 
 
-result hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
+result hash_light(const ethash_epoch_context& context, const hash256& header_hash, uint64_t nonce);
 
-result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
+result hash(const ethash_epoch_context& context, const hash256& header_hash, uint64_t nonce);
 
-bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
-    uint64_t nonce, uint64_t target);
+bool verify(const ethash_epoch_context& context, const hash256& header_hash,
+    const hash256& mix_hash, uint64_t nonce, uint64_t target);
 
-uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
-    uint64_t start_nonce, size_t iterations);
+uint64_t search_light(const ethash_epoch_context& context, const hash256& header_hash,
+    uint64_t target, uint64_t start_nonce, size_t iterations);
 
-uint64_t search(const epoch_context& context, const hash256& header_hash, uint64_t target,
+uint64_t search(const ethash_epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);
 
 

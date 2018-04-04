@@ -9,6 +9,7 @@ set(include_dir ${PROJECT_SOURCE_DIR}/include)
 add_library(
     ethash
     endianness.hpp
+    ${include_dir}/ethash/ethash.h
     ${include_dir}/ethash/ethash.hpp
     ethash-internal.hpp
     ethash.cpp
