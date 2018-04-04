@@ -6,10 +6,7 @@
 #include <ethash/ethash-internal.hpp>
 #include <ethash/keccak.hpp>
 
-#pragma warning(push)
-#pragma warning(disable: 4141 4800)
 #include <benchmark/benchmark.h>
-#pragma warning(pop)
 
 
 static void hash256(benchmark::State& state)
@@ -84,7 +81,7 @@ BENCHMARK(double_hash_optimized);
 
 static void seed(benchmark::State& state)
 {
-    const int epoch_number = state.range(0);
+    const int epoch_number = static_cast<int>(state.range(0));
 
     for (auto _ : state)
     {
@@ -97,7 +94,7 @@ BENCHMARK(seed)->Arg(1)->Arg(10)->Arg(100)->Arg(1000)->Arg(10000);
 
 static void light_cache(benchmark::State& state)
 {
-    const int epoch_number = state.range(0);
+    const int epoch_number = static_cast<int>(state.range(0));
     const auto size = ethash::calculate_light_cache_size(epoch_number);
     const auto seed = ethash::calculate_seed(epoch_number);
 
@@ -171,4 +168,4 @@ static void verify_managed(benchmark::State& state)
 BENCHMARK(verify_managed)->Threads(1)->Threads(2)->Threads(4)->Threads(8);
 
 
-BENCHMARK_MAIN()
+BENCHMARK_MAIN();

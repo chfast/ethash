@@ -18,8 +18,8 @@ set(HUNTER_CONFIGURATION_TYPES Release
     CACHE STRING "Build type of the Hunter packages")
 
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.20.10.tar.gz"
-    SHA1 "5e7b471fb4704f23638588e91f53f2394f1babb4"
+    URL "https://github.com/ruslo/hunter/archive/v0.20.35.tar.gz"
+    SHA1 "6e3cb4c333b76803a83c56fcbca3b0bfd9f96f27"
 )
 
 project(ethash)
