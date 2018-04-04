@@ -27,7 +27,8 @@ epoch_context create_epoch_context_mock(int epoch_number)
 {
     // Prepare a constant endianness-independent cache item.
     hash512 fill;
-    std::fill_n(fill.words, sizeof(hash512) / sizeof(uint64_t), fix_endianness(0xe14a54a1b2c3d4e5));
+    static constexpr uint64_t fill_word = 0xe14a54a1b2c3d4e5;
+    std::fill_n(fill.words, sizeof(hash512) / sizeof(uint64_t), fix_endianness(fill_word));
     const size_t cache_size = calculate_light_cache_size(epoch_number);
 
     epoch_context context = {};
@@ -608,8 +609,9 @@ TEST(ethash, small_dataset_light)
     EXPECT_EQ(solution, 0);
 }
 
-TEST(ethash, init_full_dataset_oom)
+TEST(ethash, DISABLED_init_full_dataset_oom)
 {
+    // FIXME: Does trick does not work on macOS. Replace it with malloc hooks.
     auto mock_context = create_epoch_context_mock(0);
 
     constexpr uint64_t max = std::numeric_limits<size_t>::max();
