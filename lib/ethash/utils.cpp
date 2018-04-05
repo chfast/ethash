@@ -4,6 +4,7 @@
 #include "utils.hpp"
 
 #include <cassert>
+#include <cstdint>
 
 namespace ethash
 {
@@ -15,7 +16,9 @@ bool is_prime(int number) noexcept
     if (number % 2 == 0 && number > 2)
         return false;
 
-    for (int d = 3; (d * d) <= number; d += 2)
+    // Check factors up to sqrt(number).
+    // To avoid computing sqrt, compare d*d <= number with 64-bit precision.
+    for (int d = 3; int64_t(d) * int64_t(d) <= int64_t(number); d += 2)
     {
         if (number % d == 0)
             return false;
@@ -40,4 +43,4 @@ int find_largest_prime(int upper_bound) noexcept
 
     return n;
 }
-}
+}  // namespace ethash

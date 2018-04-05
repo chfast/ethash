@@ -5,9 +5,22 @@
 
 #include <ethash/ethash-internal.hpp>
 #include <ethash/keccak.hpp>
+#include <ethash/utils.hpp>
 
 #include <benchmark/benchmark.h>
 
+
+static void is_prime(benchmark::State& state)
+{
+    const auto n = static_cast<int>(state.range(0));
+
+    for (auto _ : state)
+    {
+        auto answer = ethash::is_prime(n);
+        benchmark::DoNotOptimize(&answer);
+    }
+}
+BENCHMARK(is_prime)->Arg(2147483647)->Arg(2147483645)->Arg(2147483631)->Arg(2147483629);
 
 static void hash256(benchmark::State& state)
 {
