@@ -32,7 +32,7 @@ ethash_epoch_context* create_epoch_context_mock(int epoch_number)
 
     ethash_epoch_context* context = new ethash_epoch_context;
     context->light_cache_num_items = calculate_light_cache_num_items(epoch_number);
-    context->full_dataset_size = calculate_full_dataset_size(epoch_number);
+    context->full_dataset_size = static_cast<size_t>(calculate_full_dataset_size(epoch_number));
     context->light_cache =
         reinterpret_cast<hash512*>(std::malloc(context->light_cache_num_items * sizeof(hash512)));
     std::fill_n(context->light_cache, context->light_cache_num_items, fill);

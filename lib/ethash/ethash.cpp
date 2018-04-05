@@ -369,7 +369,8 @@ extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) n
         delete context;
         return nullptr;
     }
-    context->full_dataset_size = calculate_full_dataset_size(epoch_number);
+    // TODO: Limit epoch number values.
+    context->full_dataset_size = static_cast<size_t>(calculate_full_dataset_size(epoch_number));
     return context;
 }
 
