@@ -102,7 +102,6 @@ jobs:
       - CXX: clang++-5.0
       - CC:  clang-5.0
       - BUILD_PARALLEL_JOBS: 2
-      - TEST_PARALLEL_JOBS: 2
     docker:
       - image: ethereum/cpp-build-env
     steps:
@@ -119,7 +118,7 @@ jobs:
       - CC:  gcc-6
       - GCOV: gcov-6
       - BUILD_PARALLEL_JOBS: 2
-      - TEST_PARALLEL_JOBS: 2
+      - BUILD_TYPE: Debug
       - CMAKE_OPTIONS: -DCOVERAGE=ON
     docker:
       - image: ethereum/cpp-build-env
