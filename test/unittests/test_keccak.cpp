@@ -21,7 +21,8 @@ static const char keccack512_of_empty[] =
 
 TEST(keccak, empty_256)
 {
-    hash256 h = keccak<256>(nullptr, 0);
+    uint64_t dummy_byte = 0xd;
+    hash256 h = keccak<256>(&dummy_byte, 0);
     std::string strh{h.bytes, sizeof(h)};
     EXPECT_EQ(strh, std::string(keccak256_of_empty, sizeof(h)));
 }
@@ -38,7 +39,8 @@ TEST(keccak, hello_world_256)
 
 TEST(keccak, empty_512)
 {
-    hash512 h = keccak<512>(nullptr, 0);
+    uint64_t dummy_byte = 0xd;
+    hash512 h = keccak<512>(&dummy_byte, 0);
     std::string strh{h.bytes, sizeof(h)};
     EXPECT_EQ(strh, std::string(keccack512_of_empty, sizeof(h)));
 }

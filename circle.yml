@@ -131,6 +131,23 @@ jobs:
       - *test
       - *upload-coverage-data
 
+  linux-gcc6-ubsan:
+    environment:
+      - CXX: g++-6
+      - CC:  gcc-6
+      - GCOV: gcov-6
+      - BUILD_PARALLEL_JOBS: 2
+      - CMAKE_OPTIONS: -DSANITIZE=undefined
+      - UBSAN_OPTIONS: halt_on_error=1
+    docker:
+      - image: ethereum/cpp-build-env
+    steps:
+      - checkout
+      - *update-submodules
+      - *configure
+      - *build
+      - *test
+
   linux-gcc4.8:
     environment:
       - CXX: g++-4.8
@@ -209,6 +226,7 @@ workflows:
   ethash:
     jobs:
       - linux-gcc6-coverage
+      - linux-gcc6-ubsan
       - linux-clang5-asan
       - linux-gcc4.8
       - linux-clang3.8
