@@ -70,8 +70,6 @@ defaults:
 
   macos-defaults: &macos-defaults
     environment:
-      - CXX: clang++
-      - CC:  clang
       - BUILD_PARALLEL_JOBS: 2
     steps:
       - run:
@@ -205,8 +203,12 @@ jobs:
             qemu-mips64 test/unittests/ethash-test --gtest_filter='-*_multithreaded.*'
 
 
-  macos-xcode93:
+  macos-xcode93-tsan:
     <<: *macos-defaults
+    environment:
+      - BUILD_PARALLEL_JOBS: 2
+      - CMAKE_OPTIONS: -DSANITIZE=thread
+      - TSAN_OPTIONS: allocator_may_return_null=1
     macos:
       xcode: "9.3.0"
 
@@ -231,6 +233,6 @@ workflows:
       - linux-gcc4.8
       - linux-clang3.8
       - mips64
-      - macos-xcode93
+      - macos-xcode93-tsan
       - macos-xcode90
       - macos-xcode83
