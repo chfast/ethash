@@ -34,25 +34,24 @@ union hash1024
     constexpr hash1024() : hashes{{}, {}} {}
 };
 
-using light_cache = std::vector<hash512>;
-
-uint64_t calculate_light_cache_size(int epoch_number) noexcept;
+size_t calculate_light_cache_num_items(int epoch_number) noexcept;
 
 uint64_t calculate_full_dataset_size(int epoch_number) noexcept;
 
 hash256 calculate_seed(int epoch_number) noexcept;
 
-light_cache make_light_cache(size_t size, const hash256& seed);
+hash512* make_light_cache(size_t num_items, const hash256& seed);
 
 hash1024 calculate_dataset_item(const ethash_epoch_context& context, size_t index) noexcept;
 
-hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) noexcept;
+hash512 calculate_dataset_item_partial(const hash512* cache, size_t num_cache_items, size_t index) noexcept;
 }
 
 extern "C" struct ethash_epoch_context
 {
     int epoch_number = -1;
-    ethash::light_cache cache;
-    size_t full_dataset_size;
+    size_t light_cache_num_items = 0;
+    ethash::hash512* light_cache = nullptr;
+    size_t full_dataset_size = 0;
     ethash::hash1024* full_dataset = nullptr;
 };

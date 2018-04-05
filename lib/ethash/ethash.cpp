@@ -42,7 +42,7 @@ hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 }
 }
 
-uint64_t calculate_light_cache_size(int epoch_number) noexcept
+size_t calculate_light_cache_num_items(int epoch_number) noexcept
 {
     static constexpr int item_size = sizeof(hash512);
     static constexpr int num_items_init = light_cache_init_size / item_size;
@@ -54,7 +54,7 @@ uint64_t calculate_light_cache_size(int epoch_number) noexcept
 
     int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
     int num_items = find_largest_prime(num_items_upper_bound);
-    return static_cast<uint64_t>(num_items) * item_size;
+    return static_cast<size_t>(num_items);
 }
 
 uint64_t calculate_full_dataset_size(int epoch_number) noexcept
@@ -122,30 +122,28 @@ int find_epoch_number(const hash256& seed) noexcept
     return -1;
 }
 
-light_cache make_light_cache(size_t size, const hash256& seed)
+hash512* make_light_cache(size_t num_items, const hash256& seed)
 {
-    size_t n = size / sizeof(hash512);
+    hash512* cache = reinterpret_cast<hash512*>(std::malloc(num_items * sizeof(hash512)));
 
     hash512 item = keccak512(seed);
-    light_cache cache;
-    cache.reserve(n);
-    cache.emplace_back(item);
-    for (size_t i = 1; i < n; ++i)
+    cache[0] = item;
+    for (size_t i = 1; i < num_items; ++i)
     {
         item = keccak512(item);
-        cache.emplace_back(item);
+        cache[i] = item;
     }
 
     for (size_t q = 0; q < light_cache_rounds; ++q)
     {
-        for (size_t i = 0; i < n; ++i)
+        for (size_t i = 0; i < num_items; ++i)
         {
             // Fist index: 4 first bytes of the item as little-endian integer.
             size_t t = fix_endianness(cache[i].half_words[0]);
-            size_t v = t % n;
+            size_t v = t % num_items;
 
             // Second index.
-            size_t w = (n + i - 1) % n;
+            size_t w = (num_items + i - 1) % num_items;
 
             // Pipelining functions returning structs gives small performance boost.
             cache[i] = keccak512(bitwise_xor(cache[v], cache[w]));
@@ -156,12 +154,11 @@ light_cache make_light_cache(size_t size, const hash256& seed)
 }
 
 /// TODO: Only used in tests or for reference, so can be removed or moved.
-hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) noexcept
+hash512 calculate_dataset_item_partial(const hash512* cache, size_t num_cache_items, size_t index) noexcept
 {
-    assert(cache.size() <= std::numeric_limits<uint32_t>::max());
+    assert(num_cache_items <= std::numeric_limits<uint32_t>::max());
 
     static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
-    const size_t num_cache_items = cache.size();
 
     const uint32_t init = static_cast<uint32_t>(index);
 
@@ -188,10 +185,10 @@ hash512 calculate_dataset_item_partial(const light_cache& cache, size_t index) n
 /// Here the computation is done interleaved for better performance.
 hash1024 calculate_dataset_item(const ethash_epoch_context& context, size_t index) noexcept
 {
-    const light_cache& cache = context.cache;
+    const hash512* cache = context.light_cache;
 
     static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
-    const size_t num_cache_items = cache.size();
+    const size_t num_cache_items = static_cast<size_t>(context.light_cache_num_items);
 
     const size_t index0 = index * 2;
     const size_t index1 = index * 2 + 1;
@@ -357,21 +354,21 @@ using namespace ethash;
 
 extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
 {
-    const size_t cache_size = calculate_light_cache_size(epoch_number);
-    hash256 seed = calculate_seed(epoch_number);
-
     ethash_epoch_context* context = new (std::nothrow) ethash_epoch_context;
     if (!context)
         return nullptr;  // Signal out-of-memory by returning null pointer.
 
     context->epoch_number = epoch_number;
-    context->cache = make_light_cache(cache_size, seed);
+    // FIXME: Return num items.
+    context->light_cache_num_items = calculate_light_cache_num_items(epoch_number);
     context->full_dataset_size = calculate_full_dataset_size(epoch_number);
+    context->light_cache = make_light_cache(context->light_cache_num_items, calculate_seed(epoch_number));
     return context;
 }
 
 extern "C" void ethash_destroy_epoch_context(ethash_epoch_context* context) noexcept
 {
+    std::free(context->light_cache);
     std::free(context->full_dataset);
     delete context;
 }
