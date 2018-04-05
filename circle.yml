@@ -97,11 +97,13 @@ defaults:
 version: 2
 jobs:
 
-  linux-clang5:
+  linux-clang5-asan:
     environment:
       - CXX: clang++-5.0
       - CC:  clang-5.0
       - BUILD_PARALLEL_JOBS: 2
+      - CMAKE_OPTIONS: -DSANITIZE=address
+      - ASAN_OPTIONS: allocator_may_return_null=1
     docker:
       - image: ethereum/cpp-build-env
     steps:
@@ -110,7 +112,6 @@ jobs:
       - *configure
       - *build
       - *test
-      - *test-cmake-config
 
   linux-gcc6-coverage:
     environment:
@@ -143,6 +144,7 @@ jobs:
       - *update-submodules
       - *configure
       - *build
+      - *test-cmake-config
 
   linux-clang3.8:
     environment:
@@ -157,6 +159,7 @@ jobs:
       - *update-submodules
       - *configure
       - *build
+      - *test-cmake-config
 
   mips64:
     environment:
@@ -206,7 +209,7 @@ workflows:
   ethash:
     jobs:
       - linux-gcc6-coverage
-      - linux-clang5
+      - linux-clang5-asan
       - linux-gcc4.8
       - linux-clang3.8
       - mips64
