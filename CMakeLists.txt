@@ -41,6 +41,8 @@ if(CABLE_COMPILER_GNULIKE)
     endif()
 endif()
 
+option(ETHASH_INSTALL_CMAKE_CONFIG "Install CMake configuration scripts for find_package(CONFIG)" ON)
+
 add_subdirectory(lib/ethash)
 
 option(ETHASH_BUILD_TESTS "Build unit tests" ON)

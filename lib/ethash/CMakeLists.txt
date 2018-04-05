@@ -37,25 +37,25 @@ install(
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-
-install(
-    EXPORT ethashTargets
-    NAMESPACE ethash::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ethash
-)
-
 install(
     DIRECTORY
     ${include_dir}/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-install(
-    FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/ethashConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/ethashConfigVersion.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ethash
-)
+if(ETHASH_INSTALL_CMAKE_CONFIG)
+    install(
+        EXPORT ethashTargets
+        NAMESPACE ethash::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ethash
+    )
+    install(
+        FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/ethashConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/ethashConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ethash
+    )
+endif()
 
 get_filename_component(ETHASH_PRIVATE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/.. ABSOLUTE)
 set(ETHASH_PRIVATE_INCLUDE_DIR ${ETHASH_PRIVATE_INCLUDE_DIR} PARENT_SCOPE)
