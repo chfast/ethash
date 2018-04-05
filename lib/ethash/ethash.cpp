@@ -125,6 +125,8 @@ int find_epoch_number(const hash256& seed) noexcept
 hash512* make_light_cache(size_t num_items, const hash256& seed)
 {
     hash512* cache = reinterpret_cast<hash512*>(std::malloc(num_items * sizeof(hash512)));
+    if (!cache)
+        return nullptr;
 
     hash512 item = keccak512(seed);
     cache[0] = item;
@@ -358,11 +360,16 @@ extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) n
     if (!context)
         return nullptr;  // Signal out-of-memory by returning null pointer.
 
+    hash256 seed = calculate_seed(epoch_number);
     context->epoch_number = epoch_number;
-    // FIXME: Return num items.
     context->light_cache_num_items = calculate_light_cache_num_items(epoch_number);
+    context->light_cache = make_light_cache(context->light_cache_num_items, seed);
+    if (!context->light_cache)
+    {
+        delete context;
+        return nullptr;
+    }
     context->full_dataset_size = calculate_full_dataset_size(epoch_number);
-    context->light_cache = make_light_cache(context->light_cache_num_items, calculate_seed(epoch_number));
     return context;
 }
 

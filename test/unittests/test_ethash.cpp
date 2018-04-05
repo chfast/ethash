@@ -628,3 +628,19 @@ TEST(ethash, init_full_dataset_oom)
     EXPECT_FALSE(init_full_dataset(*mock_context));
     ethash_destroy_epoch_context(mock_context);
 }
+
+#if ! __APPLE__
+TEST(ethash, init_light_cache_oom)
+{
+    // This test tries to allocate huge light cache what should fail
+    // (not failing on macOS so disabled there).
+
+    static constexpr int epoch = 1000000;
+    const auto num_items = calculate_light_cache_num_items(epoch);
+    const auto size = num_items * sizeof(hash512);
+    EXPECT_EQ(size, 131088776768);
+
+    auto* context = ethash_create_epoch_context(epoch);
+    EXPECT_EQ(context, nullptr);
+}
+#endif
