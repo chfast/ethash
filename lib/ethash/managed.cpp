@@ -26,6 +26,12 @@ std::shared_ptr<ethash_epoch_context> get_epoch_context(int epoch_number)
 }
 }
 
+result hash(int epoch_number, const hash256& header_hash, uint64_t nonce)
+{
+    std::shared_ptr<ethash_epoch_context> epoch_context = get_epoch_context(epoch_number);
+    return ethash::hash_light(*epoch_context, header_hash, nonce);
+}
+
 bool verify(int block_number, const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
     uint64_t target)
 {

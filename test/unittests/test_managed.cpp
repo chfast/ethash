@@ -13,6 +13,59 @@
 
 using namespace ethash;
 
+TEST(managed, hash)
+{
+    for (const auto& t : hash_test_cases)
+    {
+        const hash256 header_hash = to_hash256(t.header_hash_hex);
+        const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
+        const result res = managed::hash(get_epoch_number(t.block_number), header_hash, nonce);
+        EXPECT_EQ(to_hex(res.mix_hash), t.mix_hash_hex);
+        EXPECT_EQ(to_hex(res.final_hash), t.final_hash_hex);
+    }
+}
+
+TEST(managed_multithreaded, hash_all)
+{
+    constexpr size_t num_treads = 8;
+
+    std::array<std::future<void>, num_treads> futures;
+    for (auto& f : futures)
+    {
+        f = std::async(std::launch::async, [] {
+            for (const auto& t : hash_test_cases)
+            {
+                const hash256 header_hash = to_hash256(t.header_hash_hex);
+                const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
+                const result res = managed::hash(get_epoch_number(t.block_number), header_hash, nonce);
+                EXPECT_EQ(to_hex(res.mix_hash), t.mix_hash_hex);
+                EXPECT_EQ(to_hex(res.final_hash), t.final_hash_hex);
+            }
+        });
+    }
+    for (auto& f : futures)
+        f.wait();
+}
+
+TEST(managed_multithreaded, hash_parallel)
+{
+    std::vector<std::future<bool>> futures;
+
+    for (const auto& t : hash_test_cases)
+    {
+        futures.emplace_back(std::async(std::launch::async, [&t] {
+            const hash256 header_hash = to_hash256(t.header_hash_hex);
+            const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
+            const result res = managed::hash(get_epoch_number(t.block_number), header_hash, nonce);
+            return (to_hex(res.mix_hash) == t.mix_hash_hex) &&
+                   (to_hex(res.final_hash) == t.final_hash_hex);
+        }));
+    }
+
+    for (auto& f : futures)
+        EXPECT_TRUE(f.get());
+}
+
 TEST(managed, verify)
 {
     for (const auto& t : hash_test_cases)

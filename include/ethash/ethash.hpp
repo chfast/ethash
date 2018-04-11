@@ -94,6 +94,10 @@ int find_epoch_number(const hash256& seed) noexcept;
 
 namespace managed
 {
+
+/// Compute Ethash hash using light cache and the shared epoch context managed by the library.
+result hash(int epoch_number, const hash256& header_hash, uint64_t nonce);
+
 bool verify(int block_number, const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
     uint64_t target);
 }
