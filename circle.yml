@@ -95,10 +95,10 @@ defaults:
 version: 2
 jobs:
 
-  linux-clang5-asan:
+  linux-clang6-asan:
     environment:
-      - CXX: clang++-5.0
-      - CC:  clang-5.0
+      - CXX: clang++-6.0
+      - CC:  clang-6.0
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=address
       - ASAN_OPTIONS: allocator_may_return_null=1
@@ -229,7 +229,7 @@ workflows:
     jobs:
       - linux-gcc6-coverage
       - linux-gcc6-ubsan
-      - linux-clang5-asan
+      - linux-clang6-asan
       - linux-gcc4.8
       - linux-clang3.8
       - mips64
