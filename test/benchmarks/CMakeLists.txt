@@ -4,6 +4,8 @@
 hunter_add_package(benchmark)
 find_package(benchmark CONFIG REQUIRED)
 
-add_executable(bench benchmarks.cpp)
+add_executable(bench
+    benchmarks.cpp
+    threadsync_benchmarks.cpp threadsync_utils.hpp threadsync_utils.cpp)
 target_link_libraries(bench PRIVATE ethash benchmark::benchmark)
 target_include_directories(bench PRIVATE ${ETHASH_PRIVATE_INCLUDE_DIR})
