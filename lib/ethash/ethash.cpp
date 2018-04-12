@@ -6,7 +6,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
-#include <functional>
 #include <limits>
 
 #include "keccak.hpp"
@@ -235,10 +234,10 @@ bool init_full_dataset(ethash_epoch_context& context) noexcept
 namespace
 {
 
-using lookup_fn = std::function<hash1024(const ethash_epoch_context&, size_t)>;
+using lookup_fn = hash1024 (*)(const ethash_epoch_context&, size_t);
 
-inline result hash_kernel(const ethash_epoch_context& context, const hash256& header_hash, uint64_t nonce,
-    const lookup_fn& lookup)
+inline result hash_kernel(const ethash_epoch_context& context, const hash256& header_hash,
+    uint64_t nonce, lookup_fn lookup)
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
     const size_t num_items = context.full_dataset_size / sizeof(hash1024);
