@@ -50,6 +50,7 @@ hash512 calculate_dataset_item_partial(const hash512* cache, size_t num_cache_it
 extern "C" struct ethash_epoch_context
 {
     int epoch_number = -1;
+    // FIXME: use int ot int64_t for light_cache_num_items.
     size_t light_cache_num_items = 0;
     ethash::hash512* light_cache = nullptr;
     size_t full_dataset_size = 0;

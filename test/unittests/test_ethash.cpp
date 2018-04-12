@@ -572,8 +572,14 @@ TEST(ethash, verify_hash)
 
         ethash_epoch_context* context = ethash_create_epoch_context(epoch_number);
         ASSERT_NE(context, nullptr);
-        auto full_dataset_size = ethash::calculate_full_dataset_size(epoch_number);
+        uint64_t full_dataset_size = ethash::calculate_full_dataset_size(epoch_number);
         bool full_dataset_initialized = init_full_dataset(*context);
+#if _WIN32 && !_WIN64
+        // On Windows 32-bit you can only allocate ~ 2GB of memory.
+        static constexpr uint64_t allocation_size_limit = uint64_t(2) * 1024 * 1024 * 1024;
+        if (!full_dataset_initialized && full_dataset_size > allocation_size_limit)
+            continue;
+#endif
         ASSERT_TRUE(full_dataset_initialized) << "size: " << full_dataset_size;
 
         result r = hash(*context, header_hash, nonce);
@@ -638,10 +644,12 @@ TEST(ethash, init_light_cache_oom)
     // This test tries to allocate huge light cache what should fail
     // (not failing on macOS so disabled there).
 
-    static constexpr int epoch = 1000000;
-    const auto num_items = calculate_light_cache_num_items(epoch);
-    const auto size = num_items * sizeof(hash512);
-    EXPECT_EQ(size, 131088776768);
+    static constexpr bool arch64bit = sizeof(void*) == 8;
+    static constexpr int epoch = arch64bit ? 1000000 : 30000;
+    static constexpr size_t expected_size = arch64bit ? 131088776768 : 3948936512;
+    const size_t num_items = calculate_light_cache_num_items(epoch);
+    const size_t size = num_items * sizeof(hash512);
+    ASSERT_EQ(size, expected_size);
 
     auto* context = ethash_create_epoch_context(epoch);
     EXPECT_EQ(context, nullptr);

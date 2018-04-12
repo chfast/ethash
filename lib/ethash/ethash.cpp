@@ -157,8 +157,7 @@ hash512* make_light_cache(size_t num_items, const hash256& seed)
 /// TODO: Only used in tests or for reference, so can be removed or moved.
 hash512 calculate_dataset_item_partial(const hash512* cache, size_t num_cache_items, size_t index) noexcept
 {
-    assert(num_cache_items <= std::numeric_limits<uint32_t>::max());
-
+    // FIXME: Remove this function.
     static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
 
     const uint32_t init = static_cast<uint32_t>(index);
@@ -172,7 +171,6 @@ hash512 calculate_dataset_item_partial(const hash512* cache, size_t num_cache_it
     {
         uint32_t t = fnv(init ^ j, mix.half_words[j % num_half_words]);
         size_t parent_index = t % num_cache_items;
-        // TODO: Fix endianness when generating the cache item?
         mix = fnv(mix, fix_endianness32(cache[parent_index]));
     }
 
@@ -186,13 +184,14 @@ hash512 calculate_dataset_item_partial(const hash512* cache, size_t num_cache_it
 /// Here the computation is done interleaved for better performance.
 hash1024 calculate_dataset_item(const ethash_epoch_context& context, size_t index) noexcept
 {
+    // FIXME: Consider changing the type of index.
     const hash512* cache = context.light_cache;
 
     static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
-    const size_t num_cache_items = static_cast<size_t>(context.light_cache_num_items);
+    const int64_t num_cache_items = static_cast<int64_t>(context.light_cache_num_items);
 
-    const size_t index0 = index * 2;
-    const size_t index1 = index * 2 + 1;
+    const int64_t index0 = int64_t(index) * 2;
+    const int64_t index1 = int64_t(index) * 2 + 1;
 
     const uint32_t init0 = static_cast<uint32_t>(index0);
     const uint32_t init1 = static_cast<uint32_t>(index1);
@@ -211,11 +210,11 @@ hash1024 calculate_dataset_item(const ethash_epoch_context& context, size_t inde
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
         uint32_t t0 = fnv(init0 ^ j, mix.hashes[0].half_words[j % num_half_words]);
-        size_t parent_index0 = t0 % num_cache_items;
+        int64_t parent_index0 = t0 % num_cache_items;
         mix.hashes[0] = fnv(mix.hashes[0], fix_endianness32(cache[parent_index0]));
 
         uint32_t t1 = fnv(init1 ^ j, mix.hashes[1].half_words[j % num_half_words]);
-        size_t parent_index1 = t1 % num_cache_items;
+        int64_t parent_index1 = t1 % num_cache_items;
         mix.hashes[1] = fnv(mix.hashes[1], fix_endianness32(cache[parent_index1]));
     }
 

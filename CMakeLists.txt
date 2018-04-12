@@ -39,6 +39,9 @@ if(CABLE_COMPILER_GNULIKE)
         # Tune for currently most common CPUs (flag not supported in mips64 cross-compiler).
         add_compile_options(-mtune=generic)
     endif()
+elseif(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+    # For Win32 builds allow allocating more than 2 GB of memory.
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 endif()
 
 option(ETHASH_INSTALL_CMAKE_CONFIG "Install CMake configuration scripts for find_package(CONFIG)" ON)
