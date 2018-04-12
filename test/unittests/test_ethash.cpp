@@ -571,7 +571,10 @@ TEST(ethash, verify_hash)
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 
         ethash_epoch_context* context = ethash_create_epoch_context(epoch_number);
-        init_full_dataset(*context);
+        ASSERT_NE(context, nullptr);
+        auto full_dataset_size = ethash::calculate_full_dataset_size(epoch_number);
+        bool full_dataset_initialized = init_full_dataset(*context);
+        ASSERT_TRUE(full_dataset_initialized) << "size: " << full_dataset_size;
 
         result r = hash(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
