@@ -66,6 +66,27 @@ inline int get_epoch_number(int block_number)
     return block_number / epoch_length;
 }
 
+/**
+ * Coverts the number of items of a light cache to size in bytes.
+ *
+ * @param num_items  The number of items in the light cache.
+ * @return           The size of the light cache in bytes.
+ */
+inline size_t get_light_cache_size(int num_items) noexcept
+{
+    return static_cast<size_t>(num_items) * light_cache_item_size;
+}
+
+/**
+ * Coverts the number of items of a full dataset to size in bytes.
+ *
+ * @param num_items  The number of items in the full dataset.
+ * @return           The size of the full dataset in bytes.
+ */
+inline uint64_t get_full_dataset_size(int num_items) noexcept
+{
+    return static_cast<uint64_t>(num_items) * full_dataset_item_size;
+}
 
 /// Init full dataset in the epoch context.
 ///
