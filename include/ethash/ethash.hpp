@@ -50,6 +50,13 @@ struct result
 };
 
 
+/// Alias for ethash_calculate_light_cache_num_items().
+static constexpr auto calculate_light_cache_num_items = ethash_calculate_light_cache_num_items;
+
+/// Alias for ethash_calculate_full_dataset_num_items().
+static constexpr auto calculate_full_dataset_num_items = ethash_calculate_full_dataset_num_items;
+
+
 /// Calculates the epoch number out of the block number.
 inline int get_epoch_number(int block_number)
 {

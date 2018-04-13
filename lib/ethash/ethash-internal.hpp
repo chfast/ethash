@@ -35,17 +35,6 @@ union hash1024
 };
 
 /**
- * Calculates the number of items in the light cache for given epoch.
- *
- * This function will search for a prime number matching the criteria given
- * by the Ethash so the execution time is not constant. It takes ~ 0.01 ms.
- *
- * @param epoch_number  The epoch number.
- * @return              The number items in the light cache.
- */
-int calculate_light_cache_num_items(int epoch_number) noexcept;
-
-/**
  * Coverts the number of items of a light cache to size in bytes.
  *
  * @param num_items  The number of items in the light cache.
@@ -55,17 +44,6 @@ inline size_t get_light_cache_size(int num_items) noexcept
 {
     return static_cast<size_t>(num_items) * sizeof(hash512);
 }
-
-/**
- * Calculates the number of items in the full dataset for given epoch.
- *
- * This function will search for a prime number matching the criteria given
- * by the Ethash so the execution time is not constant. It takes ~ 0.05 ms.
- *
- * @param epoch_number  The epoch number.
- * @return              The number items in the full dataset.
- */
-int calculate_full_dataset_num_items(int epoch_number) noexcept;
 
 /**
  * Coverts the number of items of a full dataset to size in bytes.

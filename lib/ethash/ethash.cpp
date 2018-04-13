@@ -41,36 +41,6 @@ hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 }
 }
 
-int calculate_light_cache_num_items(int epoch_number) noexcept
-{
-    static constexpr int item_size = sizeof(hash512);
-    static constexpr int num_items_init = light_cache_init_size / item_size;
-    static constexpr int num_items_growth = light_cache_growth / item_size;
-    static_assert(
-        light_cache_init_size % item_size == 0, "light_cache_init_size not multiple of item size");
-    static_assert(
-        light_cache_growth % item_size == 0, "light_cache_growth not multiple of item size");
-
-    int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
-    int num_items = find_largest_prime(num_items_upper_bound);
-    return num_items;
-}
-
-int calculate_full_dataset_num_items(int epoch_number) noexcept
-{
-    static constexpr int item_size = sizeof(hash1024);
-    static constexpr int num_items_init = full_dataset_init_size / item_size;
-    static constexpr int num_items_growth = full_dataset_growth / item_size;
-    static_assert(full_dataset_init_size % item_size == 0,
-        "full_dataset_init_size not multiple of item size");
-    static_assert(
-        full_dataset_growth % item_size == 0, "full_dataset_growth not multiple of item size");
-
-    int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
-    int num_items = find_largest_prime(num_items_upper_bound);
-    return num_items;
-}
-
 hash256 calculate_seed(int epoch_number) noexcept
 {
     hash256 seed;
@@ -346,11 +316,43 @@ uint64_t search(const ethash_epoch_context& context, const hash256& header_hash,
     }
     return 0;
 }
-}
+}  // namespace ethash
 
 using namespace ethash;
 
-extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
+extern "C" {
+
+int ethash_calculate_light_cache_num_items(int epoch_number) noexcept
+{
+    static constexpr int item_size = sizeof(hash512);
+    static constexpr int num_items_init = light_cache_init_size / item_size;
+    static constexpr int num_items_growth = light_cache_growth / item_size;
+    static_assert(
+        light_cache_init_size % item_size == 0, "light_cache_init_size not multiple of item size");
+    static_assert(
+        light_cache_growth % item_size == 0, "light_cache_growth not multiple of item size");
+
+    int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
+    int num_items = find_largest_prime(num_items_upper_bound);
+    return num_items;
+}
+
+int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
+{
+    static constexpr int item_size = sizeof(hash1024);
+    static constexpr int num_items_init = full_dataset_init_size / item_size;
+    static constexpr int num_items_growth = full_dataset_growth / item_size;
+    static_assert(full_dataset_init_size % item_size == 0,
+                  "full_dataset_init_size not multiple of item size");
+    static_assert(
+        full_dataset_growth % item_size == 0, "full_dataset_growth not multiple of item size");
+
+    int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
+    int num_items = find_largest_prime(num_items_upper_bound);
+    return num_items;
+}
+
+ethash_epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
 {
     static_assert(sizeof(ethash_epoch_context) < sizeof(hash512), "ethash_epoch_context too big");
     static constexpr size_t context_alloc_size = sizeof(hash512);
@@ -375,9 +377,11 @@ extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) n
     return context;
 }
 
-extern "C" void ethash_destroy_epoch_context(ethash_epoch_context* context) noexcept
+void ethash_destroy_epoch_context(ethash_epoch_context* context) noexcept
 {
     std::free(context->full_dataset);
     context->~ethash_epoch_context();
     std::free(context);
 }
+
+}  // extern "C"
