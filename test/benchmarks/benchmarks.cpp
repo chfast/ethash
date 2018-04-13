@@ -32,7 +32,19 @@ static void calculate_light_cache_num_items(benchmark::State& state)
         benchmark::DoNotOptimize(&answer);
     }
 }
-BENCHMARK(calculate_light_cache_num_items)->Arg(32639);
+BENCHMARK(calculate_light_cache_num_items)->Arg(32638)->Arg(32639);
+
+static void calculate_full_dataset_num_items(benchmark::State& state)
+{
+    const auto epoch_number = static_cast<int>(state.range(0));
+
+    for (auto _ : state)
+    {
+        auto answer = ethash::calculate_full_dataset_num_items(epoch_number);
+        benchmark::DoNotOptimize(&answer);
+    }
+}
+BENCHMARK(calculate_full_dataset_num_items)->Arg(32638)->Arg(32639);
 
 static void hash256(benchmark::State& state)
 {

@@ -32,7 +32,7 @@ ethash_epoch_context* create_epoch_context_mock(int epoch_number)
 
     ethash_epoch_context* context = new ethash_epoch_context;
     context->light_cache_num_items = calculate_light_cache_num_items(epoch_number);
-    context->full_dataset_size = static_cast<size_t>(calculate_full_dataset_size(epoch_number));
+    context->full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
     size_t cache_size = get_light_cache_size(context->light_cache_num_items);
     context->light_cache =
         reinterpret_cast<hash512*>(std::malloc(cache_size));
@@ -137,7 +137,8 @@ TEST(ethash, full_dataset_size)
 {
     for (const auto& t : dataset_size_test_cases)
     {
-        uint64_t size = ethash::calculate_full_dataset_size(t.epoch_number);
+        const int num_items = calculate_full_dataset_num_items(t.epoch_number);
+        const uint64_t size = get_full_dataset_size(num_items);
         EXPECT_EQ(size, t.full_dataset_size) << "epoch: " << t.epoch_number;
     }
 }
@@ -574,7 +575,8 @@ TEST(ethash, verify_hash)
 
         ethash_epoch_context* context = ethash_create_epoch_context(epoch_number);
         ASSERT_NE(context, nullptr);
-        uint64_t full_dataset_size = ethash::calculate_full_dataset_size(epoch_number);
+        const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
+        const uint64_t full_dataset_size = get_full_dataset_size(full_dataset_num_items);
         bool full_dataset_initialized = init_full_dataset(*context);
 #if _WIN32 && !_WIN64
         // On Windows 32-bit you can only allocate ~ 2GB of memory.
@@ -598,11 +600,11 @@ TEST(ethash_multithreaded, small_dataset)
     // sync issues between threads.
 
     constexpr size_t num_treads = 8;
-    constexpr size_t num_dataset_items = 501;
+    constexpr int num_dataset_items = 501;
     constexpr uint64_t target = uint64_t(1) << 50;
 
     ethash_epoch_context* context = create_epoch_context_mock(0);
-    context->full_dataset_size = num_dataset_items * sizeof(hash1024);
+    context->full_dataset_num_items = num_dataset_items;
     init_full_dataset(*context);
 
     std::array<std::future<uint64_t>, num_treads> futures;
@@ -617,11 +619,11 @@ TEST(ethash_multithreaded, small_dataset)
 
 TEST(ethash, small_dataset_light)
 {
-    constexpr size_t num_dataset_items = 501;
+    constexpr int num_dataset_items = 501;
     constexpr uint64_t target = uint64_t(1) << 55;
 
     ethash_epoch_context* context = create_epoch_context_mock(0);
-    context->full_dataset_size = num_dataset_items * sizeof(hash1024);
+    context->full_dataset_num_items = num_dataset_items;
 
     uint64_t solution = search_light(*context, {}, target, 475, 10);
     EXPECT_EQ(solution, 482);
@@ -632,20 +634,25 @@ TEST(ethash, small_dataset_light)
     ethash_destroy_epoch_context(context);
 }
 
+#if !__APPLE__
+
+// The Out-Of-Memory tests try to allocate huge memory buffers. This fails on
+// Linux and Windows, but not on macOS. Because the macOS tries too hard
+// the tests go forever.
+// The tests are disabled on macOS at compile time (instead of using GTest
+// filter) because we don't want developers using macOS to be hit by this
+// behavior.
+
 TEST(ethash, init_full_dataset_oom)
 {
     auto* mock_context = create_epoch_context_mock(0);
-    mock_context->full_dataset_size = std::numeric_limits<size_t>::max();
+    mock_context->full_dataset_num_items = std::numeric_limits<int>::max();
     EXPECT_FALSE(init_full_dataset(*mock_context));
     ethash_destroy_epoch_context(mock_context);
 }
 
-#if ! __APPLE__
 TEST(ethash, init_light_cache_oom)
 {
-    // This test tries to allocate huge light cache what should fail
-    // (not failing on macOS so disabled there).
-
     static constexpr bool arch64bit = sizeof(void*) == 8;
     static constexpr int epoch = arch64bit ? 1000000 : 30000;
     static constexpr size_t expected_size = arch64bit ? 131088776768 : 3948936512;

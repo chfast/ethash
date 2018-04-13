@@ -56,7 +56,7 @@ int calculate_light_cache_num_items(int epoch_number) noexcept
     return num_items;
 }
 
-uint64_t calculate_full_dataset_size(int epoch_number) noexcept
+int calculate_full_dataset_num_items(int epoch_number) noexcept
 {
     static constexpr int item_size = sizeof(hash1024);
     static constexpr int num_items_init = full_dataset_init_size / item_size;
@@ -68,7 +68,7 @@ uint64_t calculate_full_dataset_size(int epoch_number) noexcept
 
     int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
     int num_items = find_largest_prime(num_items_upper_bound);
-    return static_cast<uint64_t>(num_items) * item_size;
+    return num_items;
 }
 
 hash256 calculate_seed(int epoch_number) noexcept
@@ -229,8 +229,8 @@ bool init_full_dataset(ethash_epoch_context& context) noexcept
 {
     assert(context.full_dataset == nullptr);
 
-    const size_t num_items = context.full_dataset_size / sizeof(hash1024);
-    context.full_dataset = reinterpret_cast<hash1024*>(std::calloc(num_items, sizeof(hash1024)));
+    const size_t num_items = static_cast<size_t>(context.full_dataset_num_items);
+    context.full_dataset = static_cast<hash1024*>(std::calloc(num_items, sizeof(hash1024)));
     return context.full_dataset != nullptr;
 }
 
@@ -243,7 +243,8 @@ inline result hash_kernel(const ethash_epoch_context& context, const hash256& he
     uint64_t nonce, lookup_fn lookup)
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
-    const size_t num_items = context.full_dataset_size / sizeof(hash1024);
+    const int num_items = context.full_dataset_num_items;
+    const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
     uint64_t init_data[5];
     std::memcpy(&init_data, &header_hash, sizeof(header_hash));
@@ -261,7 +262,7 @@ inline result hash_kernel(const ethash_epoch_context& context, const hash256& he
 
     for (uint32_t i = 0; i < 64; ++i)
     {
-        auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % num_items;
+        auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % index_limit;
         hash1024 newdata = fix_endianness32(lookup(context, p));
 
         for (size_t j = 0; j < mix_hwords; ++j)
@@ -372,7 +373,7 @@ extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) n
         return nullptr;
     }
     // TODO: Limit epoch number values.
-    context->full_dataset_size = static_cast<size_t>(calculate_full_dataset_size(epoch_number));
+    context->full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
     return context;
 }
 
