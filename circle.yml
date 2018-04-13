@@ -72,6 +72,13 @@ defaults:
       command: |
         qemu-mips64 -L /usr/mips64-linux-gnuabi64 test/unittests/ethash-test
 
+  benchmark: &benchmark
+    run:
+      name: "Benchmark"
+      working_directory: ~/build
+      command: |
+        test/benchmarks/bench
+
   upload-coverage-data: &upload-coverage-data
     run:
       name: "Upload coverage data"
@@ -121,6 +128,7 @@ jobs:
       - *configure
       - *build
       - *test
+      - *benchmark
 
   linux-gcc6-coverage:
     environment:
