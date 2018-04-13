@@ -33,8 +33,9 @@ ethash_epoch_context* create_epoch_context_mock(int epoch_number)
     ethash_epoch_context* context = new ethash_epoch_context;
     context->light_cache_num_items = calculate_light_cache_num_items(epoch_number);
     context->full_dataset_size = static_cast<size_t>(calculate_full_dataset_size(epoch_number));
+    size_t cache_size = get_light_cache_size(context->light_cache_num_items);
     context->light_cache =
-        reinterpret_cast<hash512*>(std::malloc(context->light_cache_num_items * sizeof(hash512)));
+        reinterpret_cast<hash512*>(std::malloc(cache_size));
     std::fill_n(context->light_cache, context->light_cache_num_items, fill);
     return context;
 }
@@ -126,8 +127,8 @@ TEST(ethash, light_cache_size)
 {
     for (const auto& t : dataset_size_test_cases)
     {
-        size_t num_items = ethash::calculate_light_cache_num_items(t.epoch_number);
-        size_t size = num_items * sizeof(hash512);
+        int num_items = calculate_light_cache_num_items(t.epoch_number);
+        size_t size = get_light_cache_size(num_items);
         EXPECT_EQ(size, t.light_cache_size) << "epoch: " << t.epoch_number;
     }
 }
@@ -356,7 +357,8 @@ TEST(ethash, light_cache)
 
         for (auto& u : t.item_tests)
         {
-            ASSERT_LT(u.index, context->light_cache_num_items);
+            const size_t index_limit = static_cast<size_t>(context->light_cache_num_items);
+            ASSERT_LT(u.index, index_limit);
             EXPECT_EQ(to_hex(context->light_cache[u.index]), u.hash_hex)
                 << "epoch: " << t.epoch_number << " item: " << u.index;
         }
@@ -647,8 +649,8 @@ TEST(ethash, init_light_cache_oom)
     static constexpr bool arch64bit = sizeof(void*) == 8;
     static constexpr int epoch = arch64bit ? 1000000 : 30000;
     static constexpr size_t expected_size = arch64bit ? 131088776768 : 3948936512;
-    const size_t num_items = calculate_light_cache_num_items(epoch);
-    const size_t size = num_items * sizeof(hash512);
+    const int num_items = calculate_light_cache_num_items(epoch);
+    const size_t size = get_light_cache_size(num_items);
     ASSERT_EQ(size, expected_size);
 
     auto* context = ethash_create_epoch_context(epoch);

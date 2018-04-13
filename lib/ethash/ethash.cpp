@@ -41,7 +41,7 @@ hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 }
 }
 
-size_t calculate_light_cache_num_items(int epoch_number) noexcept
+int calculate_light_cache_num_items(int epoch_number) noexcept
 {
     static constexpr int item_size = sizeof(hash512);
     static constexpr int num_items_init = light_cache_init_size / item_size;
@@ -53,7 +53,7 @@ size_t calculate_light_cache_num_items(int epoch_number) noexcept
 
     int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
     int num_items = find_largest_prime(num_items_upper_bound);
-    return static_cast<size_t>(num_items);
+    return num_items;
 }
 
 uint64_t calculate_full_dataset_size(int epoch_number) noexcept
@@ -121,30 +121,33 @@ int find_epoch_number(const hash256& seed) noexcept
     return -1;
 }
 
-hash512* make_light_cache(size_t num_items, const hash256& seed)
+hash512* make_light_cache(int num_items, const hash256& seed)
 {
-    hash512* cache = reinterpret_cast<hash512*>(std::malloc(num_items * sizeof(hash512)));
+    size_t cache_size = get_light_cache_size(num_items);
+    hash512* cache = reinterpret_cast<hash512*>(std::malloc(cache_size));
     if (!cache)
         return nullptr;
 
     hash512 item = keccak512(seed);
     cache[0] = item;
-    for (size_t i = 1; i < num_items; ++i)
+    for (int64_t i = 1; i < num_items; ++i)
     {
         item = keccak512(item);
         cache[i] = item;
     }
 
-    for (size_t q = 0; q < light_cache_rounds; ++q)
+    for (int q = 0; q < light_cache_rounds; ++q)
     {
-        for (size_t i = 0; i < num_items; ++i)
+        for (int64_t i = 0; i < num_items; ++i)
         {
+            const uint32_t index_limit = static_cast<uint32_t>(num_items);
+
             // Fist index: 4 first bytes of the item as little-endian integer.
-            size_t t = fix_endianness(cache[i].half_words[0]);
-            size_t v = t % num_items;
+            uint32_t t = fix_endianness(cache[i].half_words[0]);
+            uint32_t v = t % index_limit;
 
             // Second index.
-            size_t w = (num_items + i - 1) % num_items;
+            uint32_t w = static_cast<uint32_t>(num_items + (i - 1)) % index_limit;
 
             // Pipelining functions returning structs gives small performance boost.
             cache[i] = keccak512(bitwise_xor(cache[v], cache[w]));
@@ -155,14 +158,15 @@ hash512* make_light_cache(size_t num_items, const hash256& seed)
 }
 
 /// TODO: Only used in tests or for reference, so can be removed or moved.
-hash512 calculate_dataset_item_partial(const hash512* cache, size_t num_cache_items, size_t index) noexcept
+hash512 calculate_dataset_item_partial(const hash512* cache, int num_cache_items, size_t index) noexcept
 {
     // FIXME: Remove this function.
     static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
 
+    const size_t index_limit = static_cast<size_t>(num_cache_items);
     const uint32_t init = static_cast<uint32_t>(index);
 
-    hash512 mix = cache[index % num_cache_items];
+    hash512 mix = cache[index % index_limit];
     mix.half_words[0] ^= fix_endianness(init);
     mix = keccak512(mix);
     mix = fix_endianness32(mix);  // Covert bytes to 32-bit words.
@@ -170,7 +174,7 @@ hash512 calculate_dataset_item_partial(const hash512* cache, size_t num_cache_it
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
         uint32_t t = fnv(init ^ j, mix.half_words[j % num_half_words]);
-        size_t parent_index = t % num_cache_items;
+        size_t parent_index = t % index_limit;
         mix = fnv(mix, fix_endianness32(cache[parent_index]));
     }
 

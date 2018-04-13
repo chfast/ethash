@@ -22,6 +22,18 @@ static void is_prime(benchmark::State& state)
 }
 BENCHMARK(is_prime)->Arg(2147483647)->Arg(2147483645)->Arg(2147483631)->Arg(2147483629);
 
+static void calculate_light_cache_num_items(benchmark::State& state)
+{
+    const auto epoch_number = static_cast<int>(state.range(0));
+
+    for (auto _ : state)
+    {
+        auto answer = ethash::calculate_light_cache_num_items(epoch_number);
+        benchmark::DoNotOptimize(&answer);
+    }
+}
+BENCHMARK(calculate_light_cache_num_items)->Arg(32639);
+
 static void hash256(benchmark::State& state)
 {
     const auto data_size = static_cast<size_t>(state.range(0));
