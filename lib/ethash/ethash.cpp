@@ -121,13 +121,8 @@ int find_epoch_number(const hash256& seed) noexcept
     return -1;
 }
 
-hash512* build_light_cache(int num_items, const hash256 &seed)
+void build_light_cache(hash512* cache, int num_items, const hash256 &seed)
 {
-    size_t cache_size = get_light_cache_size(num_items);
-    hash512* cache = reinterpret_cast<hash512*>(std::malloc(cache_size));
-    if (!cache)
-        return nullptr;
-
     hash512 item = keccak512(seed);
     cache[0] = item;
     for (int64_t i = 1; i < num_items; ++i)
@@ -153,8 +148,6 @@ hash512* build_light_cache(int num_items, const hash256 &seed)
             cache[i] = keccak512(bitwise_xor(cache[v], cache[w]));
         }
     }
-
-    return cache;
 }
 
 /// TODO: Only used in tests or for reference, so can be removed or moved.
@@ -363,15 +356,20 @@ extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) n
     if (!context)
         return nullptr;  // Signal out-of-memory by returning null pointer.
 
-    hash256 seed = calculate_seed(epoch_number);
+    const hash256 seed = calculate_seed(epoch_number);
     context->epoch_number = epoch_number;
     context->light_cache_num_items = calculate_light_cache_num_items(epoch_number);
-    context->light_cache = build_light_cache(context->light_cache_num_items, seed);
+    const size_t cache_size = get_light_cache_size(context->light_cache_num_items);
+
+    context->light_cache = static_cast<hash512*>(std::malloc(cache_size));
     if (!context->light_cache)
     {
         delete context;
         return nullptr;
     }
+
+    build_light_cache(context->light_cache, context->light_cache_num_items, seed);
+
     // TODO: Limit epoch number values.
     context->full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
     return context;

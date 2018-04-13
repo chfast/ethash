@@ -80,7 +80,7 @@ inline uint64_t get_full_dataset_size(int num_items) noexcept
 
 hash256 calculate_seed(int epoch_number) noexcept;
 
-hash512* build_light_cache(int num_items, const hash256 &seed);
+void build_light_cache(hash512 cache[], int num_items, const hash256 &seed);
 
 hash1024 calculate_dataset_item(const ethash_epoch_context& context, size_t index) noexcept;
 

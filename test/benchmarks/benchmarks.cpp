@@ -135,10 +135,12 @@ static void light_cache(benchmark::State& state)
     const auto num_items = ethash::calculate_light_cache_num_items(epoch_number);
     const auto seed = ethash::calculate_seed(epoch_number);
 
+    std::unique_ptr<ethash::hash512[]> light_cache{new ethash::hash512[num_items]};
+
     for (auto _ : state)
     {
-        auto cache = ethash::build_light_cache(num_items, seed);
-        benchmark::DoNotOptimize(cache);
+        ethash::build_light_cache(light_cache.get(), num_items, seed);
+        benchmark::DoNotOptimize(light_cache.get());
     }
 }
 BENCHMARK(light_cache)->Arg(1);
