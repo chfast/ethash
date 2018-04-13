@@ -30,12 +30,26 @@ ethash_epoch_context* create_epoch_context_mock(int epoch_number)
     static constexpr uint64_t fill_word = 0xe14a54a1b2c3d4e5;
     std::fill_n(fill.words, sizeof(hash512) / sizeof(uint64_t), fix_endianness(fill_word));
 
-    ethash_epoch_context* context = new ethash_epoch_context;
-    context->light_cache_num_items = calculate_light_cache_num_items(epoch_number);
+    static const size_t context_alloc_size =
+        std::max(sizeof(ethash_epoch_context), sizeof(hash512));
+
+    // The copy of ethash_create_epoch_context() but without light cache building:
+
+    const int light_cache_num_items = calculate_light_cache_num_items(epoch_number);
+    const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
+    const size_t alloc_size = context_alloc_size + light_cache_size;
+
+    char* const alloc_data = static_cast<char*>(std::malloc(alloc_size));
+    if (!alloc_data)
+        return nullptr;  // Signal out-of-memory by returning null pointer.
+
+    hash512* const light_cache = reinterpret_cast<hash512*>(alloc_data + context_alloc_size);
+    ethash_epoch_context* const context = new (alloc_data) ethash_epoch_context;
+    context->epoch_number = epoch_number;
+    context->light_cache_num_items = light_cache_num_items;
+    context->light_cache = light_cache;
     context->full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
-    size_t cache_size = get_light_cache_size(context->light_cache_num_items);
-    context->light_cache =
-        reinterpret_cast<hash512*>(std::malloc(cache_size));
+
     std::fill_n(context->light_cache, context->light_cache_num_items, fill);
     return context;
 }

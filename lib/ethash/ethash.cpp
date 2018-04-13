@@ -352,32 +352,32 @@ using namespace ethash;
 
 extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
 {
-    ethash_epoch_context* context = new (std::nothrow) ethash_epoch_context;
-    if (!context)
+    static_assert(sizeof(ethash_epoch_context) < sizeof(hash512), "ethash_epoch_context too big");
+    static constexpr size_t context_alloc_size = sizeof(hash512);
+
+    const int light_cache_num_items = calculate_light_cache_num_items(epoch_number);
+    const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
+    const size_t alloc_size = context_alloc_size + light_cache_size;
+
+    char* const alloc_data = static_cast<char*>(std::malloc(alloc_size));
+    if (!alloc_data)
         return nullptr;  // Signal out-of-memory by returning null pointer.
 
+    hash512* const light_cache = reinterpret_cast<hash512*>(alloc_data + context_alloc_size);
     const hash256 seed = calculate_seed(epoch_number);
+    build_light_cache(light_cache, light_cache_num_items, seed);
+
+    ethash_epoch_context* const context = new (alloc_data) ethash_epoch_context;
     context->epoch_number = epoch_number;
-    context->light_cache_num_items = calculate_light_cache_num_items(epoch_number);
-    const size_t cache_size = get_light_cache_size(context->light_cache_num_items);
-
-    context->light_cache = static_cast<hash512*>(std::malloc(cache_size));
-    if (!context->light_cache)
-    {
-        delete context;
-        return nullptr;
-    }
-
-    build_light_cache(context->light_cache, context->light_cache_num_items, seed);
-
-    // TODO: Limit epoch number values.
+    context->light_cache_num_items = light_cache_num_items;
+    context->light_cache = light_cache;
     context->full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
     return context;
 }
 
 extern "C" void ethash_destroy_epoch_context(ethash_epoch_context* context) noexcept
 {
-    std::free(context->light_cache);
     std::free(context->full_dataset);
-    delete context;
+    context->~ethash_epoch_context();
+    std::free(context);
 }
