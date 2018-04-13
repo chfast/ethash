@@ -30,11 +30,11 @@ TEST(keccak, empty_256)
 TEST(keccak, hello_world_256)
 {
     std::string hello_world{"Hello World! "};
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 10; ++i)
         hello_world += hello_world;
-    ASSERT_GT(hello_world.size(), 200);
+    ASSERT_GT(hello_world.size(), 10000u);
     hash256 h = keccak<256>((uint64_t*)hello_world.data(), hello_world.size() / 8);
-    EXPECT_EQ(to_hex(h), "0d660e6953b0fbbd6476864d4474b2f1aa943358cd4d723af30110f6c465faaf");
+    EXPECT_EQ(to_hex(h), "da716091e8a10323f83a4635316b1d99da2cefa40a1dcd5cdbf88efb8429588b");
 }
 
 TEST(keccak, empty_512)
@@ -48,13 +48,14 @@ TEST(keccak, empty_512)
 TEST(keccak, hello_world_512)
 {
     std::string hello_world{"Hello World! "};
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 10; ++i)
         hello_world += hello_world;
-    ASSERT_GT(hello_world.size(), 200);
+    ASSERT_GT(hello_world.size(), 10000u);
     hash512 h = keccak<512>((uint64_t*)hello_world.data(), hello_world.size() / 8);
-    EXPECT_EQ(to_hex(h),
-        "f67f9221f3a039937b7f0ce58b48ef68e71a7d8b381a3476bf515716b919a5440bf8107127e02413d156317a9e"
-        "9f42bc5dea973247f1a0a2e1045cb3fbe8db72");
+    static const char* expected_hex =
+        "e09d5c29f3bb4b6ff61ce9fc14fcc839d05ea9f13ac93af01e42551aab554edfb2839b2e666f80ffd493e1fd5f"
+        "4f3982191ad7235f903bd48f150e2f0f3b1396";
+    EXPECT_EQ(to_hex(h), expected_hex);
 }
 
 TEST(keccak, double512)
@@ -63,12 +64,14 @@ TEST(keccak, double512)
     input.bytes[0] = 126;
     input.bytes[127] = 127;
     hash1024 output = double_keccak(input);
-    EXPECT_EQ(to_hex(output.hashes[0]),
+    static const char* expected_hex[] = {
         "7e62a25d706e921aaec4d4916c8822126f4470bd6d4d802e1f288d3b89356fee0e13907a71809810566cf71ae8"
-        "25306fc3197a83e6d315a04e61f28029799a98");
-    EXPECT_EQ(to_hex(output.hashes[1]),
+        "25306fc3197a83e6d315a04e61f28029799a98",
         "67525363f9cfa5b0ee6553a542b335a1d47048e4e614960537f737e5f951d162504ee77f6f76e16ea19b2a9fb8"
-        "3e5056e6ace516f9f488e072e65bb997a6de02");
+        "3e5056e6ace516f9f488e072e65bb997a6de02",
+    };
+    EXPECT_EQ(to_hex(output.hashes[0]), expected_hex[0]);
+    EXPECT_EQ(to_hex(output.hashes[1]), expected_hex[1]);
 }
 
 TEST(helpers, to_hex)
