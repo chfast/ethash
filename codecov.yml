@@ -3,3 +3,4 @@ comment:
 ignore:
   - "test/benchmarks/*"
   - "test/fakeminer/*"
+  - "test/integration/*"

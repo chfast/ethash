@@ -7,7 +7,11 @@
 
 #ifdef __cplusplus
 #define NOEXCEPT noexcept
+#else
+#define NOEXCEPT
+#endif
 
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -41,9 +45,9 @@ int ethash_calculate_light_cache_num_items(int epoch_number) NOEXCEPT;
 int ethash_calculate_full_dataset_num_items(int epoch_number) NOEXCEPT;
 
 
-ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXCEPT;
+struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXCEPT;
 
-void ethash_destroy_epoch_context(ethash_epoch_context* context) NOEXCEPT;
+void ethash_destroy_epoch_context(struct ethash_epoch_context* context) NOEXCEPT;
 
 #ifdef __cplusplus
 }
