@@ -42,7 +42,7 @@ union hash1024
  */
 inline size_t get_light_cache_size(int num_items) noexcept
 {
-    return static_cast<size_t>(num_items) * sizeof(hash512);
+    return static_cast<size_t>(num_items) * light_cache_item_size;
 }
 
 /**
@@ -53,7 +53,7 @@ inline size_t get_light_cache_size(int num_items) noexcept
  */
 inline uint64_t get_full_dataset_size(int num_items) noexcept
 {
-    return static_cast<uint64_t>(num_items) * sizeof(hash1024);
+    return static_cast<uint64_t>(num_items) * full_dataset_item_size;
 }
 
 hash256 calculate_seed(int epoch_number) noexcept;

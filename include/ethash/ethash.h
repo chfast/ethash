@@ -1,5 +1,7 @@
-/* Copyright 2018 Pawel Bylica.
-   Licensed under the Apache License, Version 2.0. See the LICENSE file. */
+/* ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
+ * Copyright 2018 Pawel Bylica.
+ * Licensed under the Apache License, Version 2.0. See the LICENSE file.
+ */
 
 #pragma once
 
@@ -8,6 +10,10 @@
 
 extern "C" {
 #endif
+
+#define ETHASH_EPOCH_LENGTH 30000
+#define ETHASH_LIGHT_CACHE_ITEM_SIZE 64
+#define ETHASH_FULL_DATASET_ITEM_SIZE 128
 
 struct ethash_epoch_context;
 

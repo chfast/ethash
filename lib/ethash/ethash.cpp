@@ -14,6 +14,12 @@
 
 namespace ethash
 {
+// Verify constants:
+static_assert(sizeof(hash512) == ETHASH_LIGHT_CACHE_ITEM_SIZE, "");
+static_assert(sizeof(hash1024) == ETHASH_FULL_DATASET_ITEM_SIZE, "");
+static_assert(light_cache_item_size == ETHASH_LIGHT_CACHE_ITEM_SIZE, "");
+static_assert(full_dataset_item_size == ETHASH_FULL_DATASET_ITEM_SIZE, "");
+
 namespace
 {
 inline uint32_t fnv(uint32_t u, uint32_t v) noexcept

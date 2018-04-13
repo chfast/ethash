@@ -1,7 +1,8 @@
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
-///@file
+/// @file
 ///
 /// API design decisions:
 ///
@@ -20,7 +21,9 @@
 
 namespace ethash
 {
-static constexpr int epoch_length = 30000;
+static constexpr int epoch_length = ETHASH_EPOCH_LENGTH;
+static constexpr int light_cache_item_size = ETHASH_LIGHT_CACHE_ITEM_SIZE;
+static constexpr int full_dataset_item_size = ETHASH_FULL_DATASET_ITEM_SIZE;
 
 
 union hash256
