@@ -137,7 +137,7 @@ static void light_cache(benchmark::State& state)
 
     for (auto _ : state)
     {
-        auto cache = ethash::make_light_cache(num_items, seed);
+        auto cache = ethash::build_light_cache(num_items, seed);
         benchmark::DoNotOptimize(cache);
     }
 }

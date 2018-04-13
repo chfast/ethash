@@ -121,7 +121,7 @@ int find_epoch_number(const hash256& seed) noexcept
     return -1;
 }
 
-hash512* make_light_cache(int num_items, const hash256& seed)
+hash512* build_light_cache(int num_items, const hash256 &seed)
 {
     size_t cache_size = get_light_cache_size(num_items);
     hash512* cache = reinterpret_cast<hash512*>(std::malloc(cache_size));
@@ -366,7 +366,7 @@ extern "C" ethash_epoch_context* ethash_create_epoch_context(int epoch_number) n
     hash256 seed = calculate_seed(epoch_number);
     context->epoch_number = epoch_number;
     context->light_cache_num_items = calculate_light_cache_num_items(epoch_number);
-    context->light_cache = make_light_cache(context->light_cache_num_items, seed);
+    context->light_cache = build_light_cache(context->light_cache_num_items, seed);
     if (!context->light_cache)
     {
         delete context;
