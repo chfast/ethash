@@ -24,7 +24,7 @@ std::shared_ptr<fake_cache> build_fake_cache(int id) noexcept
 
 std::shared_ptr<fake_cache> build_sentinel() noexcept
 {
-    static fake_cache sentinel;
+    static thread_local fake_cache sentinel;
     return std::shared_ptr<fake_cache>(&sentinel, [](fake_cache*){});
 }
 
