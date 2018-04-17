@@ -55,6 +55,7 @@ inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t si
     // Final block:
     uint64_t block[block_words] = {};
     // Weirdly, GCC and clang are able to optimize memcpy better than for loop.
+    // FIXME: This is also UB when data == nullptr.
     std::memcpy(block, data, size * sizeof(uint64_t));
 
     // Padding:

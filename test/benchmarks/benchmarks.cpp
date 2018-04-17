@@ -58,7 +58,7 @@ static void hash256(benchmark::State& state)
         benchmark::DoNotOptimize(hash.bytes);
     }
 }
-BENCHMARK(hash256)->Arg(0)->Arg(32)->Arg(40)->Arg(64)->Arg(96)->Arg(128);
+BENCHMARK(hash256)->Arg(32)->Arg(40)->Arg(64)->Arg(96)->Arg(128);
 
 
 static void hash512(benchmark::State& state)
@@ -72,7 +72,7 @@ static void hash512(benchmark::State& state)
         benchmark::DoNotOptimize(hash.bytes);
     }
 }
-BENCHMARK(hash512)->Arg(0)->Arg(32)->Arg(40)->Arg(64)->Arg(96)->Arg(128);
+BENCHMARK(hash512)->Arg(32)->Arg(40)->Arg(64)->Arg(96)->Arg(128);
 
 
 static void hash512_64(benchmark::State& state)
