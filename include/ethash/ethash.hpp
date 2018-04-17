@@ -123,6 +123,42 @@ uint64_t search(const ethash_epoch_context& context, const hash256& header_hash,
 int find_epoch_number(const hash256& seed) noexcept;
 
 
+class epoch_context
+{
+public:
+    explicit epoch_context(int epoch_number) noexcept
+      : m_ctx{ethash_create_epoch_context(epoch_number)}
+    {}
+
+    ~epoch_context() noexcept
+    {
+        if (m_ctx)
+            ethash_destroy_epoch_context(m_ctx);
+    }
+
+    epoch_context(const epoch_context&) = delete;
+    epoch_context& operator=(const epoch_context&) = delete;
+
+    epoch_context(epoch_context&& other) noexcept : m_ctx{other.m_ctx} { other.m_ctx = nullptr; }
+
+    epoch_context& operator=(epoch_context&& other) noexcept
+    {
+        if (m_ctx)
+            ethash_destroy_epoch_context(m_ctx);
+        m_ctx = other.m_ctx;
+        other.m_ctx = nullptr;
+        return *this;
+    }
+
+    explicit operator bool() const noexcept { return m_ctx != nullptr; }
+
+    ethash_epoch_context& operator*() noexcept { return *m_ctx; }
+
+private:
+    ethash_epoch_context* m_ctx = nullptr;
+};
+
+
 namespace managed
 {
 

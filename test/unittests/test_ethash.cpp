@@ -543,7 +543,7 @@ TEST(ethash, dataset_items_epoch13)
 
 
     // Create example epoch context.
-    ethash_epoch_context* context = ethash_create_epoch_context(13);
+    epoch_context context{13};
 
     for (const auto& t : test_cases)
     {
@@ -551,8 +551,6 @@ TEST(ethash, dataset_items_epoch13)
         EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
         EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
     }
-
-    ethash_destroy_epoch_context(context);
 }
 
 TEST(ethash, verify_hash_light)

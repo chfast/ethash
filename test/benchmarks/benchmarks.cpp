@@ -149,11 +149,7 @@ BENCHMARK(light_cache)->Arg(1);
 
 static void calculate_dataset_item(benchmark::State& state)
 {
-    static auto deleter = [](ethash_epoch_context* context) {
-        ethash_destroy_epoch_context(context);
-    };
-    static std::unique_ptr<ethash_epoch_context, decltype(deleter)> ctx{
-        ethash_create_epoch_context(0), deleter};
+    static ethash::epoch_context ctx{0};
 
     for (auto _ : state)
     {

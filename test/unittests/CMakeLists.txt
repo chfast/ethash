@@ -9,6 +9,7 @@ add_executable(
     helpers.hpp
     test_cases.hpp
     test_ethash.cpp
+    test_ethash_cxx.cpp
     test_keccak.cpp
     test_managed.cpp
     test_utils.cpp
