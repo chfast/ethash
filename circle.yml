@@ -127,23 +127,6 @@ defaults:
 version: 2
 jobs:
 
-  linux-clang6-asan:
-    environment:
-      - CXX: clang++-6.0
-      - CC:  clang-6.0
-      - BUILD_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DSANITIZE=address
-      - ASAN_OPTIONS: allocator_may_return_null=1
-    docker:
-      - image: ethereum/cpp-build-env
-    steps:
-      - checkout
-      - *update-submodules
-      - *configure
-      - *build
-      - *test
-      - *benchmark
-
   linux-gcc6-coverage:
     environment:
       - CXX: g++-6
@@ -162,14 +145,30 @@ jobs:
       - *test
       - *upload-coverage-data
 
-  linux-gcc6-ubsan:
+  linux-clang6-ubsan:
     environment:
-      - CXX: g++-6
-      - CC:  gcc-6
-      - GCOV: gcov-6
+      - CXX: clang++-6.0
+      - CC:  clang-6.0
       - BUILD_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DSANITIZE=undefined
+      - CMAKE_OPTIONS: -DSANITIZE=undefined,integer,nullability
       - UBSAN_OPTIONS: halt_on_error=1
+    docker:
+      - image: ethereum/cpp-build-env
+    steps:
+      - checkout
+      - *update-submodules
+      - *configure
+      - *build
+      - *test
+      - *benchmark
+
+  linux-clang6-asan:
+    environment:
+      - CXX: clang++-6.0
+      - CC:  clang-6.0
+      - BUILD_PARALLEL_JOBS: 2
+      - CMAKE_OPTIONS: -DSANITIZE=address
+      - ASAN_OPTIONS: allocator_may_return_null=1
     docker:
       - image: ethereum/cpp-build-env
     steps:
@@ -311,7 +310,7 @@ workflows:
   ethash:
     jobs:
       - linux-gcc6-coverage
-      - linux-gcc6-ubsan
+      - linux-clang6-ubsan
       - linux-clang6-asan
       - linux-gcc4.8
       - linux-clang3.8
