@@ -28,11 +28,11 @@ static constexpr int full_dataset_item_size = ETHASH_FULL_DATASET_ITEM_SIZE;
 
 union hash256
 {
-    uint64_t words[4] = {
-        0,
-    };
+    uint64_t words[4] = {0};
     uint32_t hwords[8];
     char bytes[32];
+
+    constexpr hash256() noexcept : words{0} {}
 
     /// Named constructor from bytes.
     ///

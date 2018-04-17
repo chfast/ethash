@@ -16,11 +16,11 @@ namespace ethash
 {
 union hash512
 {
-    uint64_t words[8] = {
-        0,
-    };
+    uint64_t words[8] = {0};
     uint32_t half_words[16];
     char bytes[64];
+
+    constexpr hash512() noexcept : words{0} {}
 };
 
 union hash1024

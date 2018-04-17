@@ -184,7 +184,6 @@ jobs:
       - CXX: g++-4.8
       - CC:  gcc-4.8
       - BUILD_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF
     docker:
       - image: ethereum/cpp-build-env
     steps:
@@ -193,6 +192,7 @@ jobs:
       - *configure
       - *build
       - *test-cmake-config
+      - *test
 
   linux-clang3.8:
     environment:
