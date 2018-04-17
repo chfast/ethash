@@ -28,6 +28,13 @@ defaults:
         sudo apt -q update
         sudo apt -qy install g++-mips64-linux-gnuabi64 qemu
 
+  install-powerpc64: &install-powerpc64
+    run:
+      name: "Install powerpc64 toolchain"
+      command: |
+        sudo apt -q update
+        sudo apt -qy install g++-powerpc64-linux-gnu qemu
+
   configure: &configure
     run:
       name: "Configure"
@@ -44,6 +51,13 @@ defaults:
       command: |
         cmake --build . -- -j $BUILD_PARALLEL_JOBS
         cmake --build . --target install
+
+  build-tests: &build-tests
+    run:
+      name: "Build ethash-test"
+      working_directory: ~/build
+      command: |
+        cmake --build . --target ethash-test -- -j $BUILD_PARALLEL_JOBS
 
   test: &test
     run:
@@ -239,11 +253,7 @@ jobs:
       - *update-submodules
       - *install-mips64
       - *configure
-      - run:
-          name: "Build ethash-test for mips64"
-          working_directory: ~/build
-          command: |
-            cmake --build . --target ethash-test -- -j $BUILD_PARALLEL_JOBS
+      - *build-tests
       - store_artifacts:
           path: ~/build/test/unittests/ethash-test
           destination: ethash-test
@@ -252,6 +262,28 @@ jobs:
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
             qemu-mips64 test/unittests/ethash-test --gtest_filter='-*_multithreaded.*'
+
+  powerpc64:
+    environment:
+      - BUILD_PARALLEL_JOBS: 2
+      - TEST_PARALLEL_JOBS: 2
+      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
+    docker:
+      - image: ethereum/cpp-build-env
+    steps:
+      - checkout
+      - *update-submodules
+      - *install-powerpc64
+      - *configure
+      - *build-tests
+      - store_artifacts:
+          path: ~/build/test/unittests/ethash-test
+          destination: ethash-test
+      - run:
+          name: "Test powerpc64"
+          working_directory: ~/build
+          command: |  # Software emulation in qemu will not handle threads.
+            qemu-ppc64 test/unittests/ethash-test --gtest_filter='-*_multithreaded.*'
 
 
   macos-xcode93-tsan:
@@ -286,6 +318,7 @@ workflows:
       - linux-32bit-asan
       - linux-32bit-ubsan
       - mips64
+      - powerpc64
       - macos-xcode93-tsan
       - macos-xcode90
       - macos-xcode83
