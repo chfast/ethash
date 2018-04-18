@@ -177,6 +177,7 @@ jobs:
       - *configure
       - *build
       - *test
+      - *benchmark
 
   linux-gcc4.8:
     environment:
