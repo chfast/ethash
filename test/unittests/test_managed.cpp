@@ -13,6 +13,13 @@
 
 using namespace ethash;
 
+TEST(managed, get_light_cache_data)
+{
+    auto data_ref = managed::get_light_cache_data(0);
+    EXPECT_EQ(data_ref.size, 16776896);
+    EXPECT_EQ(data_ref.data[17], uint8_t(150));
+}
+
 TEST(managed, hash)
 {
     for (const auto& t : hash_test_cases)

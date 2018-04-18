@@ -162,8 +162,18 @@ private:
 
 namespace managed
 {
+struct memory_ref
+{
+    const uint8_t* const data = nullptr;
+    const size_t size = 0;
+
+    memory_ref(const uint8_t* data, size_t size) : data{data}, size{size} {}
+};
+
 /// Get shared epoch context.
 const ethash_epoch_context& get_epoch_context(int epoch_number);
+
+memory_ref get_light_cache_data(int epoch_number);
 
 /// Compute Ethash hash using light cache and the shared epoch context managed by the library.
 result hash(int epoch_number, const hash256& header_hash, uint64_t nonce);
