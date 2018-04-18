@@ -12,18 +12,36 @@ namespace managed
 {
 namespace
 {
-std::mutex cache_building_mutex;
-std::shared_ptr<ethash_epoch_context> current_context;
+std::mutex shared_context_mutex;
+std::shared_ptr<ethash_epoch_context> shared_context;
+thread_local std::shared_ptr<ethash_epoch_context> thread_local_context;
 }  // namespace
 
 std::shared_ptr<ethash_epoch_context> get_epoch_context(int epoch_number)
 {
-    std::lock_guard<std::mutex> lock{cache_building_mutex};
+    // Check if local context matches epoch number.
+    if (!thread_local_context || thread_local_context->epoch_number != epoch_number)
+    {
+        // Release the shared pointer of the obsoleted context.
+        thread_local_context.reset();
 
-    if (!current_context || current_context->epoch_number != epoch_number)
-        current_context = {ethash_create_epoch_context(epoch_number), ethash_destroy_epoch_context};
+        // Local context invalid, check the shared context.
+        std::lock_guard<std::mutex> lock{shared_context_mutex};
 
-    return current_context;
+        if (!shared_context || shared_context->epoch_number != epoch_number)
+        {
+            // Release the shared pointer of the obsoleted context.
+            shared_context.reset();
+
+            // Build new context.
+            shared_context = {
+                ethash_create_epoch_context(epoch_number), ethash_destroy_epoch_context};
+        }
+
+        thread_local_context = shared_context;
+    }
+
+    return thread_local_context;
 }
 
 result hash(int epoch_number, const hash256& header_hash, uint64_t nonce)
