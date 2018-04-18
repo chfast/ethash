@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <memory>
 
 namespace ethash
 {
@@ -161,6 +162,8 @@ private:
 
 namespace managed
 {
+/// Get shared epoch context.
+std::shared_ptr<ethash_epoch_context> get_epoch_context(int epoch_number);
 
 /// Compute Ethash hash using light cache and the shared epoch context managed by the library.
 result hash(int epoch_number, const hash256& header_hash, uint64_t nonce);

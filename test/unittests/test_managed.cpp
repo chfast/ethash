@@ -124,3 +124,32 @@ TEST(managed_multithreaded, verify_parallel)
     for (auto& f : futures)
         EXPECT_TRUE(f.get());
 }
+
+TEST(managed_multithreaded, get_epoch_context_random)
+{
+    static constexpr int num_threads = 4;
+
+    std::vector<std::future<int>> futures;
+
+    for (int i = 0; i < num_threads; ++i)
+    {
+        futures.emplace_back(std::async(std::launch::async, [] {
+            int sum = 0;
+            for (int j = 0; j < 10; ++j)
+            {
+                // Epoch number sequence: 0, 0, 1, 1, 0, 0, 1, 1, ...
+                int epoch_number = (j / 2) % 2;
+                managed::get_epoch_context(epoch_number);
+                sum += epoch_number;
+
+                // Add sleep, otherwise this thread will starve others by quickly
+                // reacquiring the mutex in get_epoch_number().
+                std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+            }
+            return sum;
+        }));
+    }
+
+    for (auto& f : futures)
+        EXPECT_GT(f.get(), 0);
+}

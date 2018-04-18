@@ -14,6 +14,7 @@ namespace
 {
 std::mutex cache_building_mutex;
 std::shared_ptr<ethash_epoch_context> current_context;
+}  // namespace
 
 std::shared_ptr<ethash_epoch_context> get_epoch_context(int epoch_number)
 {
@@ -23,7 +24,6 @@ std::shared_ptr<ethash_epoch_context> get_epoch_context(int epoch_number)
         current_context = {ethash_create_epoch_context(epoch_number), ethash_destroy_epoch_context};
 
     return current_context;
-}
 }
 
 result hash(int epoch_number, const hash256& header_hash, uint64_t nonce)
@@ -39,5 +39,5 @@ bool verify(int block_number, const hash256& header_hash, const hash256& mix_has
         get_epoch_context(get_epoch_number(block_number));
     return ethash::verify(*epoch_context, header_hash, mix_hash, nonce, target);
 }
-}
-}
+}  // namespace managed
+}  // namespace ethash
