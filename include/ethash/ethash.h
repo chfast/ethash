@@ -49,6 +49,9 @@ struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXC
 
 void ethash_destroy_epoch_context(struct ethash_epoch_context* context) NOEXCEPT;
 
+int ethash_get_light_cache_num_items(const struct ethash_epoch_context* context) NOEXCEPT;
+int ethash_get_full_dataset_num_items(const struct ethash_epoch_context* context) NOEXCEPT;
+
 #ifdef __cplusplus
 }
 #endif

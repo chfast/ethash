@@ -89,6 +89,16 @@ inline uint64_t get_full_dataset_size(int num_items) noexcept
     return static_cast<uint64_t>(num_items) * full_dataset_item_size;
 }
 
+inline int get_light_cache_num_items(const ethash_epoch_context& context)
+{
+    return ethash_get_light_cache_num_items(&context);
+}
+
+inline int get_full_dataset_num_items(const ethash_epoch_context& context)
+{
+    return ethash_get_full_dataset_num_items(&context);
+}
+
 /// Init full dataset in the epoch context.
 ///
 /// This allocates the memory for the full dataset and inits dataset items

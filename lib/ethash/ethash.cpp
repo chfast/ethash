@@ -402,4 +402,14 @@ void ethash_destroy_epoch_context(ethash_epoch_context* context) noexcept
     std::free(context);
 }
 
+int ethash_get_light_cache_num_items(const ethash_epoch_context* context) noexcept
+{
+    return context->light_cache_num_items;
+}
+
+int ethash_get_full_dataset_num_items(const ethash_epoch_context* context) noexcept
+{
+    return context->full_dataset_num_items;
+}
+
 }  // extern "C"

@@ -316,6 +316,13 @@ TEST(ethash, get_epoch_number)
     EXPECT_EQ(get_epoch_number(5000000), 166);
 }
 
+TEST(ethash, epoch_context)
+{
+    epoch_context context{3};
+    EXPECT_EQ(get_light_cache_num_items(*context), 268283);
+    EXPECT_EQ(get_full_dataset_num_items(*context), 8585209);
+}
+
 TEST(ethash, light_cache)
 {
     struct light_cache_test_case
