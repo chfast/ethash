@@ -17,7 +17,7 @@ std::shared_ptr<ethash_epoch_context> shared_context;
 thread_local std::shared_ptr<ethash_epoch_context> thread_local_context;
 }  // namespace
 
-std::shared_ptr<ethash_epoch_context> get_epoch_context(int epoch_number)
+const ethash_epoch_context& get_epoch_context(int epoch_number)
 {
     // Check if local context matches epoch number.
     if (!thread_local_context || thread_local_context->epoch_number != epoch_number)
@@ -41,21 +41,19 @@ std::shared_ptr<ethash_epoch_context> get_epoch_context(int epoch_number)
         thread_local_context = shared_context;
     }
 
-    return thread_local_context;
+    return *thread_local_context;
 }
 
 result hash(int epoch_number, const hash256& header_hash, uint64_t nonce)
 {
-    std::shared_ptr<ethash_epoch_context> epoch_context = get_epoch_context(epoch_number);
-    return ethash::hash_light(*epoch_context, header_hash, nonce);
+    return ethash::hash_light(get_epoch_context(epoch_number), header_hash, nonce);
 }
 
 bool verify(int block_number, const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
     uint64_t target)
 {
-    std::shared_ptr<ethash_epoch_context> epoch_context =
-        get_epoch_context(get_epoch_number(block_number));
-    return ethash::verify(*epoch_context, header_hash, mix_hash, nonce, target);
+    return ethash::verify(
+        get_epoch_context(get_epoch_number(block_number)), header_hash, mix_hash, nonce, target);
 }
 }  // namespace managed
 }  // namespace ethash

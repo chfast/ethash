@@ -14,8 +14,8 @@ static void get_epoch_context(benchmark::State& state)
 
     for (auto _ : state)
     {
-        auto ctx = ethash::managed::get_epoch_context(e);
-        benchmark::DoNotOptimize(ctx.get());
+        auto& ctx = ethash::managed::get_epoch_context(e);
+        benchmark::DoNotOptimize(&ctx);
     }
 }
 BENCHMARK(get_epoch_context)->Arg(0)->ThreadRange(1, 8);
