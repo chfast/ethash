@@ -66,14 +66,14 @@ TEST(hash, hash256_from_bytes)
 
 TEST(hash, hash512_init)
 {
-    ethash::hash512 hash;
+    ethash::hash512 hash = {};
     for (auto w : hash.words)
         EXPECT_EQ(w, 0);
 }
 
 TEST(hash, hash1024_init)
 {
-    ethash::hash1024 hash;
+    ethash::hash1024 hash = {};
     for (auto w : hash.words)
         EXPECT_EQ(w, 0);
 }

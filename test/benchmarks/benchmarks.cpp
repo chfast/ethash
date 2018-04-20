@@ -90,7 +90,7 @@ BENCHMARK(hash512_64);
 
 static void double_hash_naive(benchmark::State& state)
 {
-    ethash::hash1024 hash;
+    ethash::hash1024 hash = {};
     benchmark::ClobberMemory();
 
     for (auto _ : state)
@@ -105,7 +105,7 @@ BENCHMARK(double_hash_naive);
 
 static void double_hash_optimized(benchmark::State& state)
 {
-    ethash::hash1024 hash;
+    ethash::hash1024 hash = {};
     benchmark::ClobberMemory();
 
     for (auto _ : state)
