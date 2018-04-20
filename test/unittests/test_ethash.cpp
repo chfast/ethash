@@ -64,6 +64,13 @@ TEST(hash, hash256_from_bytes)
     EXPECT_EQ(to_hex(h), "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
 }
 
+TEST(hash, hash512_init)
+{
+    ethash::hash512 hash;
+    for (auto w : hash.words)
+        EXPECT_EQ(w, 0);
+}
+
 TEST(hash, hash1024_init)
 {
     ethash::hash1024 hash;
@@ -381,8 +388,8 @@ TEST(ethash, light_cache)
         {
             const size_t index_limit = static_cast<size_t>(context->light_cache_num_items);
             ASSERT_LT(u.index, index_limit);
-            EXPECT_EQ(to_hex(context->light_cache[u.index]), u.hash_hex)
-                << "epoch: " << t.epoch_number << " item: " << u.index;
+            const auto& item = context->light_cache[u.index];
+            EXPECT_EQ(to_hex(item), u.hash_hex) << t.epoch_number << " / " << u.index;
         }
 
         ethash_destroy_epoch_context(context);
