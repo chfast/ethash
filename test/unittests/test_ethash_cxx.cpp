@@ -11,34 +11,27 @@
 
 using namespace ethash;
 
-epoch_context invalid_global_context = [] {
-    epoch_context c{0};
-    epoch_context d{std::move(c)};
-    return c;
-}();
-
-TEST(ethash_cxx, epoch_context_move)
+TEST(ethash_cxx, create_epoch_context)
 {
-    epoch_context c1{1};
-    EXPECT_TRUE(c1);
+    auto ctx1 = create_epoch_context(0);
+    EXPECT_TRUE(ctx1);
 
-    auto ptr = &*c1;
+    auto ptr = ctx1.get();
 
-    epoch_context c2 = std::move(c1);
-    EXPECT_TRUE(c2);
-    EXPECT_FALSE(c1);
-    EXPECT_EQ(&*c2, ptr);
+    auto ctx2 = std::move(ctx1);
+    EXPECT_TRUE(ctx2);
+    EXPECT_FALSE(ctx1);
+    EXPECT_EQ(ctx2.get(), ptr);
 
-    c1 = std::move(c2);
-    EXPECT_TRUE(c1);
-    EXPECT_FALSE(c2);
+    ctx1 = std::move(ctx2);
+    EXPECT_TRUE(ctx1);
+    EXPECT_FALSE(ctx2);
 
-    epoch_context c3 = std::move(c2);
-    EXPECT_FALSE(c3);
-    EXPECT_FALSE(c2);
-}
+    const auto ctx3 = std::move(ctx2);
+    EXPECT_FALSE(ctx3);
+    EXPECT_FALSE(ctx2);
 
-TEST(ethash_cxx, epoch_context_destructor)
-{
-    auto c = std::move(invalid_global_context);
+    EXPECT_TRUE(ctx1);
+    ctx1 = create_epoch_context(0);
+    EXPECT_TRUE(ctx1);
 }

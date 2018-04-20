@@ -318,7 +318,7 @@ TEST(ethash, get_epoch_number)
 
 TEST(ethash, epoch_context)
 {
-    epoch_context context{3};
+    const auto context = create_epoch_context(3);
     EXPECT_EQ(get_light_cache_num_items(*context), 268283);
     EXPECT_EQ(get_full_dataset_num_items(*context), 8585209);
 }
@@ -550,7 +550,7 @@ TEST(ethash, dataset_items_epoch13)
 
 
     // Create example epoch context.
-    epoch_context context{13};
+    const auto context = create_epoch_context(13);
 
     for (const auto& t : test_cases)
     {
