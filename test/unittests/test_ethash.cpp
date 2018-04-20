@@ -60,7 +60,7 @@ TEST(hash, hash256_from_bytes)
 {
     const uint8_t bytes[32] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
         20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
-    auto h = hash256::from_bytes(bytes);
+    auto h = hash256_from_bytes(bytes);
     EXPECT_EQ(to_hex(h), "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
 }
 
@@ -247,7 +247,7 @@ TEST(ethash, find_epoch_number_double_descending)
 
 TEST(ethash, find_epoch_number_sequential)
 {
-    hash256 seed;
+    hash256 seed = {};
     for (int i = 0; i < 30000; ++i)
     {
         auto e = find_epoch_number(seed);
@@ -280,7 +280,7 @@ TEST(ethash, find_epoch_number_descending)
 
 TEST(ethash, find_epoch_number_invalid)
 {
-    hash256 fake_seed;
+    hash256 fake_seed = {};
     fake_seed.hwords[0] = 1;
     int epoch = find_epoch_number(fake_seed);
     EXPECT_EQ(epoch, -1);
@@ -296,7 +296,7 @@ TEST(ethash, find_epoch_number_epoch_too_high)
 TEST(ethash_multithreaded, find_epoch_number_sequential)
 {
     auto fn = [] {
-        hash256 seed;
+        hash256 seed = {};
         for (int i = 0; i < 30000; ++i)
         {
             auto e = find_epoch_number(seed);

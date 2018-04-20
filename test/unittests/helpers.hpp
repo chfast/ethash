@@ -30,7 +30,7 @@ inline ethash::hash256 to_hash256(const std::string& hex)
     {
         int h = parse_digit(hex[i - 1]);
         int l = parse_digit(hex[i]);
-        hash.bytes[i / 2] = char((h << 4) | l);
+        hash.bytes[i / 2] = uint8_t((h << 4) | l);
     }
     return hash;
 }

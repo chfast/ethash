@@ -23,7 +23,7 @@ TEST(keccak, empty_256)
 {
     uint64_t dummy_byte = 0xd;
     hash256 h = keccak<256>(&dummy_byte, 0);
-    std::string strh{h.bytes, sizeof(h)};
+    std::string strh{reinterpret_cast<const char*>(h.bytes), sizeof(h)};
     EXPECT_EQ(strh, std::string(keccak256_of_empty, sizeof(h)));
 }
 
@@ -76,7 +76,7 @@ TEST(keccak, double512)
 
 TEST(helpers, to_hex)
 {
-    hash256 h;
+    hash256 h = {};
     h.bytes[0] = 0;
     h.bytes[1] = 1;
     h.bytes[2] = 2;
@@ -89,7 +89,7 @@ TEST(helpers, to_hex)
     h.bytes[9] = 9;
     h.bytes[10] = 10;
 
-    h.bytes[31] = char(-1);
+    h.bytes[31] = 0xff;
 
     auto s = to_hex(h);
     EXPECT_EQ(s, "000102030405060708090a0000000000000000000000000000000000000000ff");

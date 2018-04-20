@@ -29,23 +29,21 @@ static constexpr int full_dataset_item_size = ETHASH_FULL_DATASET_ITEM_SIZE;
 
 union hash256
 {
-    uint64_t words[4] = {0};
+    uint64_t words[4];
     uint32_t hwords[8];
-    char bytes[32];
-
-    constexpr hash256() noexcept : words{0} {}
-
-    /// Named constructor from bytes.
-    ///
-    /// @param bytes  A pointer to array of at least 32 bytes.
-    /// @return       The constructed hash.
-    static hash256 from_bytes(const uint8_t bytes[32]) noexcept
-    {
-        hash256 h;
-        std::memcpy(&h, bytes, sizeof(h));
-        return h;
-    }
+    uint8_t bytes[32];
 };
+
+/// Constructs a 256-bit hash from an array of bytes.
+///
+/// @param bytes  A pointer to array of at least 32 bytes.
+/// @return       The constructed hash.
+inline hash256 hash256_from_bytes(const uint8_t bytes[32]) noexcept
+{
+    hash256 h;
+    std::memcpy(&h, bytes, sizeof(h));
+    return h;
+}
 
 struct result
 {
