@@ -65,14 +65,6 @@ const ethash_epoch_context& get_epoch_context(int epoch_number)
     return *thread_local_context;
 }
 
-memory_ref get_light_cache_data(int epoch_number)
-{
-    auto& context = get_epoch_context(epoch_number);
-    const uint8_t* const data = reinterpret_cast<const uint8_t*>(context.light_cache[0].bytes);
-    const size_t size = get_light_cache_size(context.light_cache_num_items);
-    return {data, size};
-}
-
 result hash(int epoch_number, const hash256& header_hash, uint64_t nonce)
 {
     return ethash::hash_light(get_epoch_context(epoch_number), header_hash, nonce);
