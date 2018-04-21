@@ -387,11 +387,13 @@ ethash_epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
     const hash256 seed = calculate_seed(epoch_number);
     build_light_cache(light_cache, light_cache_num_items, seed);
 
-    ethash_epoch_context* const context = new (alloc_data) ethash_epoch_context;
-    context->epoch_number = epoch_number;
-    context->light_cache_num_items = light_cache_num_items;
-    context->light_cache = light_cache;
-    context->full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
+    ethash_epoch_context* const context = new (alloc_data) ethash_epoch_context{
+        epoch_number,
+        light_cache_num_items,
+        light_cache,
+        calculate_full_dataset_num_items(epoch_number),
+        nullptr,
+    };
     return context;
 }
 

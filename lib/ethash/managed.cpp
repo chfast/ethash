@@ -68,7 +68,7 @@ const ethash_epoch_context& get_epoch_context(int epoch_number)
 memory_ref get_light_cache_data(int epoch_number)
 {
     auto& context = get_epoch_context(epoch_number);
-    const uint8_t* const data = reinterpret_cast<uint8_t*>(context.light_cache[0].bytes);
+    const uint8_t* const data = reinterpret_cast<const uint8_t*>(context.light_cache[0].bytes);
     const size_t size = get_light_cache_size(context.light_cache_num_items);
     return {data, size};
 }

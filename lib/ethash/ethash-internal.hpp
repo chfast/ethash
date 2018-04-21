@@ -26,9 +26,9 @@ hash512 calculate_dataset_item_partial(const hash512* cache, int num_cache_items
 
 extern "C" struct ethash_epoch_context
 {
-    int epoch_number = -1;
-    int light_cache_num_items = 0;
-    ethash::hash512* light_cache = nullptr;
-    int full_dataset_num_items = 0;
-    ethash::hash1024* full_dataset = nullptr;
+    const int epoch_number;
+    const int light_cache_num_items;
+    const ethash_hash512* light_cache;
+    const int full_dataset_num_items;
+    ethash_hash1024* full_dataset;
 };

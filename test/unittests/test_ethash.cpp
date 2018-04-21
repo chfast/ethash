@@ -44,13 +44,15 @@ ethash_epoch_context* create_epoch_context_mock(int epoch_number)
         return nullptr;  // Signal out-of-memory by returning null pointer.
 
     hash512* const light_cache = reinterpret_cast<hash512*>(alloc_data + context_alloc_size);
-    ethash_epoch_context* const context = new (alloc_data) ethash_epoch_context;
-    context->epoch_number = epoch_number;
-    context->light_cache_num_items = light_cache_num_items;
-    context->light_cache = light_cache;
-    context->full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
-
-    std::fill_n(context->light_cache, context->light_cache_num_items, fill);
+    std::fill_n(light_cache, light_cache_num_items, fill);
+    
+    ethash_epoch_context* const context = new (alloc_data) ethash_epoch_context{
+        epoch_number,
+        light_cache_num_items,
+        light_cache,
+        calculate_full_dataset_num_items(epoch_number),
+        nullptr,
+    };
     return context;
 }
 }
@@ -630,7 +632,7 @@ TEST(ethash_multithreaded, small_dataset)
     constexpr uint64_t target = uint64_t(1) << 50;
 
     ethash_epoch_context* context = create_epoch_context_mock(0);
-    context->full_dataset_num_items = num_dataset_items;
+    const_cast<int&>(context->full_dataset_num_items) = num_dataset_items;
     init_full_dataset(*context);
 
     std::array<std::future<uint64_t>, num_treads> futures;
@@ -649,7 +651,7 @@ TEST(ethash, small_dataset_light)
     constexpr uint64_t target = uint64_t(1) << 55;
 
     ethash_epoch_context* context = create_epoch_context_mock(0);
-    context->full_dataset_num_items = num_dataset_items;
+    const_cast<int&>(context->full_dataset_num_items) = num_dataset_items;
 
     uint64_t solution = search_light(*context, {}, target, 475, 10);
     EXPECT_EQ(solution, 482);
@@ -672,7 +674,7 @@ TEST(ethash, small_dataset_light)
 TEST(ethash, init_full_dataset_oom)
 {
     auto* mock_context = create_epoch_context_mock(0);
-    mock_context->full_dataset_num_items = std::numeric_limits<int>::max();
+    const_cast<int&>(mock_context->full_dataset_num_items) = std::numeric_limits<int>::max();
     EXPECT_FALSE(init_full_dataset(*mock_context));
     ethash_destroy_epoch_context(mock_context);
 }
