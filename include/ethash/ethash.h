@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 #define NOEXCEPT noexcept
 #else
@@ -18,6 +20,31 @@ extern "C" {
 #define ETHASH_EPOCH_LENGTH 30000
 #define ETHASH_LIGHT_CACHE_ITEM_SIZE 64
 #define ETHASH_FULL_DATASET_ITEM_SIZE 128
+
+
+union ethash_hash256
+{
+    uint64_t words[4];
+    uint32_t hwords[8];
+    uint8_t bytes[32];
+};
+
+union ethash_hash512
+{
+    uint64_t words[8];
+    uint32_t half_words[16];
+    char bytes[64];
+};
+
+union ethash_hash1024
+{
+    /* TODO: Is the array worse than 2 fields for memory aliasing? */
+    union ethash_hash512 hashes[2];
+    uint64_t words[16];
+    uint32_t hwords[32];
+    uint8_t bytes[128];
+};
+
 
 struct ethash_epoch_context;
 

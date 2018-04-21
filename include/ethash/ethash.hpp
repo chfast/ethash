@@ -26,13 +26,9 @@ static constexpr int epoch_length = ETHASH_EPOCH_LENGTH;
 static constexpr int light_cache_item_size = ETHASH_LIGHT_CACHE_ITEM_SIZE;
 static constexpr int full_dataset_item_size = ETHASH_FULL_DATASET_ITEM_SIZE;
 
-
-union hash256
-{
-    uint64_t words[4];
-    uint32_t hwords[8];
-    uint8_t bytes[32];
-};
+using hash256 = ethash_hash256;
+using hash512 = ethash_hash512;
+using hash1024 = ethash_hash1024;
 
 /// Constructs a 256-bit hash from an array of bytes.
 ///

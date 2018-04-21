@@ -14,21 +14,6 @@
 
 namespace ethash
 {
-union hash512
-{
-    uint64_t words[8];
-    uint32_t half_words[16];
-    char bytes[64];
-};
-
-union hash1024
-{
-    // TODO: Is the array worse than 2 fields for memory aliasing?
-    hash512 hashes[2];
-    uint64_t words[16];
-    uint32_t hwords[32];
-    uint8_t bytes[128];
-};
 
 hash256 calculate_seed(int epoch_number) noexcept;
 
