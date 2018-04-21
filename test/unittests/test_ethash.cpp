@@ -45,7 +45,7 @@ ethash_epoch_context* create_epoch_context_mock(int epoch_number)
 
     hash512* const light_cache = reinterpret_cast<hash512*>(alloc_data + context_alloc_size);
     std::fill_n(light_cache, light_cache_num_items, fill);
-    
+
     ethash_epoch_context* const context = new (alloc_data) ethash_epoch_context{
         epoch_number,
         light_cache_num_items,
@@ -328,8 +328,8 @@ TEST(ethash, get_epoch_number)
 TEST(ethash, epoch_context)
 {
     const auto context = create_epoch_context(3);
-    EXPECT_EQ(get_light_cache_num_items(*context), 268283);
-    EXPECT_EQ(get_full_dataset_num_items(*context), 8585209);
+    EXPECT_EQ(context->light_cache_num_items, 268283);
+    EXPECT_EQ(context->full_dataset_num_items, 8585209);
 }
 
 TEST(ethash, light_cache)

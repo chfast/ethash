@@ -46,7 +46,15 @@ union ethash_hash1024
 };
 
 
-struct ethash_epoch_context;
+struct ethash_epoch_context
+{
+    const int epoch_number;
+    const int light_cache_num_items;
+    const union ethash_hash512* light_cache;
+    const int full_dataset_num_items;
+    union ethash_hash1024* full_dataset;
+};
+
 
 /**
  * Calculates the number of items in the light cache for given epoch.
@@ -75,9 +83,6 @@ int ethash_calculate_full_dataset_num_items(int epoch_number) NOEXCEPT;
 struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXCEPT;
 
 void ethash_destroy_epoch_context(struct ethash_epoch_context* context) NOEXCEPT;
-
-int ethash_get_light_cache_num_items(const struct ethash_epoch_context* context) NOEXCEPT;
-int ethash_get_full_dataset_num_items(const struct ethash_epoch_context* context) NOEXCEPT;
 
 #ifdef __cplusplus
 }
