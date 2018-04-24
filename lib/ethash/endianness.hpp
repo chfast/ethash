@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "ethash-internal.hpp"
+#include <ethash/ethash.hpp>
 
 #if _WIN32
 
@@ -55,11 +55,6 @@ inline uint64_t fix_endianness(uint64_t x)
 }
 
 inline const hash1024& fix_endianness32(const hash1024& h)
-{
-    return h;
-}
-
-inline const hash1024& fix_endianness64(const hash1024& h)
 {
     return h;
 }

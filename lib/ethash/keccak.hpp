@@ -89,40 +89,10 @@ inline hash512 keccak512(const hash512& input) noexcept
 
 inline hash1024 double_keccak(const hash1024& input) noexcept
 {
-    static constexpr size_t bits = 512;
-    static constexpr size_t size = sizeof(input.hashes[0]) / sizeof(uint64_t);
-    static constexpr size_t block_size = (1600 - bits * 2) / 8;
-    static constexpr size_t block_words = block_size / sizeof(uint64_t);
-
-    auto data0 = &input.hashes[0].bytes;
-    auto data1 = &input.hashes[1].bytes;
-
-    uint64_t state0[25] = {};
-    uint64_t state1[25] = {};
-
-    // Final block:
-    uint64_t block0[block_words] = {};
-    uint64_t block1[block_words] = {};
-    std::memcpy(block0, data0, size * sizeof(uint64_t));
-    std::memcpy(block1, data1, size * sizeof(uint64_t));
-
-    // Padding:
-    auto block_bytes0 = reinterpret_cast<unsigned char*>(block0);
-    block_bytes0[size * sizeof(uint64_t)] = 0x01;
-    block_bytes0[block_size - 1] = 0x80;
-    auto block_bytes1 = reinterpret_cast<unsigned char*>(block1);
-    block_bytes1[size * sizeof(uint64_t)] = 0x01;
-    block_bytes1[block_size - 1] = 0x80;
-
-    keccak_load_block_into_state(state0, block0, block_size);
-    keccak_load_block_into_state(state1, block1, block_size);
-    ethash_keccakf(state0);
-    ethash_keccakf(state1);
-
-    hash1024 hash;
-    std::memcpy(&hash.hashes[0], state0, sizeof(hash.hashes[0]));
-    std::memcpy(&hash.hashes[1], state1, sizeof(hash.hashes[1]));
-    return fix_endianness64(hash);
+    hash1024 output;
+    output.hashes[0] = keccak512(input.hashes[0]);
+    output.hashes[1] = keccak512(input.hashes[1]);
+    return output;
 }
 
-}
+}  // namespace ethash
