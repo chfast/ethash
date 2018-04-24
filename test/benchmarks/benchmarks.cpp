@@ -88,6 +88,20 @@ static void hash512_64(benchmark::State& state)
 BENCHMARK(hash512_64);
 
 
+static void double_hash_optimized(benchmark::State& state)
+{
+    ethash::hash1024 hash = {};
+    benchmark::ClobberMemory();
+
+    for (auto _ : state)
+    {
+        hash = ethash::double_keccak(hash);
+        benchmark::DoNotOptimize(hash.bytes);
+    }
+}
+BENCHMARK(double_hash_optimized);
+
+
 static void double_hash_naive(benchmark::State& state)
 {
     ethash::hash1024 hash = {};
@@ -101,20 +115,6 @@ static void double_hash_naive(benchmark::State& state)
     }
 }
 BENCHMARK(double_hash_naive);
-
-
-static void double_hash_optimized(benchmark::State& state)
-{
-    ethash::hash1024 hash = {};
-    benchmark::ClobberMemory();
-
-    for (auto _ : state)
-    {
-        hash = ethash::double_keccak(hash);
-        benchmark::DoNotOptimize(hash.bytes);
-    }
-}
-BENCHMARK(double_hash_optimized);
 
 
 static void seed(benchmark::State& state)

@@ -1,15 +1,16 @@
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
 #pragma once
 
 #include "endianness.hpp"
-#include "ethash-internal.hpp"
+
+#include <ethash/ethash.hpp>
 
 #include <cstring>
 
 extern "C" void ethash_keccakf(uint64_t* state) noexcept;
-extern "C" void ethash_double_keccakf(uint64_t* state) noexcept;
 
 namespace ethash
 {
@@ -96,10 +97,8 @@ inline hash1024 double_keccak(const hash1024& input) noexcept
     auto data0 = &input.hashes[0].bytes;
     auto data1 = &input.hashes[1].bytes;
 
-    // TODO: De-alias the state.
-    uint64_t state[50] = {};
-    uint64_t* state0 = &state[0];
-    uint64_t* state1 = &state[25];
+    uint64_t state0[25] = {};
+    uint64_t state1[25] = {};
 
     // Final block:
     uint64_t block0[block_words] = {};
@@ -117,7 +116,8 @@ inline hash1024 double_keccak(const hash1024& input) noexcept
 
     keccak_load_block_into_state(state0, block0, block_size);
     keccak_load_block_into_state(state1, block1, block_size);
-    ethash_double_keccakf(state);
+    ethash_keccakf(state0);
+    ethash_keccakf(state1);
 
     hash1024 hash;
     std::memcpy(&hash.hashes[0], state0, sizeof(hash.hashes[0]));

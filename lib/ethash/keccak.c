@@ -257,10 +257,3 @@ void ethash_keccakf(uint64_t* state)
     state[23] = Aso;
     state[24] = Asu;
 }
-
-void ethash_double_keccakf(uint64_t* state)
-{
-    /* FIXME: Does not make sense. */
-    ethash_keccakf(state);
-    ethash_keccakf(state + 25);
-}
