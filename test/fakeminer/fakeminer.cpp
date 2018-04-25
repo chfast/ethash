@@ -1,3 +1,4 @@
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
@@ -23,63 +24,80 @@ class ethash_interface
 public:
     virtual ~ethash_interface() noexcept = default;
 
-    virtual void search(
-        const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const noexcept = 0;
+    virtual void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
+        noexcept = 0;
 };
 
 class ethash_light : public ethash_interface
 {
-    ethash::epoch_context_ptr context;
+    const ethash::epoch_context& context;
 
 public:
-    explicit ethash_light(int epoch_number) : context{ethash::create_epoch_context(epoch_number)} {}
-
-    void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
-        noexcept override
-    {
-        ethash::search_light(*context, header_hash, 0, nonce, iterations);
-    }
-};
-
-class ethash_full : public ethash_interface
-{
-    ethash::epoch_context_full_ptr context;
-
-public:
-    explicit ethash_full(int epoch_number)
-      : context{ethash::create_epoch_context_full(epoch_number)}
+    explicit ethash_light(int epoch_number)
+      : context(ethash::managed::get_epoch_context(epoch_number))
     {}
 
     void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
         noexcept override
     {
-        ethash::search(*context, header_hash, 0, nonce, iterations);
+        ethash::search_light(context, header_hash, 0, nonce, iterations);
+    }
+};
+
+class ethash_full : public ethash_interface
+{
+    const ethash::epoch_context_full& context;
+
+public:
+    explicit ethash_full(int epoch_number)
+      : context(ethash::managed::get_epoch_context_full(epoch_number))
+    {}
+
+    void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
+        noexcept override
+    {
+        ethash::search(context, header_hash, 0, nonce, iterations);
     }
 };
 
 
+std::atomic<int> block_number{0};
 std::atomic<int> num_hashes{0};
 
-void worker(const ethash_interface& ei, const ethash::hash256& header_hash, uint64_t start_nonce,
-    int iterations, int work_size)
+void worker(bool light, const ethash::hash256& header_hash, uint64_t start_nonce, int batch_size)
 {
-    for (int i = 0; i < iterations; i += work_size)
+    int current_epoch = -1;
+    std::unique_ptr<ethash_interface> ei;
+    uint64_t i = 0;
+    size_t w = static_cast<size_t>(batch_size);
+    while (true)
     {
-        // FIXME: Change iterations arg in search().
-        ei.search(
-            header_hash, start_nonce + static_cast<uint64_t>(i), static_cast<size_t>(work_size));
+        int b = block_number.load(std::memory_order_relaxed);
+        if (b < 0)
+            break;
 
-        num_hashes.fetch_add(work_size, std::memory_order_relaxed);
+        int e = ethash::get_epoch_number(b);
+
+        if (current_epoch != e)
+        {
+            ei.reset(
+                light ? static_cast<ethash_interface*>(new ethash_light{e}) : new ethash_full{e});
+            current_epoch = e;
+        }
+
+        ei->search(header_hash, start_nonce + i, w);
+        num_hashes.fetch_add(batch_size, std::memory_order_relaxed);
+        i += w;
     }
 }
 }  // namespace
 
 int main(int argc, const char* argv[])
 {
-    int num_iterations = 10000;
+    int num_blocks = 10;
+    int block_time = 6;
     int work_size = 100;
-    int epoch = 0;
-    int num_threads = 1;
+    int num_threads = static_cast<int>(std::thread::hardware_concurrency());
     uint64_t start_nonce = 0;
     bool light = false;
 
@@ -90,9 +108,9 @@ int main(int argc, const char* argv[])
         if (arg == "--light")
             light = true;
         else if (arg == "-i" && i + 1 < argc)
-            num_iterations = std::stoi(argv[++i]);
-        else if (arg == "-e" && i + 1 < argc)
-            epoch = std::stoi(argv[++i]);
+            num_blocks = std::stoi(argv[++i]);
+        else if (arg == "-b" && i + 1 < argc)
+            block_number = std::stoi(argv[++i]);
         else if (arg == "-t" && i + 1 < argc)
             num_threads = std::stoi(argv[++i]);
         else if (arg == "-n" && i + 1 < argc)
@@ -100,39 +118,43 @@ int main(int argc, const char* argv[])
     }
 
     // clang-format off
-    std::cout << "fakeminer benchmark"
-              << "\n  iterations:  " << num_iterations
+    std::cout << "Fakeminer Benchmark\n\nParameters:"
               << "\n  threads:     " << num_threads
+              << "\n  blocks:      " << num_blocks
+              << "\n  block time:  " << block_time
+              << "\n  batch size:  " << work_size
               << "\n  start nonce: " << start_nonce
               << "\n\n";
     // clang-format on
 
+    const uint64_t divisor = static_cast<uint64_t>(num_threads);
+    const uint64_t nonce_space_per_thread = std::numeric_limits<uint64_t>::max() / divisor;
 
     const ethash::hash256 header_hash{};
-    const int iterations_per_thread = num_iterations / num_threads;
-
-    std::unique_ptr<ethash_interface> ei{
-        light ? static_cast<ethash_interface*>(new ethash_light{epoch}) : new ethash_full{epoch}};
 
     std::vector<std::future<void>> futures;
 
     for (int t = 0; t < num_threads; ++t)
     {
-        futures.emplace_back(std::async(std::launch::async, worker, std::ref(*ei), header_hash,
-            start_nonce, iterations_per_thread, work_size));
-        start_nonce += static_cast<uint64_t>(iterations_per_thread);
+        futures.emplace_back(
+            std::async(std::launch::async, worker, light, header_hash, start_nonce, work_size));
+        start_nonce += nonce_space_per_thread;
     }
 
-    std::cout << "Hashrate:\n      current      average\n";
+    std::cout << "Progress:\n  epoch    block       current       average\n";
 
     int all_hashes = 0;
     auto start_time = timer::now();
     auto time = start_time;
-    while (true)
+
+    for (int i = 0; i < num_blocks; ++i)
     {
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+        std::this_thread::sleep_for(std::chrono::seconds(block_time));
         int current_hashes = num_hashes.exchange(0, std::memory_order_relaxed);
         all_hashes += current_hashes;
+
+        int b = block_number.fetch_add(1, std::memory_order_relaxed);
+        int e = ethash::get_epoch_number(b);
 
         auto now = timer::now();
         auto current_duration = duration_cast<milliseconds>(now - time).count();
@@ -142,19 +164,23 @@ int main(int argc, const char* argv[])
         auto current_khps = double(current_hashes) / double(current_duration);
         auto average_khps = double(all_hashes) / double(all_duration);
 
-        std::cout << std::fixed << "  " << std::setw(6) << std::setprecision(2) << current_khps
-                  << " kh/s  " << std::setw(6) << std::setprecision(2) << average_khps << " kh/s\n";
-
-        if (all_hashes >= num_iterations)
-            break;
+        std::cout << std::setw(7) << e << std::setw(9) << b << std::fixed << std::setw(9)
+                  << std::setprecision(2) << current_khps << " kh/s" << std::setw(9)
+                  << std::setprecision(2) << average_khps << " kh/s\n";
     }
 
+    block_number.store(-1, std::memory_order_relaxed);
     for (auto& future : futures)
         future.wait();
 
-    auto ms = duration_cast<milliseconds>(timer::now() - start_time).count();
-    auto hps = static_cast<decltype(ms)>(num_iterations) * 1000 / ms;
+    all_hashes += num_hashes.load(std::memory_order_relaxed);
 
-    std::cout << ((ms + 999) / 1000) << " s\n" << hps << " H/s\n";
+    auto total_duration = duration_cast<milliseconds>(timer::now() - start_time).count();
+    auto total_khps = double(all_hashes) / double(total_duration);
+    auto total_seconds = double(total_duration) / 1000;
+
+    std::cout << "\nSummary:\n  time:     " << std::fixed << std::setw(7) << std::setprecision(2)
+              << total_seconds << " s\n  hashrate: " << std::setw(7) << std::setprecision(2)
+              << total_khps << " kh/s\n";
     return 0;
 }
