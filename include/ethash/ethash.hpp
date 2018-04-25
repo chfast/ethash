@@ -30,6 +30,8 @@ using hash256 = ethash_hash256;
 using hash512 = ethash_hash512;
 using hash1024 = ethash_hash1024;
 
+using epoch_context = ethash_epoch_context;
+
 /// Constructs a 256-bit hash from an array of bytes.
 ///
 /// @param bytes  A pointer to array of at least 32 bytes.
@@ -84,8 +86,7 @@ inline uint64_t get_full_dataset_size(int num_items) noexcept
 }
 
 /// Owned unique pointer to an epoch context.
-using epoch_context_ptr =
-    std::unique_ptr<ethash_epoch_context, decltype(&ethash_destroy_epoch_context)>;
+using epoch_context_ptr = std::unique_ptr<epoch_context, decltype(&ethash_destroy_epoch_context)>;
 
 /// Creates Ethash epoch context.
 ///
@@ -103,20 +104,20 @@ inline epoch_context_ptr create_epoch_context(int epoch_number) noexcept
 ///
 /// @param context  The epoch context.
 /// @return  Returns true if memory allocations succeeded, false otherwise.
-bool init_full_dataset(ethash_epoch_context& context) noexcept;
+bool init_full_dataset(epoch_context& context) noexcept;
 
 
-result hash_light(const ethash_epoch_context& context, const hash256& header_hash, uint64_t nonce);
+result hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
 
-result hash(const ethash_epoch_context& context, const hash256& header_hash, uint64_t nonce);
+result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
 
-bool verify(const ethash_epoch_context& context, const hash256& header_hash,
-    const hash256& mix_hash, uint64_t nonce, uint64_t target);
+bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
+    uint64_t nonce, uint64_t target);
 
-uint64_t search_light(const ethash_epoch_context& context, const hash256& header_hash,
-    uint64_t target, uint64_t start_nonce, size_t iterations);
+uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
+    uint64_t start_nonce, size_t iterations);
 
-uint64_t search(const ethash_epoch_context& context, const hash256& header_hash, uint64_t target,
+uint64_t search(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);
 
 
@@ -134,7 +135,7 @@ int find_epoch_number(const hash256& seed) noexcept;
 namespace managed
 {
 /// Get shared epoch context.
-const ethash_epoch_context& get_epoch_context(int epoch_number);
+const epoch_context& get_epoch_context(int epoch_number);
 
 /// Compute Ethash hash using light cache and the shared epoch context managed by the library.
 /// TODO: Deprecated.

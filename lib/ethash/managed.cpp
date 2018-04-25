@@ -25,8 +25,8 @@ namespace managed
 namespace
 {
 std::mutex shared_context_mutex;
-std::shared_ptr<ethash_epoch_context> shared_context;
-thread_local std::shared_ptr<ethash_epoch_context> thread_local_context;
+std::shared_ptr<epoch_context> shared_context;
+thread_local std::shared_ptr<epoch_context> thread_local_context;
 
 /// Update thread local epoch context.
 ///
@@ -56,7 +56,7 @@ void update_local_context(int epoch_number)
 }
 }  // namespace
 
-const ethash_epoch_context& get_epoch_context(int epoch_number)
+const epoch_context& get_epoch_context(int epoch_number)
 {
     // Check if local context matches epoch number.
     if (!thread_local_context || thread_local_context->epoch_number != epoch_number)
