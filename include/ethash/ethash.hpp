@@ -134,15 +134,7 @@ int find_epoch_number(const hash256& seed) noexcept;
 
 namespace managed
 {
-/// Get shared epoch context.
+/// Get global shared epoch context.
 const epoch_context& get_epoch_context(int epoch_number);
-
-/// Compute Ethash hash using light cache and the shared epoch context managed by the library.
-/// TODO: Deprecated.
-result hash(int epoch_number, const hash256& header_hash, uint64_t nonce);
-
-/// TODO: Deprecated.
-bool verify(int block_number, const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
-    uint64_t target);
 }  // namespace managed
 }

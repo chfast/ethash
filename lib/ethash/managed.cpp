@@ -64,17 +64,5 @@ const epoch_context& get_epoch_context(int epoch_number)
 
     return *thread_local_context;
 }
-
-result hash(int epoch_number, const hash256& header_hash, uint64_t nonce)
-{
-    return ethash::hash_light(get_epoch_context(epoch_number), header_hash, nonce);
-}
-
-bool verify(int block_number, const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
-    uint64_t target)
-{
-    return ethash::verify(
-        get_epoch_context(get_epoch_number(block_number)), header_hash, mix_hash, nonce, target);
-}
 }  // namespace managed
 }  // namespace ethash

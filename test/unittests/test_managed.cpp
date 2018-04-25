@@ -13,18 +13,6 @@
 
 using namespace ethash;
 
-TEST(managed, hash)
-{
-    for (const auto& t : hash_test_cases)
-    {
-        const hash256 header_hash = to_hash256(t.header_hash_hex);
-        const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
-        const result res = managed::hash(get_epoch_number(t.block_number), header_hash, nonce);
-        EXPECT_EQ(to_hex(res.mix_hash), t.mix_hash_hex);
-        EXPECT_EQ(to_hex(res.final_hash), t.final_hash_hex);
-    }
-}
-
 TEST(managed_multithreaded, hash_all)
 {
     constexpr size_t num_treads = 8;
@@ -37,7 +25,9 @@ TEST(managed_multithreaded, hash_all)
             {
                 const hash256 header_hash = to_hash256(t.header_hash_hex);
                 const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
-                const result res = managed::hash(get_epoch_number(t.block_number), header_hash, nonce);
+                const int epoch_number = get_epoch_number(t.block_number);
+                auto& context = managed::get_epoch_context(epoch_number);
+                const result res = hash_light(context, header_hash, nonce);
                 EXPECT_EQ(to_hex(res.mix_hash), t.mix_hash_hex);
                 EXPECT_EQ(to_hex(res.final_hash), t.final_hash_hex);
             }
@@ -56,7 +46,9 @@ TEST(managed_multithreaded, hash_parallel)
         futures.emplace_back(std::async(std::launch::async, [&t] {
             const hash256 header_hash = to_hash256(t.header_hash_hex);
             const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
-            const result res = managed::hash(get_epoch_number(t.block_number), header_hash, nonce);
+            const int epoch_number = get_epoch_number(t.block_number);
+            auto& context = managed::get_epoch_context(epoch_number);
+            const result res = hash_light(context, header_hash, nonce);
             return (to_hex(res.mix_hash) == t.mix_hash_hex) &&
                    (to_hex(res.final_hash) == t.final_hash_hex);
         }));
@@ -64,20 +56,6 @@ TEST(managed_multithreaded, hash_parallel)
 
     for (auto& f : futures)
         EXPECT_TRUE(f.get());
-}
-
-TEST(managed, verify)
-{
-    for (const auto& t : hash_test_cases)
-    {
-        const hash256 header_hash = to_hash256(t.header_hash_hex);
-        const hash256 mix_hash = to_hash256(t.mix_hash_hex);
-        const hash256 final_hash = to_hash256(t.final_hash_hex);
-        const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
-        const uint64_t target = final_hash.words[0] + 1;
-        const bool valid = managed::verify(t.block_number, header_hash, mix_hash, nonce, target);
-        EXPECT_TRUE(valid);
-    }
 }
 
 TEST(managed_multithreaded, verify_all)
@@ -95,8 +73,9 @@ TEST(managed_multithreaded, verify_all)
                 const hash256 final_hash = to_hash256(t.final_hash_hex);
                 const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
                 const uint64_t target = final_hash.words[0] + 1;
-                const bool valid =
-                    managed::verify(t.block_number, header_hash, mix_hash, nonce, target);
+                const int epoch_number = get_epoch_number(t.block_number);
+                auto& context = managed::get_epoch_context(epoch_number);
+                const bool valid = verify(context, header_hash, mix_hash, nonce, target);
                 EXPECT_TRUE(valid);
             }
         });
@@ -117,7 +96,9 @@ TEST(managed_multithreaded, verify_parallel)
             const hash256 final_hash = to_hash256(t.final_hash_hex);
             const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
             const uint64_t target = final_hash.words[0] + 1;
-            return managed::verify(t.block_number, header_hash, mix_hash, nonce, target);
+            const int epoch_number = get_epoch_number(t.block_number);
+            auto& context = managed::get_epoch_context(epoch_number);
+            return verify(context, header_hash, mix_hash, nonce, target);
         }));
     }
 

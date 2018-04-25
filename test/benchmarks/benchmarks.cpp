@@ -188,14 +188,16 @@ static void verify_managed(benchmark::State& state)
     const uint64_t nonce = 0x4617a20003ba3f25;
     const uint64_t target = 0x0000000000001a5b + 1;
 
-    // This should create the light cache.
-    bool v = ethash::managed::verify(block_number, header_hash, mix_hash, nonce, target);
+    const int epoch_number = ethash::get_epoch_number(block_number);
 
-    if (!v)
-        state.SkipWithError("Invalid input data for validation");
+    // This should create the light cache.
+    ethash::managed::get_epoch_context(epoch_number);
 
     for (auto _ : state)
-        ethash::managed::verify(block_number, header_hash, mix_hash, nonce, target);
+    {
+        auto& context = ethash::managed::get_epoch_context(epoch_number);
+        ethash::verify(context, header_hash, mix_hash, nonce, target);
+    }
 }
 BENCHMARK(verify_managed)->Threads(1)->Threads(2)->Threads(4)->Threads(8);
 
