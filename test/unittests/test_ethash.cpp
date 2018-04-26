@@ -22,7 +22,13 @@ using namespace ethash;
 
 namespace
 {
+struct test_context_full : epoch_context
+{
+    hash1024* full_dataset;
+};
+
 /// Creates the epoch context of the correct size but filled with fake data.
+/// @todo Return unique_ptr.
 epoch_context* create_epoch_context_mock(int epoch_number)
 {
     // Prepare a constant endianness-independent cache item.
@@ -50,7 +56,6 @@ epoch_context* create_epoch_context_mock(int epoch_number)
         light_cache_num_items,
         light_cache,
         calculate_full_dataset_num_items(epoch_number),
-        nullptr,
     };
     return context;
 }
@@ -600,24 +605,22 @@ TEST(ethash, verify_hash)
         const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
 
-        epoch_context* context = ethash_create_epoch_context(epoch_number);
-        ASSERT_NE(context, nullptr);
         const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
         const uint64_t full_dataset_size = get_full_dataset_size(full_dataset_num_items);
-        bool full_dataset_initialized = init_full_dataset(*context);
+
+        auto context = create_epoch_context_full(epoch_number);
 #if _WIN32 && !_WIN64
         // On Windows 32-bit you can only allocate ~ 2GB of memory.
         static constexpr uint64_t allocation_size_limit = uint64_t(2) * 1024 * 1024 * 1024;
-        if (!full_dataset_initialized && full_dataset_size > allocation_size_limit)
+        if (!context && full_dataset_size > allocation_size_limit)
             continue;
 #endif
-        ASSERT_TRUE(full_dataset_initialized) << "size: " << full_dataset_size;
+        ASSERT_NE(context, nullptr);
+        EXPECT_GT(full_dataset_size, 0);
 
         result r = hash(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_hash_hex);
-
-        ethash_destroy_epoch_context(context);
     }
 }
 
@@ -632,11 +635,17 @@ TEST(ethash_multithreaded, small_dataset)
 
     epoch_context* context = create_epoch_context_mock(0);
     const_cast<int&>(context->full_dataset_num_items) = num_dataset_items;
-    init_full_dataset(*context);
+
+    std::unique_ptr<hash1024[]> full_dataset{new hash1024[num_dataset_items]{}};
+    reinterpret_cast<test_context_full*>(context)->full_dataset = full_dataset.get();
+    auto context_full = reinterpret_cast<epoch_context_full*>(context);
 
     std::array<std::future<uint64_t>, num_treads> futures;
     for (auto& f : futures)
-        f = std::async(std::launch::async, [&] { return search(*context, {}, target, 1, 11000); });
+    {
+        f = std::async(
+            std::launch::async, [&] { return search(*context_full, {}, target, 1, 11000); });
+    }
 
     for (auto& f : futures)
         EXPECT_EQ(f.get(), 10498);
@@ -670,17 +679,64 @@ TEST(ethash, small_dataset_light)
 // filter) because we don't want developers using macOS to be hit by this
 // behavior.
 
+#if __linux__
+#include <sys/resource.h>
+
+namespace
+{
+rlimit orig_limit;
+
+bool set_memory_limit(size_t size)
+{
+    getrlimit(RLIMIT_AS, &orig_limit);
+    rlimit limit = orig_limit;
+    limit.rlim_cur = size;
+    return setrlimit(RLIMIT_AS, &limit) == 0;
+}
+
+bool restore_memory_limit()
+{
+    return setrlimit(RLIMIT_AS, &orig_limit) == 0;
+}
+}  // namespace
+
+#else
+
+namespace
+{
+bool set_memory_limit(size_t)
+{
+    return true;
+}
+
+bool restore_memory_limit()
+{
+    return true;
+}
+}  // namespace
+
+#endif
+
+static constexpr bool arch64bit = sizeof(void*) == 8;
+
 TEST(ethash, init_full_dataset_oom)
 {
-    auto* mock_context = create_epoch_context_mock(0);
-    const_cast<int&>(mock_context->full_dataset_num_items) = std::numeric_limits<int>::max();
-    EXPECT_FALSE(init_full_dataset(*mock_context));
-    ethash_destroy_epoch_context(mock_context);
+    static constexpr int epoch = arch64bit ? 3000 : 384;
+    static constexpr size_t expected_size = arch64bit ? 26239565696 : 4294962304;
+    const int num_items = calculate_full_dataset_num_items(epoch);
+    const uint64_t full_dataset_size = get_full_dataset_size(num_items);
+    const size_t size = static_cast<size_t>(full_dataset_size);
+    ASSERT_EQ(size, full_dataset_size);
+    ASSERT_EQ(size, expected_size);
+
+    ASSERT_TRUE(set_memory_limit(1024 * 1024 * 1024));
+    auto* context = ethash_create_epoch_context_full(epoch);
+    ASSERT_TRUE(restore_memory_limit());
+    EXPECT_EQ(context, nullptr);
 }
 
 TEST(ethash, init_light_cache_oom)
 {
-    static constexpr bool arch64bit = sizeof(void*) == 8;
     static constexpr int epoch = arch64bit ? 1000000 : 30000;
     static constexpr size_t expected_size = arch64bit ? 131088776768 : 3948936512;
     const int num_items = calculate_light_cache_num_items(epoch);

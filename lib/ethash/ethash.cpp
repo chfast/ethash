@@ -23,6 +23,20 @@
 #define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
 #endif
 
+
+extern "C" struct ethash_epoch_context_full : ethash_epoch_context
+{
+    ethash_hash1024* full_dataset;
+
+    constexpr ethash_epoch_context_full(int epoch_number, int light_cache_num_items,
+        const ethash_hash512* light_cache, int full_dataset_num_items,
+        ethash_hash1024* full_dataset)
+      : ethash_epoch_context{epoch_number, light_cache_num_items, light_cache,
+            full_dataset_num_items},
+        full_dataset{full_dataset}
+    {}
+};
+
 namespace ethash
 {
 // Verify constants:
@@ -30,6 +44,7 @@ static_assert(sizeof(hash512) == ETHASH_LIGHT_CACHE_ITEM_SIZE, "");
 static_assert(sizeof(hash1024) == ETHASH_FULL_DATASET_ITEM_SIZE, "");
 static_assert(light_cache_item_size == ETHASH_LIGHT_CACHE_ITEM_SIZE, "");
 static_assert(full_dataset_item_size == ETHASH_FULL_DATASET_ITEM_SIZE, "");
+
 
 namespace
 {
@@ -206,15 +221,6 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
     return double_keccak(fix_endianness32(mix));  // Covert 32-bit words back to bytes and hash.
 }
 
-bool init_full_dataset(epoch_context& context) noexcept
-{
-    assert(context.full_dataset == nullptr);
-
-    const size_t num_items = static_cast<size_t>(context.full_dataset_num_items);
-    context.full_dataset = static_cast<hash1024*>(std::calloc(num_items, sizeof(hash1024)));
-    return context.full_dataset != nullptr;
-}
-
 namespace
 {
 using lookup_fn = hash1024 (*)(const epoch_context&, size_t);
@@ -272,12 +278,12 @@ result hash_light(const epoch_context& context, const hash256& header_hash, uint
     return hash_kernel(context, header_hash, nonce, calculate_dataset_item);
 }
 
-result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
+result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce)
 {
-    assert(context.full_dataset != nullptr);
-
-    static const auto lazy_lookup = [](const epoch_context& context, size_t index) {
-        hash1024& item = context.full_dataset[index];
+    static const auto lazy_lookup = [](const epoch_context& context, size_t index) noexcept
+    {
+        auto full_dataset = static_cast<const epoch_context_full&>(context).full_dataset;
+        hash1024& item = full_dataset[index];
         if (item.words[0] == 0)
         {
             // TODO: Copy elision here makes it thread-safe?
@@ -320,7 +326,7 @@ uint64_t search_light(const epoch_context& context, const hash256& header_hash, 
     return 0;
 }
 
-uint64_t search(const epoch_context& context, const hash256& header_hash, uint64_t target,
+uint64_t search(const epoch_context_full& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations)
 {
     const uint64_t end_nonce = start_nonce + iterations;
@@ -369,9 +375,11 @@ int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
     return num_items;
 }
 
-epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
+namespace
 {
-    static_assert(sizeof(epoch_context) < sizeof(hash512), "epoch_context too big");
+epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
+{
+    static_assert(sizeof(epoch_context_full) < sizeof(hash512), "epoch_context too big");
     static constexpr size_t context_alloc_size = sizeof(hash512);
 
     const int light_cache_num_items = calculate_light_cache_num_items(epoch_number);
@@ -386,19 +394,49 @@ epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
     const hash256 seed = calculate_seed(epoch_number);
     build_light_cache(light_cache, light_cache_num_items, seed);
 
-    epoch_context* const context = new (alloc_data) epoch_context{
+    const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
+    hash1024* full_dataset = nullptr;
+    if (full)
+    {
+        // TODO: This can be "optimized" by doing single allocation for light and full caches.
+        const size_t num_items = static_cast<size_t>(full_dataset_num_items);
+        full_dataset = static_cast<hash1024*>(std::calloc(num_items, sizeof(hash1024)));
+        if (!full_dataset)
+        {
+            std::free(alloc_data);
+            return nullptr;
+        }
+    }
+
+    epoch_context_full* const context = new (alloc_data) epoch_context_full{
         epoch_number,
         light_cache_num_items,
         light_cache,
-        calculate_full_dataset_num_items(epoch_number),
-        nullptr,
+        full_dataset_num_items,
+        full_dataset,
     };
     return context;
+}
+}  // namespace
+
+epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
+{
+    return create_epoch_context(epoch_number, false);
+}
+
+epoch_context_full* ethash_create_epoch_context_full(int epoch_number) noexcept
+{
+    return create_epoch_context(epoch_number, true);
+}
+
+void ethash_destroy_epoch_context_full(epoch_context_full* context) noexcept
+{
+    std::free(context->full_dataset);
+    ethash_destroy_epoch_context(context);
 }
 
 void ethash_destroy_epoch_context(epoch_context* context) noexcept
 {
-    std::free(context->full_dataset);
     context->~epoch_context();
     std::free(context);
 }

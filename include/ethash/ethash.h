@@ -50,10 +50,12 @@ struct ethash_epoch_context
 {
     const int epoch_number;
     const int light_cache_num_items;
-    const union ethash_hash512* light_cache;
+    const union ethash_hash512* const light_cache;
     const int full_dataset_num_items;
-    union ethash_hash1024* full_dataset;
 };
+
+
+struct ethash_epoch_context_full;
 
 
 /**
@@ -82,7 +84,22 @@ int ethash_calculate_full_dataset_num_items(int epoch_number) NOEXCEPT;
 
 struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXCEPT;
 
+/**
+ * Creates the epoch context with the full dataset initialized.
+ *
+ * The memory for the full dataset is only allocated and marked as "not-generated".
+ * The items of the full dataset are generated on the fly when hit for the first time.
+ *
+ * The memory allocated in the context MUST be freed with ethash_destroy_epoch_context_full().
+ *
+ * @param epoch_number  The epoch number.
+ * @return  Pointer to the context or null in case of memory allocation failure.
+ */
+struct ethash_epoch_context_full* ethash_create_epoch_context_full(int epoch_number) NOEXCEPT;
+
 void ethash_destroy_epoch_context(struct ethash_epoch_context* context) NOEXCEPT;
+
+void ethash_destroy_epoch_context_full(struct ethash_epoch_context_full* context) NOEXCEPT;
 
 #ifdef __cplusplus
 }

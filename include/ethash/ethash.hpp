@@ -31,6 +31,7 @@ using hash512 = ethash_hash512;
 using hash1024 = ethash_hash1024;
 
 using epoch_context = ethash_epoch_context;
+using epoch_context_full = ethash_epoch_context_full;
 
 /// Constructs a 256-bit hash from an array of bytes.
 ///
@@ -88,6 +89,9 @@ inline uint64_t get_full_dataset_size(int num_items) noexcept
 /// Owned unique pointer to an epoch context.
 using epoch_context_ptr = std::unique_ptr<epoch_context, decltype(&ethash_destroy_epoch_context)>;
 
+using epoch_context_full_ptr =
+    std::unique_ptr<epoch_context_full, decltype(&ethash_destroy_epoch_context_full)>;
+
 /// Creates Ethash epoch context.
 ///
 /// This is a wrapper for ethash_create_epoch_number C function that returns
@@ -97,19 +101,14 @@ inline epoch_context_ptr create_epoch_context(int epoch_number) noexcept
     return {ethash_create_epoch_context(epoch_number), ethash_destroy_epoch_context};
 }
 
-/// Init full dataset in the epoch context.
-///
-/// This allocates the memory for the full dataset and inits dataset items
-/// marked as "not-generated".
-///
-/// @param context  The epoch context.
-/// @return  Returns true if memory allocations succeeded, false otherwise.
-bool init_full_dataset(epoch_context& context) noexcept;
-
+inline epoch_context_full_ptr create_epoch_context_full(int epoch_number) noexcept
+{
+    return {ethash_create_epoch_context_full(epoch_number), ethash_destroy_epoch_context_full};
+}
 
 result hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
 
-result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce);
+result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce);
 
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
     uint64_t nonce, uint64_t target);
@@ -117,7 +116,7 @@ bool verify(const epoch_context& context, const hash256& header_hash, const hash
 uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);
 
-uint64_t search(const epoch_context& context, const hash256& header_hash, uint64_t target,
+uint64_t search(const epoch_context_full& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);
 
 
