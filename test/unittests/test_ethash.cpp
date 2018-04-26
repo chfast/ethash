@@ -584,7 +584,7 @@ TEST(ethash, verify_hash_light)
         const std::string target_hex{t.final_hash_hex, 16};
         const uint64_t target = std::stoull(target_hex, nullptr, 16) + 1;
 
-        epoch_context* context = ethash_create_epoch_context(epoch_number);
+        auto context = create_epoch_context(epoch_number);
 
         result r = hash_light(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
@@ -593,7 +593,8 @@ TEST(ethash, verify_hash_light)
         bool v = verify(*context, header_hash, mix_hash, nonce, target);
         EXPECT_TRUE(v);
 
-        ethash_destroy_epoch_context(context);
+        v = verify(*context, header_hash, mix_hash, nonce + 1, target);
+        EXPECT_FALSE(v);
     }
 }
 
