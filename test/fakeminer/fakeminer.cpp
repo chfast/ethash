@@ -141,12 +141,22 @@ int main(int argc, const char* argv[])
         start_nonce += nonce_space_per_thread;
     }
 
-    std::cout << "Progress:\n  epoch    block       current       average\n";
+    std::cout << "Progress:\n"
+              << "                  |-----    hashrate    -----|  |-----    bandwidth   -----|\n"
+              << "  epoch    block        current       average         current       average\n";
 
     int all_hashes = 0;
     auto start_time = timer::now();
     auto time = start_time;
+    static constexpr int khps_mbps_ratio =
+        ethash::num_dataset_accesses * ethash::full_dataset_item_size / 1024;
 
+    double current_duration = 0;
+    double all_duration = 0;
+    double current_khps = 0;
+    double average_khps = 0;
+    double current_bandwidth = 0;
+    double average_bandwidth = 0;
     for (int i = 0; i < num_blocks; ++i)
     {
         std::this_thread::sleep_for(std::chrono::seconds(block_time));
@@ -157,30 +167,35 @@ int main(int argc, const char* argv[])
         int e = ethash::get_epoch_number(b);
 
         auto now = timer::now();
-        auto current_duration = duration_cast<milliseconds>(now - time).count();
-        auto all_duration = duration_cast<milliseconds>(now - start_time).count();
+        current_duration = double(duration_cast<milliseconds>(now - time).count());
+        all_duration = double(duration_cast<milliseconds>(now - start_time).count());
         time = now;
 
-        auto current_khps = double(current_hashes) / double(current_duration);
-        auto average_khps = double(all_hashes) / double(all_duration);
+        current_khps = double(current_hashes) / current_duration;
+        average_khps = double(all_hashes) / all_duration;
+        current_bandwidth = double(current_hashes * khps_mbps_ratio) / 1024 / current_duration;
+        average_bandwidth = double(all_hashes * khps_mbps_ratio) / 1024 / all_duration;
 
-        std::cout << std::setw(7) << e << std::setw(9) << b << std::fixed << std::setw(9)
+        std::cout << std::setw(7) << e << std::setw(9) << b << std::fixed << std::setw(10)
                   << std::setprecision(2) << current_khps << " kh/s" << std::setw(9)
-                  << std::setprecision(2) << average_khps << " kh/s\n";
+                  << std::setprecision(2) << average_khps << " kh/s" << std::setw(10)
+                  << std::setprecision(2) << current_bandwidth << " GiB/s" << std::setw(8)
+                  << std::setprecision(2) << average_bandwidth << " GiB/s\n";
     }
 
     block_number.store(-1, std::memory_order_relaxed);
     for (auto& future : futures)
         future.wait();
 
-    all_hashes += num_hashes.load(std::memory_order_relaxed);
+    auto total_seconds = all_duration / 1000;
 
-    auto total_duration = duration_cast<milliseconds>(timer::now() - start_time).count();
-    auto total_khps = double(all_hashes) / double(total_duration);
-    auto total_seconds = double(total_duration) / 1000;
-
-    std::cout << "\nSummary:\n  time:     " << std::fixed << std::setw(7) << std::setprecision(2)
-              << total_seconds << " s\n  hashrate: " << std::setw(7) << std::setprecision(2)
-              << total_khps << " kh/s\n";
+    std::cout << "\nSummary:\n  time:                     " << std::fixed << std::setw(7)
+              << std::setprecision(2) << total_seconds
+              << " s\n  latest hashrate:          " << std::setw(7) << std::setprecision(2)
+              << current_khps << " kh/s\n  average hashrate:         " << std::setw(7)
+              << std::setprecision(2) << average_khps
+              << " kh/s\n  latest memory bandwitdh:  " << std::setw(7) << std::setprecision(2)
+              << current_bandwidth << " GiB/s\n  average memory bandwitdh: " << std::setw(7)
+              << std::setprecision(2) << average_bandwidth << " GiB/s\n";
     return 0;
 }
