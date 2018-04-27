@@ -135,5 +135,8 @@ namespace managed
 {
 /// Get global shared epoch context.
 const epoch_context& get_epoch_context(int epoch_number);
+
+/// Get global shared epoch context with full dataset initialized.
+const epoch_context_full& get_epoch_context_full(int epoch_number);
 }  // namespace managed
 }

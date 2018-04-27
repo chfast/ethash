@@ -1,10 +1,11 @@
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
 #include "helpers.hpp"
 #include "test_cases.hpp"
 
-#include <ethash/ethash.hpp>
+#include <ethash/ethash-internal.hpp>
 
 #include <gtest/gtest.h>
 
@@ -133,4 +134,23 @@ TEST(managed_multithreaded, get_epoch_context_random)
 
     for (auto& f : futures)
         EXPECT_GT(f.get(), 0);
+}
+
+TEST(managed_multithreaded, get_epoch_context_full)
+{
+    static constexpr int num_threads = 4;
+
+    std::vector<std::future<bool>> futures;
+
+    for (int i = 0; i < num_threads; ++i)
+    {
+        futures.emplace_back(std::async(std::launch::async, [] {
+            hash1024* full_dataset1 = managed::get_epoch_context_full(7).full_dataset;
+            hash1024* full_dataset2 = managed::get_epoch_context_full(7).full_dataset;
+            return (full_dataset1 == full_dataset2) && (full_dataset1 != nullptr);
+        }));
+    }
+
+    for (auto& f : futures)
+        EXPECT_TRUE(f.get());
 }

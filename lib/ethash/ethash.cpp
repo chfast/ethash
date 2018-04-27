@@ -23,20 +23,6 @@
 #define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
 #endif
 
-
-extern "C" struct ethash_epoch_context_full : ethash_epoch_context
-{
-    ethash_hash1024* full_dataset;
-
-    constexpr ethash_epoch_context_full(int epoch_number, int light_cache_num_items,
-        const ethash_hash512* light_cache, int full_dataset_num_items,
-        ethash_hash1024* full_dataset)
-      : ethash_epoch_context{epoch_number, light_cache_num_items, light_cache,
-            full_dataset_num_items},
-        full_dataset{full_dataset}
-    {}
-};
-
 namespace ethash
 {
 // Internal constants:
