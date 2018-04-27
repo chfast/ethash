@@ -8,7 +8,6 @@
 #include <ethash/ethash-internal.hpp>
 #include <ethash/ethash.hpp>
 #include <ethash/keccak.hpp>
-#include <ethash/params.hpp>
 
 #include "helpers.hpp"
 #include "test_cases.hpp"

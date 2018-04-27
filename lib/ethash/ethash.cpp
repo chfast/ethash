@@ -1,3 +1,4 @@
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
@@ -9,7 +10,6 @@
 #include <limits>
 
 #include "keccak.hpp"
-#include "params.hpp"
 #include "utils.hpp"
 
 #if defined(__has_attribute)
@@ -39,6 +39,14 @@ extern "C" struct ethash_epoch_context_full : ethash_epoch_context
 
 namespace ethash
 {
+// Internal constants:
+constexpr static int light_cache_init_size = 1 << 24;
+constexpr static int light_cache_growth = 1 << 17;
+constexpr static int light_cache_rounds = 3;
+constexpr static int full_dataset_init_size = 1 << 30;
+constexpr static int full_dataset_growth = 1 << 23;
+constexpr static int full_dataset_item_parents = 256;
+
 // Verify constants:
 static_assert(sizeof(hash512) == ETHASH_LIGHT_CACHE_ITEM_SIZE, "");
 static_assert(sizeof(hash1024) == ETHASH_FULL_DATASET_ITEM_SIZE, "");

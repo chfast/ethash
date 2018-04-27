@@ -16,7 +16,6 @@ add_library(
     managed.cpp
     keccak.hpp
     keccak.c
-    params.hpp
     utils.hpp
     utils.cpp
 )
