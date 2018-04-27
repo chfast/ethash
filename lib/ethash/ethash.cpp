@@ -240,7 +240,7 @@ inline result hash_kernel(
     mix.hashes[0] = fix_endianness32(s);
     mix.hashes[1] = fix_endianness32(s);
 
-    for (uint32_t i = 0; i < 64; ++i)
+    for (uint32_t i = 0; i < num_dataset_accesses; ++i)
     {
         auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % index_limit;
         hash1024 newdata = fix_endianness32(lookup(context, p));
