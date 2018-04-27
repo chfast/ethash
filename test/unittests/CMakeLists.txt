@@ -12,7 +12,7 @@ add_executable(
     test_ethash_cxx.cpp
     test_keccak.cpp
     test_managed.cpp
-    test_utils.cpp
+    test_primes.cpp
 )
 
 target_link_libraries(ethash-test PRIVATE ethash GTest::gtest GTest::main)

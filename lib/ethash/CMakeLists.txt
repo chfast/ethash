@@ -16,8 +16,8 @@ add_library(
     managed.cpp
     keccak.hpp
     keccak.c
-    utils.hpp
-    utils.cpp
+    primes.hpp
+    primes.cpp
 )
 
 target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)

@@ -10,7 +10,7 @@
 #include <limits>
 
 #include "keccak.hpp"
-#include "utils.hpp"
+#include "primes.hpp"
 
 #if defined(__has_attribute)
 #if __has_attribute(no_sanitize)
