@@ -7,10 +7,9 @@
 #include "endianness.hpp"
 
 #include <ethash/ethash.hpp>
+#include <ethash/keccak.h>
 
 #include <cstring>
-
-extern "C" void ethash_keccakf(uint64_t* state) noexcept;
 
 namespace ethash
 {
@@ -48,7 +47,7 @@ inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t si
     while (size >= block_words)
     {
         keccak_load_block_into_state(state, data, block_size);
-        ethash_keccakf(state);
+        ethash_keccakf1600(state);
         data += block_words;
         size -= block_words;
     }
@@ -65,7 +64,7 @@ inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t si
     block_bytes[block_size - 1] = 0x80;
 
     keccak_load_block_into_state(state, block, block_size);
-    ethash_keccakf(state);
+    ethash_keccakf1600(state);
 
     typename hash_selector<bits>::type hash;
     std::memcpy(&hash, state, sizeof(hash));

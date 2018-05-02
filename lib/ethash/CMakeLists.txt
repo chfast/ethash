@@ -14,6 +14,7 @@ add_library(
     ethash-internal.hpp
     ethash.cpp
     managed.cpp
+    ${include_dir}/ethash/keccak.h
     keccak.hpp
     keccak.c
     primes.hpp

@@ -43,7 +43,7 @@ static const uint64_t round_constants[24] = {
     0x8000000080008008,
 };
 
-void ethash_keccakf(uint64_t* state)
+void ethash_keccakf1600(uint64_t* state)
 {
     int round;
 
