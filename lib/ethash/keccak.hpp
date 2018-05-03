@@ -14,9 +14,9 @@
 namespace ethash
 {
 
-inline void keccak_load_block_into_state(uint64_t* state, const uint64_t* block, size_t block_size) noexcept
+inline void keccak_load_block_into_state(uint64_t* state, const uint64_t* block, size_t block_words) noexcept
 {
-    for (size_t i = 0; i < (block_size / sizeof(uint64_t)); ++i)
+    for (size_t i = 0; i < block_words; ++i)
         state[i] ^= fix_endianness(block[i]);
 }
 
@@ -46,7 +46,7 @@ inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t si
 
     while (size >= block_words)
     {
-        keccak_load_block_into_state(state, data, block_size);
+        keccak_load_block_into_state(state, data, block_words);
         ethash_keccakf1600(state);
         data += block_words;
         size -= block_words;
@@ -61,9 +61,10 @@ inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t si
     // Padding:
     auto block_bytes = reinterpret_cast<unsigned char*>(block);
     block_bytes[size * sizeof(uint64_t)] = 0x01;
-    block_bytes[block_size - 1] = 0x80;
+    // FIXME: Add test case for this padding when bytes API available.
+    block_bytes[block_size - 1] |= 0x80;
 
-    keccak_load_block_into_state(state, block, block_size);
+    keccak_load_block_into_state(state, block, block_words);
     ethash_keccakf1600(state);
 
     typename hash_selector<bits>::type hash;
