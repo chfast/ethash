@@ -3,12 +3,6 @@
  * Licensed under the Apache License, Version 2.0. See the LICENSE file.
  */
 
-/**
- * @file
- * The implementation of Keccak-f [1600] function
- * based on the "simple" implementation by Ronny Van Keer.
- */
-
 #include <stdint.h>
 
 static inline uint64_t rol(uint64_t x, unsigned s)
@@ -45,6 +39,8 @@ static const uint64_t round_constants[24] = {
 
 void ethash_keccakf1600(uint64_t* state)
 {
+    /* The implementation based on the "simple" implementation by Ronny Van Keer. */
+
     int round;
 
     uint64_t Aba, Abe, Abi, Abo, Abu;
