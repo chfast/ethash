@@ -38,3 +38,4 @@ build:
 
 after_build: |
   C:\projects\ethash\build\test\unittests\Release\ethash-test.exe
+  C:\projects\ethash\build\test\benchmarks\Release\bench.exe
