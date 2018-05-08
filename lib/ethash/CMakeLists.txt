@@ -13,6 +13,7 @@ add_library(
     ${include_dir}/ethash/ethash.hpp
     ethash-internal.hpp
     ethash.cpp
+    ${include_dir}/ethash/hash_types.h
     managed.cpp
     ${include_dir}/ethash/keccak.h
     keccak.hpp
