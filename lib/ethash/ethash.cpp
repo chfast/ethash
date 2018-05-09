@@ -12,14 +12,10 @@
 #include "keccak.hpp"
 #include "primes.hpp"
 
-#if defined(__has_attribute)
-#if __has_attribute(no_sanitize)
+#if __clang__
 #define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW \
     __attribute__((no_sanitize("unsigned-integer-overflow")))
-#endif
-#endif
-
-#if !defined(ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW)
+#else
 #define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
 #endif
 
