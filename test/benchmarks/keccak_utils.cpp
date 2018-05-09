@@ -45,13 +45,11 @@ inline void keccak_default_aligned(uint64_t* out, const uint64_t* data, size_t s
     // Final block:
     uint64_t block[block_words] = {};
     // Weirdly, GCC and clang are able to optimize memcpy better than for loop.
-    // FIXME: This is also UB when data == nullptr.
     std::memcpy(block, data, size * sizeof(uint64_t));
 
     // Padding:
     auto block_bytes = reinterpret_cast<unsigned char*>(block);
     block_bytes[size * sizeof(uint64_t)] = 0x01;
-    // FIXME: Add test case for this padding when bytes API available.
     block_bytes[block_size - 1] |= 0x80;
 
     xor_into_state(state, block, block_words);
