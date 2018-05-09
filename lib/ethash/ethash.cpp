@@ -118,7 +118,7 @@ void build_light_cache(hash512* cache, int num_items, const hash256 &seed)
 {
     hash512 item = keccak512(seed.bytes, sizeof(seed));
     cache[0] = item;
-    for (int64_t i = 1; i < num_items; ++i)
+    for (int i = 1; i < num_items; ++i)
     {
         item = keccak512(item);
         cache[i] = item;
@@ -126,7 +126,7 @@ void build_light_cache(hash512* cache, int num_items, const hash256 &seed)
 
     for (int q = 0; q < light_cache_rounds; ++q)
     {
-        for (int64_t i = 0; i < num_items; ++i)
+        for (int i = 0; i < num_items; ++i)
         {
             const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
