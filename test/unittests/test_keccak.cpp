@@ -42,7 +42,7 @@ TEST(keccak, empty_512)
 {
     uint64_t dummy_byte = 0xd;
     hash512 h = keccak<512>(&dummy_byte, 0);
-    std::string strh{h.bytes, sizeof(h)};
+    std::string strh{reinterpret_cast<const char*>(h.bytes), sizeof(h)};
     EXPECT_EQ(strh, std::string(keccack512_of_empty, sizeof(h)));
 }
 
