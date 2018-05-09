@@ -1,3 +1,4 @@
+# ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
 # Copyright 2018 Pawel Bylica.
 # Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
@@ -12,7 +13,7 @@ include(HunterGate)
 
 include(defaults/HunterCacheServers)
 
-cable_configure_toolchain(DEFAULT cxx11)
+cable_configure_toolchain(DEFAULT cxx11-c99)
 
 set(HUNTER_CONFIGURATION_TYPES Release
     CACHE STRING "Build type of the Hunter packages")
