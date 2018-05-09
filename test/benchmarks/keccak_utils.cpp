@@ -105,7 +105,7 @@ inline void keccak_default(uint64_t* out, const uint8_t* data, size_t size) noex
 }
 
 /// Loads 64-bit integer from given memory location.
-inline uint64_t load(const uint8_t* data) noexcept
+inline uint64_t load_le(const uint8_t *data) noexcept
 {
     // memcpy is the best way of expressing the intention. Every compiler will
     // optimize is to single load instruction if the target architecture
@@ -131,7 +131,7 @@ inline void keccak_fastest(uint64_t* out, const uint8_t* data, size_t size)
     while (size >= block_size)
     {
         for (size_t i = 0; i < (block_size / sizeof(uint64_t)); ++i)
-            state.words[i] ^= fix_endianness(load(data));
+            state.words[i] ^= fix_endianness(load_le(data + i * sizeof(uint64_t)));
 
         fake_keccakf1600(state.words);
 
@@ -139,10 +139,22 @@ inline void keccak_fastest(uint64_t* out, const uint8_t* data, size_t size)
         size -= block_size;
     }
 
-    for (size_t i = 0; i < size; ++i)
-        state.bytes[i] ^= data[i];
+    uint8_t* p_state_bytes = state.bytes;
 
-    state.bytes[size] ^= 0x01;
+    while (size >= sizeof(uint64_t))
+    {
+        uint64_t* p_state_word = (uint64_t*)p_state_bytes;
+        *p_state_word ^= load_le(data);
+        data += sizeof(uint64_t);
+        size -= sizeof(uint64_t);
+        p_state_bytes += sizeof(uint64_t);
+    }
+
+    for (size_t i = 0; i < size; ++i)
+        p_state_bytes[i] ^= data[i];
+
+
+    p_state_bytes[size] ^= 0x01;
     state.bytes[block_size - 1] ^= 0x80;
 
     fake_keccakf1600(state.words);
@@ -165,4 +177,9 @@ void fake_keccak256_default(uint64_t* out, const uint8_t* data, size_t size) noe
 void fake_keccak256_fastest(uint64_t* out, const uint8_t* data, size_t size) noexcept
 {
     keccak_fastest(out, data, size);
+}
+
+void fake_keccak256_fastest_word4(uint64_t out[4], const uint64_t data[4]) noexcept
+{
+    keccak_fastest(out, (const uint8_t*)data, 32);
 }

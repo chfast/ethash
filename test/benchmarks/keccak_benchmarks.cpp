@@ -45,3 +45,17 @@ static void fake_keccak256_unaligned(benchmark::State& state)
 }
 BENCHMARK_TEMPLATE(fake_keccak256_unaligned, fake_keccak256_default)->Arg(128)->Arg(17 * 8)->Arg(4096)->Arg(16 * 1024);
 BENCHMARK_TEMPLATE(fake_keccak256_unaligned, fake_keccak256_fastest)->Arg(128)->Arg(17 * 8)->Arg(4096)->Arg(16 * 1024);
+
+
+static void fake_keccak256_word4(benchmark::State& state)
+{
+    const uint64_t input[4] = {1, 2, 3, 4};
+
+    for (auto _ : state)
+    {
+        uint64_t out[4];
+        fake_keccak256_fastest_word4(out, input);
+        benchmark::DoNotOptimize(out);
+    }
+}
+BENCHMARK(fake_keccak256_word4);

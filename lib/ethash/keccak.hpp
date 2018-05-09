@@ -74,17 +74,18 @@ inline typename hash_selector<bits>::type keccak(const uint64_t* data, size_t si
 
 inline hash256 keccak256(const hash256& input) noexcept
 {
-    return keccak<256>(input.words, sizeof(input) / sizeof(uint64_t));
+    return ethash_keccak256_word4(input.words);
 }
 
 inline hash512 keccak512(const hash256& input) noexcept
 {
-    return keccak<512>(input.words, sizeof(input) / sizeof(uint64_t));
+    // FIXME: Remove this overload.
+    return ethash_keccak512(input.bytes, sizeof(input));
 }
 
 inline hash512 keccak512(const hash512& input) noexcept
 {
-    return keccak<512>(input.words, sizeof(input) / sizeof(uint64_t));
+    return ethash_keccak512_word8(input.words);
 }
 
 inline hash1024 double_keccak(const hash1024& input) noexcept

@@ -5,7 +5,9 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <ethash/hash_types.h>
+
+#include <stddef.h>
 
 #ifdef __cplusplus
 #define NOEXCEPT noexcept
@@ -25,7 +27,12 @@ extern "C" {
  *
  * @param state  The state of 25 64-bit words on which the permutation is to be performed.
  */
-void ethash_keccakf1600(uint64_t* state) NOEXCEPT;
+void ethash_keccakf1600(uint64_t state[25]) NOEXCEPT;
+
+union ethash_hash256 ethash_keccak256(const uint8_t* data, size_t size) NOEXCEPT;
+union ethash_hash256 ethash_keccak256_word4(const uint64_t data[4]) NOEXCEPT;
+union ethash_hash512 ethash_keccak512(const uint8_t* data, size_t size) NOEXCEPT;
+union ethash_hash512 ethash_keccak512_word8(const uint64_t data[8]) NOEXCEPT;
 
 #ifdef __cplusplus
 }
