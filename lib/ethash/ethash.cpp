@@ -222,13 +222,14 @@ inline result hash_kernel(
     const int num_items = context.full_dataset_num_items;
     const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
-    uint64_t init_data[5];
-    std::memcpy(&init_data, &header_hash, sizeof(header_hash));
-    init_data[4] = fix_endianness(nonce);
+    nonce = fix_endianness(nonce);
+    uint8_t init_data[sizeof(header_hash) + sizeof(nonce)];
+    std::memcpy(&init_data[0], &header_hash, sizeof(header_hash));
+    std::memcpy(&init_data[sizeof(header_hash)], &nonce, sizeof(nonce));
 
     // Do not convert it to array of native 32-bit words, because bytes are
     // needed in the end.
-    const hash512 s = keccak<512>(init_data, 5);
+    const hash512 s = keccak512(init_data, sizeof(init_data));
 
     const uint32_t s_init = fix_endianness(s.half_words[0]);
 
@@ -255,10 +256,10 @@ inline result hash_kernel(
     }
     mix_hash = fix_endianness32(mix_hash);
 
-    uint64_t final_data[12];
+    uint8_t final_data[sizeof(s) + sizeof(mix_hash)];
     std::memcpy(&final_data[0], s.bytes, sizeof(s));
-    std::memcpy(&final_data[8], mix_hash.bytes, sizeof(mix_hash));
-    hash256 final_hash = keccak<256>(final_data, 12);
+    std::memcpy(&final_data[sizeof(s)], mix_hash.bytes, sizeof(mix_hash));
+    hash256 final_hash = keccak256(final_data, sizeof(final_data));
     return {final_hash, mix_hash};
 }
 }
