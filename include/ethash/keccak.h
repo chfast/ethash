@@ -30,9 +30,9 @@ extern "C" {
 void ethash_keccakf1600(uint64_t state[25]) NOEXCEPT;
 
 union ethash_hash256 ethash_keccak256(const uint8_t* data, size_t size) NOEXCEPT;
-union ethash_hash256 ethash_keccak256_word4(const uint64_t data[4]) NOEXCEPT;
+union ethash_hash256 ethash_keccak256_32(const uint8_t data[32]) NOEXCEPT;
 union ethash_hash512 ethash_keccak512(const uint8_t* data, size_t size) NOEXCEPT;
-union ethash_hash512 ethash_keccak512_word8(const uint64_t data[8]) NOEXCEPT;
+union ethash_hash512 ethash_keccak512_64(const uint8_t data[64]) NOEXCEPT;
 
 #ifdef __cplusplus
 }

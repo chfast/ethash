@@ -4,13 +4,14 @@
 
 #include "ethash-internal.hpp"
 
+#include "endianness.hpp"
+#include "keccak.hpp"
+#include "primes.hpp"
+
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
-
-#include "keccak.hpp"
-#include "primes.hpp"
 
 #if __clang__
 #define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW \
