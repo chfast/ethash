@@ -47,6 +47,12 @@ endif()
 
 option(ETHASH_INSTALL_CMAKE_CONFIG "Install CMake configuration scripts for find_package(CONFIG)" ON)
 
+option(ETHASH_FUZZING "Build with fuzzer instrumentation" OFF)
+if(ETHASH_FUZZING)
+    set(CMAKE_EXE_LINKER_FLAGS "-fsanitize=fuzzer-no-link ${CMAKE_EXE_LINKER_FLAGS}")
+    add_compile_options(-fno-omit-frame-pointer -fsanitize=fuzzer,undefined,integer -fno-sanitize-recover=all)
+endif()
+
 add_subdirectory(lib/ethash)
 
 option(ETHASH_BUILD_TESTS "Build unit tests" ON)
