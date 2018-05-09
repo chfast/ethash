@@ -19,7 +19,7 @@ extern "C" struct ethash_epoch_context_full : ethash_epoch_context
 
     constexpr ethash_epoch_context_full(int epoch_number, int light_cache_num_items,
         const ethash_hash512* light_cache, int full_dataset_num_items,
-        ethash_hash1024* full_dataset)
+        ethash_hash1024* full_dataset) noexcept
       : ethash_epoch_context{epoch_number, light_cache_num_items, light_cache,
             full_dataset_num_items},
         full_dataset{full_dataset}
@@ -30,7 +30,7 @@ namespace ethash
 {
 hash256 calculate_seed(int epoch_number) noexcept;
 
-void build_light_cache(hash512 cache[], int num_items, const hash256& seed);
+void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept;
 
 hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noexcept;
 
