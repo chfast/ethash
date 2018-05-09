@@ -45,35 +45,6 @@ static void keccak512(benchmark::State& state)
 BENCHMARK(keccak512)->Arg(32)->Arg(64)->Arg(71)->Arg(72)->Arg(142)->Arg(143)->Arg(144);
 
 
-static void double_keccak_optimized(benchmark::State& state)
-{
-    ethash::hash1024 hash = {};
-    benchmark::ClobberMemory();
-
-    for (auto _ : state)
-    {
-        hash = ethash::double_keccak(hash);
-        benchmark::DoNotOptimize(hash.bytes);
-    }
-}
-BENCHMARK(double_keccak_optimized);
-
-
-static void double_keccak_naive(benchmark::State& state)
-{
-    ethash::hash1024 hash = {};
-    benchmark::ClobberMemory();
-
-    for (auto _ : state)
-    {
-        hash.hashes[0] = ethash::keccak512(hash.hashes[0]);
-        hash.hashes[1] = ethash::keccak512(hash.hashes[1]);
-        benchmark::DoNotOptimize(hash.bytes);
-    }
-}
-BENCHMARK(double_keccak_naive);
-
-
 template<void keccak_fn(uint64_t*, const uint8_t*, size_t)>
 static void fake_keccak256(benchmark::State& state)
 {

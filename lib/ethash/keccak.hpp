@@ -33,12 +33,4 @@ inline hash512 keccak512(const hash512& input) noexcept
     return ethash_keccak512_word8(input.words);
 }
 
-inline hash1024 double_keccak(const hash1024& input) noexcept
-{
-    hash1024 output;
-    output.hashes[0] = keccak512(input.hashes[0]);
-    output.hashes[1] = keccak512(input.hashes[1]);
-    return output;
-}
-
 }  // namespace ethash

@@ -193,7 +193,8 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
     mix.hashes[0].half_words[0] ^= fix_endianness(init0);
     mix.hashes[1].half_words[0] ^= fix_endianness(init1);
 
-    mix = double_keccak(mix);
+    mix.hashes[0] = keccak512(mix.hashes[0]);
+    mix.hashes[1] = keccak512(mix.hashes[1]);
 
     mix = fix_endianness32(mix);  // Covert bytes to 32-bit words.
 
@@ -208,7 +209,12 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
         mix.hashes[1] = fnv(mix.hashes[1], fix_endianness32(cache[parent_index1]));
     }
 
-    return double_keccak(fix_endianness32(mix));  // Covert 32-bit words back to bytes and hash.
+    mix = fix_endianness32(mix);  // Covert 32-bit words back to bytes and hash.
+
+    mix.hashes[0] = keccak512(mix.hashes[0]);
+    mix.hashes[1] = keccak512(mix.hashes[1]);
+
+    return mix;
 }
 
 namespace
