@@ -432,9 +432,12 @@ TEST(ethash, fake_dataset_partial_items)
 
     for (const auto& t : test_cases)
     {
-        const hash512 item = calculate_dataset_item_partial(
-            context->light_cache, context->light_cache_num_items, t.index);
-        EXPECT_EQ(to_hex(item), t.hash_hex) << "index: " << t.index;
+        const auto full_index = t.index / 2;
+        const auto part_index = t.index % 2;
+
+        const auto full_item = calculate_dataset_item(*context, full_index);
+        const auto& part_item = full_item.hashes[part_index];
+        EXPECT_EQ(to_hex(part_item), t.hash_hex) << "index: " << t.index;
     }
 
     ethash_destroy_epoch_context(context);

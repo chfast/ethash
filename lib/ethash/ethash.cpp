@@ -144,30 +144,6 @@ void build_light_cache(hash512* cache, int num_items, const hash256 &seed)
     }
 }
 
-/// TODO: Only used in tests or for reference, so can be removed or moved.
-hash512 calculate_dataset_item_partial(const hash512* cache, int num_cache_items, size_t index) noexcept
-{
-    // FIXME: Remove this function.
-    static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
-
-    const size_t index_limit = static_cast<size_t>(num_cache_items);
-    const uint32_t init = static_cast<uint32_t>(index);
-
-    hash512 mix = cache[index % index_limit];
-    mix.half_words[0] ^= fix_endianness(init);
-    mix = keccak512(mix);
-    mix = fix_endianness32(mix);  // Covert bytes to 32-bit words.
-
-    for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
-    {
-        uint32_t t = fnv(init ^ j, mix.half_words[j % num_half_words]);
-        size_t parent_index = t % index_limit;
-        mix = fnv(mix, fix_endianness32(cache[parent_index]));
-    }
-
-    return keccak512(fix_endianness32(mix));
-}
-
 
 /// Calculates a full dataset item
 ///

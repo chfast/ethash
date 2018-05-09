@@ -34,7 +34,4 @@ void build_light_cache(hash512 cache[], int num_items, const hash256& seed);
 
 hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noexcept;
 
-hash512 calculate_dataset_item_partial(
-    const hash512* cache, int num_cache_items, size_t index) noexcept;
-
 }  // namespace ethash
