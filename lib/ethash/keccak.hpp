@@ -28,12 +28,6 @@ inline hash512 keccak512(const uint8_t* data, size_t size) noexcept
     return ethash_keccak512(data, size);
 }
 
-inline hash512 keccak512(const hash256& input) noexcept
-{
-    // FIXME: Remove this overload.
-    return ethash_keccak512(input.bytes, sizeof(input));
-}
-
 inline hash512 keccak512(const hash512& input) noexcept
 {
     return ethash_keccak512_word8(input.words);

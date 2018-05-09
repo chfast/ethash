@@ -116,7 +116,7 @@ int find_epoch_number(const hash256& seed) noexcept
 
 void build_light_cache(hash512* cache, int num_items, const hash256 &seed)
 {
-    hash512 item = keccak512(seed);
+    hash512 item = keccak512(seed.bytes, sizeof(seed));
     cache[0] = item;
     for (int64_t i = 1; i < num_items; ++i)
     {
