@@ -4,6 +4,9 @@
 
 #include "keccak_utils.hpp"
 
+#include <ethash/keccak.h>
+#include <ethash/keccak.hpp>
+
 #include <benchmark/benchmark.h>
 
 
@@ -12,6 +15,64 @@ void fake_keccakf1600(uint64_t* state) noexcept
     // Do nothing to measure performance of the code outside of keccakf function.
     (void)state;
 }
+
+
+static void keccak256(benchmark::State& state)
+{
+    const auto data_size = static_cast<size_t>(state.range(0));
+    std::vector<uint8_t> data(data_size, 0xde);
+
+    for (auto _ : state)
+    {
+        auto h = ethash_keccak256(data.data(), data.size());
+        benchmark::DoNotOptimize(h.bytes);
+    }
+}
+BENCHMARK(keccak256)->Arg(32)->Arg(64)->Arg(128)->Arg(135)->Arg(136);
+
+
+static void keccak512(benchmark::State& state)
+{
+    const auto data_size = static_cast<size_t>(state.range(0));
+    std::vector<uint8_t> data(data_size, 0xde);
+
+    for (auto _ : state)
+    {
+        auto h = ethash_keccak512(data.data(), data.size());
+        benchmark::DoNotOptimize(h.bytes);
+    }
+}
+BENCHMARK(keccak512)->Arg(32)->Arg(64)->Arg(71)->Arg(72)->Arg(142)->Arg(143)->Arg(144);
+
+
+static void double_keccak_optimized(benchmark::State& state)
+{
+    ethash::hash1024 hash = {};
+    benchmark::ClobberMemory();
+
+    for (auto _ : state)
+    {
+        hash = ethash::double_keccak(hash);
+        benchmark::DoNotOptimize(hash.bytes);
+    }
+}
+BENCHMARK(double_keccak_optimized);
+
+
+static void double_keccak_naive(benchmark::State& state)
+{
+    ethash::hash1024 hash = {};
+    benchmark::ClobberMemory();
+
+    for (auto _ : state)
+    {
+        hash.hashes[0] = ethash::keccak512(hash.hashes[0]);
+        hash.hashes[1] = ethash::keccak512(hash.hashes[1]);
+        benchmark::DoNotOptimize(hash.bytes);
+    }
+}
+BENCHMARK(double_keccak_naive);
+
 
 template<void keccak_fn(uint64_t*, const uint8_t*, size_t)>
 static void fake_keccak256(benchmark::State& state)
