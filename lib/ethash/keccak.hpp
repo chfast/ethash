@@ -5,7 +5,7 @@
 #pragma once
 
 #include <ethash/keccak.h>
-#include <ethash/ethash.hpp>
+#include <ethash/hash_types.hpp>
 
 namespace ethash
 {
@@ -28,5 +28,4 @@ inline hash512 keccak512(const hash512& input) noexcept
 {
     return ethash_keccak512_64(input.bytes);
 }
-
 }  // namespace ethash

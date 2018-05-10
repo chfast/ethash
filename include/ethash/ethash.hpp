@@ -15,6 +15,7 @@
 #pragma once
 
 #include <ethash/ethash.h>
+#include <ethash/hash_types.hpp>
 
 #include <cstdint>
 #include <cstring>
@@ -26,10 +27,6 @@ static constexpr int epoch_length = ETHASH_EPOCH_LENGTH;
 static constexpr int light_cache_item_size = ETHASH_LIGHT_CACHE_ITEM_SIZE;
 static constexpr int full_dataset_item_size = ETHASH_FULL_DATASET_ITEM_SIZE;
 static constexpr int num_dataset_accesses = ETHASH_NUM_DATASET_ACCESSES;
-
-using hash256 = ethash_hash256;
-using hash512 = ethash_hash512;
-using hash1024 = ethash_hash1024;
 
 using epoch_context = ethash_epoch_context;
 using epoch_context_full = ethash_epoch_context_full;
