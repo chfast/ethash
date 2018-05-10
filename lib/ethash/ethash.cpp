@@ -5,8 +5,9 @@
 #include "ethash-internal.hpp"
 
 #include "endianness.hpp"
-#include "keccak.hpp"
 #include "primes.hpp"
+
+#include <ethash/keccak.hpp>
 
 #include <cassert>
 #include <cstdlib>
