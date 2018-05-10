@@ -118,7 +118,6 @@ defaults:
             fi
             pip3 install -q requests
       - checkout
-      - *update-submodules
       - *configure
       - *build
       - *test
@@ -139,7 +138,6 @@ jobs:
       - image: ethereum/cpp-build-env
     steps:
       - checkout
-      - *update-submodules
       - *configure
       - *build
       - *test
@@ -156,7 +154,6 @@ jobs:
       - image: ethereum/cpp-build-env
     steps:
       - checkout
-      - *update-submodules
       - *configure
       - *build
       - *test
@@ -173,7 +170,6 @@ jobs:
       - image: ethereum/cpp-build-env
     steps:
       - checkout
-      - *update-submodules
       - *configure
       - *build
       - *test
@@ -188,7 +184,6 @@ jobs:
       - image: ethereum/cpp-build-env
     steps:
       - checkout
-      - *update-submodules
       - *configure
       - *build
       - *test-cmake-config
@@ -204,7 +199,6 @@ jobs:
       - image: ethereum/cpp-build-env:experimental
     steps:
       - checkout
-      - *update-submodules
       - *configure
       - *build
       - *test-cmake-config
@@ -219,7 +213,6 @@ jobs:
       - image: ethereum/cpp-build-env
     steps:
       - checkout
-      - *update-submodules
       - *install-m32
       - *configure
       - *build
@@ -235,7 +228,6 @@ jobs:
       - image: ethereum/cpp-build-env
     steps:
       - checkout
-      - *update-submodules
       - *install-m32
       - *configure
       - *build
@@ -250,7 +242,6 @@ jobs:
       - image: ethereum/cpp-build-env
     steps:
       - checkout
-      - *update-submodules
       - *install-mips64
       - *configure
       - *build-tests
@@ -272,7 +263,6 @@ jobs:
       - image: ethereum/cpp-build-env
     steps:
       - checkout
-      - *update-submodules
       - *install-powerpc64
       - *configure
       - *build-tests
