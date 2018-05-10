@@ -19,7 +19,6 @@
 Build from source using CMake.
 
 ```sh
-git submodule update --init
 mkdir build
 cd build
 cmake ..
@@ -28,7 +27,7 @@ cmake --build build
 
 ## Usage
 
-See [include/ethash.hpp] for list of exported function and documentation.
+See [ethash.hpp] for list of exported function and documentation.
 
 
 ## Optimizations
@@ -63,5 +62,6 @@ Licensed under the [Apache License, Version 2.0].
 
 
 [@chfast]: https://github.com/chfast
-[Apache License, Version 2.0]: https://www.apache.org/licenses/LICENSE-2.0
+[Apache License, Version 2.0]: LICENSE
+[ethash.hpp]: include/ethash/ethash.hpp
 [Ethash reference implementation]: https://github.com/ethereum/wiki/wiki/Ethash
