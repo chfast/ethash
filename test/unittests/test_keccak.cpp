@@ -239,6 +239,14 @@ TEST(keccak, unaligned)
     }
 }
 
+TEST(keccak, hpp_aliases)
+{
+    uint8_t data[64] = {42};
+
+    EXPECT_EQ(keccak256_32(data).words[1], ethash_keccak256_32(data).words[1]);
+    EXPECT_EQ(keccak512_64(data).words[1], ethash_keccak512_64(data).words[1]);
+}
+
 TEST(helpers, to_hex)
 {
     hash256 h = {};
