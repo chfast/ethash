@@ -30,14 +30,11 @@ cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug Release Re
 
 cable_configure_compiler(NO_STACK_PROTECTION)
 if(CABLE_COMPILER_GNULIKE)
-    # Do not allow lossy type conversions.
-    add_compile_options(-Wconversion -Wsign-conversion)
-
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
 
     if(NOT CMAKE_CROSSCOMPILING)
-        # Tune for currently most common CPUs (flag not supported in mips64 cross-compiler).
+        # Tune for currently most common CPUs (flag not supported in cross compilation).
         add_compile_options(-mtune=generic)
     endif()
 elseif(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4)
