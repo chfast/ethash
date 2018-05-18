@@ -642,7 +642,8 @@ TEST(ethash_multithreaded, small_dataset)
 
     constexpr size_t num_treads = 8;
     constexpr int num_dataset_items = 501;
-    constexpr uint64_t target = uint64_t(1) << 50;
+    const hash256 boundary =
+        to_hash256("0004000000000000000000000000000000000000000000000000000000000000");
 
     epoch_context* context = create_epoch_context_mock(0);
     const_cast<int&>(context->full_dataset_num_items) = num_dataset_items;
@@ -655,7 +656,7 @@ TEST(ethash_multithreaded, small_dataset)
     for (auto& f : futures)
     {
         f = std::async(
-            std::launch::async, [&] { return search(*context_full, {}, target, 30000, 10000); });
+            std::launch::async, [&] { return search(*context_full, {}, boundary, 30000, 10000); });
     }
 
     for (auto& f : futures)
@@ -667,15 +668,16 @@ TEST(ethash_multithreaded, small_dataset)
 TEST(ethash, small_dataset_light)
 {
     constexpr int num_dataset_items = 501;
-    constexpr uint64_t target = uint64_t(1) << 55;
+    const hash256 boundary =
+        to_hash256("0080000000000000000000000000000000000000000000000000000000000000");
 
     epoch_context* context = create_epoch_context_mock(0);
     const_cast<int&>(context->full_dataset_num_items) = num_dataset_items;
 
-    uint64_t solution = search_light(*context, {}, target, 940, 10);
+    uint64_t solution = search_light(*context, {}, boundary, 940, 10);
     EXPECT_EQ(solution, 948);
 
-    solution = search_light(*context, {}, target, 483, 10);
+    solution = search_light(*context, {}, boundary, 483, 10);
     EXPECT_EQ(solution, 0);
 
     ethash_destroy_epoch_context(context);

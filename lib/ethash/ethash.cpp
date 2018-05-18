@@ -286,27 +286,27 @@ bool verify(const epoch_context& context, const hash256& header_hash, const hash
     return is_less_or_equal(r.final_hash, boundary);
 }
 
-uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
-    uint64_t start_nonce, size_t iterations)
+uint64_t search_light(const epoch_context& context, const hash256& header_hash,
+    const hash256& boundary, uint64_t start_nonce, size_t iterations)
 {
     const uint64_t end_nonce = start_nonce + iterations;
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash_light(context, header_hash, nonce);
-        if (from_be(r.final_hash.words[0]) < target)
+        if (is_less_or_equal(r.final_hash, boundary))
             return nonce;
     }
     return 0;
 }
 
-uint64_t search(const epoch_context_full& context, const hash256& header_hash, uint64_t target,
-    uint64_t start_nonce, size_t iterations)
+uint64_t search(const epoch_context_full& context, const hash256& header_hash,
+    const hash256& boundary, uint64_t start_nonce, size_t iterations)
 {
     const uint64_t end_nonce = start_nonce + iterations;
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash(context, header_hash, nonce);
-        if (from_be(r.final_hash.words[0]) < target)
+        if (is_less_or_equal(r.final_hash, boundary))
             return nonce;
     }
     return 0;

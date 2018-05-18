@@ -40,7 +40,7 @@ public:
     void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
         noexcept override
     {
-        ethash::search_light(context, header_hash, 0, nonce, iterations);
+        ethash::search_light(context, header_hash, {}, nonce, iterations);
     }
 };
 
@@ -56,7 +56,7 @@ public:
     void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
         noexcept override
     {
-        ethash::search(context, header_hash, 0, nonce, iterations);
+        ethash::search(context, header_hash, {}, nonce, iterations);
     }
 };
 
