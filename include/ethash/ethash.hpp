@@ -109,7 +109,7 @@ result hash_light(const epoch_context& context, const hash256& header_hash, uint
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce);
 
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
-    uint64_t nonce, uint64_t target);
+    uint64_t nonce, const hash256& boundary);
 
 uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,
     uint64_t start_nonce, size_t iterations);

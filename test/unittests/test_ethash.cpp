@@ -592,8 +592,7 @@ TEST(ethash, verify_hash_light)
         const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
         const hash256 header_hash = to_hash256(t.header_hash_hex);
         const hash256 mix_hash = to_hash256(t.mix_hash_hex);
-        const std::string target_hex{t.final_hash_hex, 16};
-        const uint64_t target = std::stoull(target_hex, nullptr, 16) + 1;
+        const hash256 boundary = to_hash256(t.final_hash_hex);
 
         auto context = create_epoch_context(epoch_number);
 
@@ -601,10 +600,10 @@ TEST(ethash, verify_hash_light)
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_hash_hex);
 
-        bool v = verify(*context, header_hash, mix_hash, nonce, target);
+        bool v = verify(*context, header_hash, mix_hash, nonce, boundary);
         EXPECT_TRUE(v);
 
-        v = verify(*context, header_hash, mix_hash, nonce + 1, target);
+        v = verify(*context, header_hash, mix_hash, nonce + 1, boundary);
         EXPECT_FALSE(v);
     }
 }

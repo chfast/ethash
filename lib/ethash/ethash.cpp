@@ -272,7 +272,7 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
 }
 
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
-    uint64_t nonce, uint64_t target)
+    uint64_t nonce, const hash256& boundary)
 {
     // TODO: Not optimal strategy.
     // First we should check if mix -> final transition is correct,
@@ -283,8 +283,7 @@ bool verify(const epoch_context& context, const hash256& header_hash, const hash
     if (std::memcmp(&r.mix_hash, &mix_hash, sizeof(mix_hash)) != 0)
         return false;
 
-    // The final hash in BE order. Covert the top word to native integer.
-    return from_be(r.final_hash.words[0]) < target;
+    return is_less_or_equal(r.final_hash, boundary);
 }
 
 uint64_t search_light(const epoch_context& context, const hash256& header_hash, uint64_t target,

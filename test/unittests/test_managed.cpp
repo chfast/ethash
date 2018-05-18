@@ -73,10 +73,10 @@ TEST(managed_multithreaded, verify_all)
                 const hash256 mix_hash = to_hash256(t.mix_hash_hex);
                 const hash256 final_hash = to_hash256(t.final_hash_hex);
                 const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
-                const uint64_t target = final_hash.words[0] + 1;
+                const hash256 boundary = final_hash;
                 const int epoch_number = get_epoch_number(t.block_number);
                 auto& context = managed::get_epoch_context(epoch_number);
-                const bool valid = verify(context, header_hash, mix_hash, nonce, target);
+                const bool valid = verify(context, header_hash, mix_hash, nonce, boundary);
                 EXPECT_TRUE(valid);
             }
         });
@@ -96,10 +96,10 @@ TEST(managed_multithreaded, verify_parallel)
             const hash256 mix_hash = to_hash256(t.mix_hash_hex);
             const hash256 final_hash = to_hash256(t.final_hash_hex);
             const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
-            const uint64_t target = final_hash.words[0] + 1;
+            const hash256 boundary = final_hash;
             const int epoch_number = get_epoch_number(t.block_number);
             auto& context = managed::get_epoch_context(epoch_number);
-            return verify(context, header_hash, mix_hash, nonce, target);
+            return verify(context, header_hash, mix_hash, nonce, boundary);
         }));
     }
 
