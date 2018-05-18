@@ -10,6 +10,8 @@
 
 #include <ethash/ethash.hpp>
 
+#include "endianness.hpp"
+
 #include <memory>
 #include <vector>
 
@@ -28,6 +30,18 @@ extern "C" struct ethash_epoch_context_full : ethash_epoch_context
 
 namespace ethash
 {
+inline bool is_less_or_equal(const hash256& a, const hash256& b) noexcept
+{
+    for (size_t i = 0; i < (sizeof(a) / sizeof(a.words[0])); ++i)
+    {
+        if (from_be(a.words[i]) > from_be(b.words[i]))
+            return false;
+        if (from_be(a.words[i]) < from_be(b.words[i]))
+            return true;
+    }
+    return true;
+}
+
 hash256 calculate_seed(int epoch_number) noexcept;
 
 void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept;
