@@ -58,6 +58,11 @@ epoch_context* create_epoch_context_mock(int epoch_number)
     };
     return context;
 }
+
+hash512 copy(const hash512& h) noexcept
+{
+    return h;
+}
 }
 
 
@@ -71,14 +76,18 @@ TEST(hash, hash256_from_bytes)
 
 TEST(hash, hash512_init)
 {
-    ethash::hash512 hash = {};
+    hash512 hash = {};
     for (auto w : hash.words)
+        EXPECT_EQ(w, 0);
+
+    hash512 hash2 = copy({});
+    for (auto w : hash2.words)
         EXPECT_EQ(w, 0);
 }
 
 TEST(hash, hash1024_init)
 {
-    ethash::hash1024 hash = {};
+    hash1024 hash = {};
     for (auto w : hash.words)
         EXPECT_EQ(w, 0);
 }
