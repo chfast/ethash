@@ -656,11 +656,11 @@ TEST(ethash_multithreaded, small_dataset)
     for (auto& f : futures)
     {
         f = std::async(
-            std::launch::async, [&] { return search(*context_full, {}, target, 1, 11000); });
+            std::launch::async, [&] { return search(*context_full, {}, target, 30000, 10000); });
     }
 
     for (auto& f : futures)
-        EXPECT_EQ(f.get(), 10498);
+        EXPECT_EQ(f.get(), 38444);
 
     ethash_destroy_epoch_context(context);
 }
@@ -673,8 +673,8 @@ TEST(ethash, small_dataset_light)
     epoch_context* context = create_epoch_context_mock(0);
     const_cast<int&>(context->full_dataset_num_items) = num_dataset_items;
 
-    uint64_t solution = search_light(*context, {}, target, 475, 10);
-    EXPECT_EQ(solution, 482);
+    uint64_t solution = search_light(*context, {}, target, 940, 10);
+    EXPECT_EQ(solution, 948);
 
     solution = search_light(*context, {}, target, 483, 10);
     EXPECT_EQ(solution, 0);

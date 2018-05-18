@@ -294,8 +294,7 @@ uint64_t search_light(const epoch_context& context, const hash256& header_hash, 
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash_light(context, header_hash, nonce);
-        // FIXME: Must be converted from BE, not from LE.
-        if (fix_endianness(r.final_hash.words[0]) < target)
+        if (from_be(r.final_hash.words[0]) < target)
             return nonce;
     }
     return 0;
@@ -308,8 +307,7 @@ uint64_t search(const epoch_context_full& context, const hash256& header_hash, u
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash(context, header_hash, nonce);
-        // FIXME: Must be converted from BE, not from LE.
-        if (fix_endianness(r.final_hash.words[0]) < target)
+        if (from_be(r.final_hash.words[0]) < target)
             return nonce;
     }
     return 0;
