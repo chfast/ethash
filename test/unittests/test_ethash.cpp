@@ -635,6 +635,34 @@ TEST(ethash, verify_hash)
     }
 }
 
+TEST(ethash, verify_boundary)
+{
+    auto context = create_epoch_context(0);
+    hash256 example_header_hash =
+        to_hash256("e74e5e8688d3c6f17885fa5e64eb6718046b57895a2a24c593593070ab71f5fd");
+    uint64_t nonce = 6666;
+    auto r = hash_light(*context, example_header_hash, nonce);
+    hash256 boundary_eq =
+        to_hash256("13c5a668bba6b86ed16098113d9d6a7a5cac1802e9c8f2d57c932d8818375eb7");
+
+    hash256 boundary_gt = boundary_eq;
+    ++boundary_gt.bytes[31];
+    auto boundary_gt_hex = "13c5a668bba6b86ed16098113d9d6a7a5cac1802e9c8f2d57c932d8818375eb8";
+    EXPECT_EQ(to_hex(boundary_gt), boundary_gt_hex);
+
+    hash256 boundary_lt = boundary_eq;
+    --boundary_lt.bytes[31];
+    auto boundary_lt_hex = "13c5a668bba6b86ed16098113d9d6a7a5cac1802e9c8f2d57c932d8818375eb6";
+    EXPECT_EQ(to_hex(boundary_lt), boundary_lt_hex);
+
+    EXPECT_EQ(r.final_hash, boundary_eq);
+    EXPECT_EQ(to_hex(r.final_hash), to_hex(boundary_eq));
+
+    EXPECT_TRUE(verify(*context, example_header_hash, r.mix_hash, nonce, boundary_eq));
+    EXPECT_TRUE(verify(*context, example_header_hash, r.mix_hash, nonce, boundary_gt));
+    EXPECT_FALSE(verify(*context, example_header_hash, r.mix_hash, nonce, boundary_lt));
+}
+
 TEST(ethash_multithreaded, small_dataset)
 {
     // This test creates an extremely small dataset for full search to discover
