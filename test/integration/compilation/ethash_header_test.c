@@ -4,7 +4,6 @@
  */
 
 #include <ethash/ethash.h>
-#include <ethash/keccak.h>
 
 int test()
 {

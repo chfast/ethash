@@ -7,9 +7,15 @@
 
 #include <string.h>
 
+#if _MSC_VER || __STDC_VERSION__
+#define INLINE inline
+#else
+#define INLINE
+#endif
+
 #if _MSC_VER
 #define ALWAYS_INLINE __forceinline
-#elif defined(__has_attribute)
+#elif defined(__has_attribute) && __STDC_VERSION__
 #if __has_attribute(always_inline)
 #define ALWAYS_INLINE __attribute__((always_inline))
 #endif
@@ -21,7 +27,7 @@
 
 
 #if _WIN32
-// On Windows assume little endian.
+/* On Windows assume little endian. */
 #define __LITTLE_ENDIAN 1234
 #define __BIG_ENDIAN 4321
 #define __BYTE_ORDER __LITTLE_ENDIAN
@@ -39,7 +45,7 @@
 
 
 /** Loads 64-bit integer from given memory location as little-endian number. */
-inline ALWAYS_INLINE uint64_t load_le(const uint8_t* data)
+static INLINE ALWAYS_INLINE uint64_t load_le(const uint8_t* data)
 {
     /* memcpy is the best way of expressing the intention. Every compiler will
        optimize is to single load instruction if the target architecture
@@ -51,17 +57,23 @@ inline ALWAYS_INLINE uint64_t load_le(const uint8_t* data)
     return to_le64(word);
 }
 
-inline ALWAYS_INLINE void keccak(uint64_t* out, size_t bits, const uint8_t* data, size_t size)
+static INLINE ALWAYS_INLINE void keccak(
+    uint64_t* out, size_t bits, const uint8_t* data, size_t size)
 {
     static const size_t word_size = sizeof(uint64_t);
     const size_t hash_size = bits / 8;
     const size_t block_size = (1600 - bits * 2) / 8;
 
+    size_t i;
+    uint64_t* state_iter;
+    uint64_t last_word = 0;
+    uint8_t* last_word_iter = (uint8_t*)&last_word;
+
     uint64_t state[25] = {0};
 
     while (size >= block_size)
     {
-        for (size_t i = 0; i < (block_size / word_size); ++i)
+        for (i = 0; i < (block_size / word_size); ++i)
         {
             state[i] ^= load_le(data);
             data += word_size;
@@ -72,7 +84,7 @@ inline ALWAYS_INLINE void keccak(uint64_t* out, size_t bits, const uint8_t* data
         size -= block_size;
     }
 
-    uint64_t* state_iter = state;
+    state_iter = state;
 
     while (size >= word_size)
     {
@@ -81,9 +93,6 @@ inline ALWAYS_INLINE void keccak(uint64_t* out, size_t bits, const uint8_t* data
         data += word_size;
         size -= word_size;
     }
-
-    uint64_t last_word = 0;
-    uint8_t* last_word_iter = (uint8_t*)&last_word;
 
     while (size > 0)
     {
@@ -99,7 +108,7 @@ inline ALWAYS_INLINE void keccak(uint64_t* out, size_t bits, const uint8_t* data
 
     ethash_keccakf1600(state);
 
-    for (size_t i = 0; i < (hash_size / word_size); ++i)
+    for (i = 0; i < (hash_size / word_size); ++i)
         out[i] = to_le64(state[i]);
 }
 

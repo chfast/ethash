@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-static inline uint64_t rol(uint64_t x, unsigned s)
+static uint64_t rol(uint64_t x, unsigned s)
 {
     return (x << s) | (x >> (64 - s));
 }
