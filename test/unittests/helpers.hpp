@@ -34,3 +34,9 @@ inline ethash::hash256 to_hash256(const std::string& hex)
     }
     return hash;
 }
+
+/// Comparison operator for hash256 to be used in unit tests.
+inline bool operator==(const ethash::hash256& a, const ethash::hash256& b) noexcept
+{
+    return std::memcmp(a.bytes, b.bytes, sizeof(a)) == 0;
+}
