@@ -61,7 +61,7 @@ public:
 };
 
 
-std::atomic<int> block_number{0};
+std::atomic<int> shared_block_number{0};
 std::atomic<int> num_hashes{0};
 
 void worker(bool light, const ethash::hash256& header_hash, uint64_t start_nonce, int batch_size)
@@ -72,11 +72,11 @@ void worker(bool light, const ethash::hash256& header_hash, uint64_t start_nonce
     size_t w = static_cast<size_t>(batch_size);
     while (true)
     {
-        int b = block_number.load(std::memory_order_relaxed);
-        if (b < 0)
+        int block_number = shared_block_number.load(std::memory_order_relaxed);
+        if (block_number < 0)
             break;
 
-        int e = ethash::get_epoch_number(b);
+        int e = ethash::get_epoch_number(block_number);
 
         if (current_epoch != e)
         {
@@ -95,6 +95,7 @@ void worker(bool light, const ethash::hash256& header_hash, uint64_t start_nonce
 int main(int argc, const char* argv[])
 {
     int num_blocks = 10;
+    int block_number = 0;
     int block_time = 6;
     int work_size = 100;
     int num_threads = static_cast<int>(std::thread::hardware_concurrency());
@@ -132,6 +133,7 @@ int main(int argc, const char* argv[])
 
     const ethash::hash256 header_hash{};
 
+    shared_block_number.store(block_number, std::memory_order_relaxed);
     std::vector<std::future<void>> futures;
 
     for (int t = 0; t < num_threads; ++t)
@@ -163,8 +165,9 @@ int main(int argc, const char* argv[])
         int current_hashes = num_hashes.exchange(0, std::memory_order_relaxed);
         all_hashes += current_hashes;
 
-        int b = block_number.fetch_add(1, std::memory_order_relaxed);
-        int e = ethash::get_epoch_number(b);
+        ++block_number;
+        int e = ethash::get_epoch_number(block_number);
+        shared_block_number.store(block_number, std::memory_order_relaxed);
 
         auto now = timer::now();
         current_duration = double(duration_cast<milliseconds>(now - time).count());
@@ -176,14 +179,14 @@ int main(int argc, const char* argv[])
         current_bandwidth = double(current_hashes * khps_mbps_ratio) / 1024 / current_duration;
         average_bandwidth = double(all_hashes * khps_mbps_ratio) / 1024 / all_duration;
 
-        std::cout << std::setw(7) << e << std::setw(9) << b << std::fixed << std::setw(10)
-                  << std::setprecision(2) << current_khps << " kh/s" << std::setw(9)
-                  << std::setprecision(2) << average_khps << " kh/s" << std::setw(10)
-                  << std::setprecision(2) << current_bandwidth << " GiB/s" << std::setw(8)
-                  << std::setprecision(2) << average_bandwidth << " GiB/s\n";
+        std::cout << std::setw(7) << e << std::setw(9) << block_number << std::fixed
+                  << std::setw(10) << std::setprecision(2) << current_khps << " kh/s"
+                  << std::setw(9) << std::setprecision(2) << average_khps << " kh/s"
+                  << std::setw(10) << std::setprecision(2) << current_bandwidth << " GiB/s"
+                  << std::setw(8) << std::setprecision(2) << average_bandwidth << " GiB/s\n";
     }
 
-    block_number.store(-1, std::memory_order_relaxed);
+    shared_block_number.store(-1, std::memory_order_relaxed);
     for (auto& future : futures)
         future.wait();
 
