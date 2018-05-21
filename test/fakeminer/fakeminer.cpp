@@ -95,7 +95,7 @@ void worker(bool light, const ethash::hash256& header_hash, uint64_t start_nonce
 int main(int argc, const char* argv[])
 {
     int num_blocks = 10;
-    int block_number = 0;
+    int start_block_number = 0;
     int block_time = 6;
     int work_size = 100;
     int num_threads = static_cast<int>(std::thread::hardware_concurrency());
@@ -111,7 +111,7 @@ int main(int argc, const char* argv[])
         else if (arg == "-i" && i + 1 < argc)
             num_blocks = std::stoi(argv[++i]);
         else if (arg == "-b" && i + 1 < argc)
-            block_number = std::stoi(argv[++i]);
+            start_block_number = std::stoi(argv[++i]);
         else if (arg == "-t" && i + 1 < argc)
             num_threads = std::stoi(argv[++i]);
         else if (arg == "-n" && i + 1 < argc)
@@ -134,7 +134,7 @@ int main(int argc, const char* argv[])
 
     const ethash::hash256 header_hash{};
 
-    shared_block_number.store(block_number, std::memory_order_relaxed);
+    shared_block_number.store(start_block_number, std::memory_order_relaxed);
     std::vector<std::future<void>> futures;
 
     for (int t = 0; t < num_threads; ++t)
@@ -160,20 +160,22 @@ int main(int argc, const char* argv[])
     double average_khps = 0;
     double current_bandwidth = 0;
     double average_bandwidth = 0;
-    for (int i = 0; i < num_blocks; ++i)
+
+    const int end_block_number = start_block_number + num_blocks;
+    for (int block_number = start_block_number; block_number < end_block_number; ++block_number)
     {
         std::this_thread::sleep_for(std::chrono::seconds(block_time));
         int current_hashes = num_hashes.exchange(0, std::memory_order_relaxed);
         all_hashes += current_hashes;
 
-        ++block_number;
-        int e = ethash::get_epoch_number(block_number);
-        shared_block_number.store(block_number, std::memory_order_relaxed);
-
         auto now = timer::now();
         current_duration = double(duration_cast<milliseconds>(now - time).count());
         all_duration = double(duration_cast<milliseconds>(now - start_time).count());
         time = now;
+
+        shared_block_number.store(block_number + 1, std::memory_order_relaxed);
+
+        int e = ethash::get_epoch_number(block_number);
 
         current_khps = double(current_hashes) / current_duration;
         average_khps = double(all_hashes) / all_duration;
