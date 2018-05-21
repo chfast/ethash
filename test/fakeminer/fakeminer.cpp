@@ -120,6 +120,7 @@ int main(int argc, const char* argv[])
 
     // clang-format off
     std::cout << "Fakeminer Benchmark\n\nParameters:"
+              << "\n  dataset:     " << (light ? "light" : "full")
               << "\n  threads:     " << num_threads
               << "\n  blocks:      " << num_blocks
               << "\n  block time:  " << block_time
