@@ -161,10 +161,12 @@ int main(int argc, const char* argv[])
     double current_bandwidth = 0;
     double average_bandwidth = 0;
 
+    const milliseconds block_time_ms{block_time * 1000};
+    milliseconds sleep_time = block_time_ms;
     const int end_block_number = start_block_number + num_blocks;
     for (int block_number = start_block_number; block_number < end_block_number; ++block_number)
     {
-        std::this_thread::sleep_for(std::chrono::seconds(block_time));
+        std::this_thread::sleep_for(sleep_time);
         int current_hashes = num_hashes.exchange(0, std::memory_order_relaxed);
         all_hashes += current_hashes;
 
@@ -187,6 +189,8 @@ int main(int argc, const char* argv[])
                   << std::setw(9) << std::setprecision(2) << average_khps << " kh/s"
                   << std::setw(10) << std::setprecision(2) << current_bandwidth << " GiB/s"
                   << std::setw(8) << std::setprecision(2) << average_bandwidth << " GiB/s\n";
+
+        sleep_time = block_time_ms - duration_cast<milliseconds>(timer::now() - now);
     }
 
     shared_block_number.store(-1, std::memory_order_relaxed);
