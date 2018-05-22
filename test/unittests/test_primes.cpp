@@ -66,3 +66,18 @@ TEST(primes, find_largest_prime)
         EXPECT_EQ(prime, t.second);
     }
 }
+
+TEST(primes, find_largest_prime_edge_cases)
+{
+    EXPECT_EQ(ethash::find_largest_prime(-2147483647), 0);
+    EXPECT_EQ(ethash::find_largest_prime(-100), 0);
+    EXPECT_EQ(ethash::find_largest_prime(-1), 0);
+    EXPECT_EQ(ethash::find_largest_prime(0), 0);
+    EXPECT_EQ(ethash::find_largest_prime(1), 0);
+    EXPECT_EQ(ethash::find_largest_prime(2), 2);
+    EXPECT_EQ(ethash::find_largest_prime(3), 3);
+    EXPECT_EQ(ethash::find_largest_prime(4), 3);
+    EXPECT_EQ(ethash::find_largest_prime(5), 5);
+    EXPECT_EQ(ethash::find_largest_prime(6), 5);
+    EXPECT_EQ(ethash::find_largest_prime(7), 7);
+}

@@ -4,7 +4,6 @@
 
 #include "primes.hpp"
 
-#include <cassert>
 #include <cstdint>
 
 namespace ethash
@@ -30,15 +29,19 @@ bool is_prime(int number) noexcept
 
 int find_largest_prime(int upper_bound) noexcept
 {
-    assert(upper_bound > 2);
-
     int n = upper_bound;
 
-    // If even number, skip it.
+    if (n < 2)
+        return 0;
+
+    if (n == 2)
+        return 2;
+
+    /* If even number, skip it. */
     if (n % 2 == 0)
         --n;
 
-    // Test descending odd numbers.
+    /* Test descending odd numbers. */
     while (!is_prime(n))
         n -= 2;
 
