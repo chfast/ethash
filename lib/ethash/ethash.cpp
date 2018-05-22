@@ -209,6 +209,14 @@ inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
     return keccak512(init_data, sizeof(init_data));
 }
 
+inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
+{
+    uint8_t final_data[sizeof(seed) + sizeof(mix_hash)];
+    std::memcpy(&final_data[0], seed.bytes, sizeof(seed));
+    std::memcpy(&final_data[sizeof(seed)], mix_hash.bytes, sizeof(mix_hash));
+    return keccak256(final_data, sizeof(final_data));
+}
+
 inline result hash_kernel(
     const epoch_context& context, const hash256& header_hash, uint64_t nonce, lookup_fn lookup)
 {
@@ -242,11 +250,7 @@ inline result hash_kernel(
     }
     mix_hash = fix_endianness32(mix_hash);
 
-    uint8_t final_data[sizeof(s) + sizeof(mix_hash)];
-    std::memcpy(&final_data[0], s.bytes, sizeof(s));
-    std::memcpy(&final_data[sizeof(s)], mix_hash.bytes, sizeof(mix_hash));
-    hash256 final_hash = keccak256(final_data, sizeof(final_data));
-    return {final_hash, mix_hash};
+    return {hash_final(s, mix_hash), mix_hash};
 }
 }
 
