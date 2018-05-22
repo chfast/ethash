@@ -217,14 +217,10 @@ inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
     return keccak256(final_data, sizeof(final_data));
 }
 
-inline result hash_kernel(
-    const epoch_context& context, const hash256& header_hash, uint64_t nonce, lookup_fn lookup)
+inline result hash_kernel(const epoch_context& context, const hash512& seed, lookup_fn lookup)
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
-    const int num_items = context.full_dataset_num_items;
-    const uint32_t index_limit = static_cast<uint32_t>(num_items);
-
-    const hash512 seed = hash_seed(header_hash, nonce);
+    const uint32_t index_limit = static_cast<uint32_t>(context.full_dataset_num_items);
     const uint32_t seed_init = fix_endianness(seed.half_words[0]);
 
     hash1024 mix;
@@ -256,7 +252,7 @@ inline result hash_kernel(
 
 result hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
 {
-    return hash_kernel(context, header_hash, nonce, calculate_dataset_item);
+    return hash_kernel(context, hash_seed(header_hash, nonce), calculate_dataset_item);
 }
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce)
@@ -274,7 +270,7 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
         return item;
     };
 
-    return hash_kernel(context, header_hash, nonce, lazy_lookup);
+    return hash_kernel(context, hash_seed(header_hash, nonce), lazy_lookup);
 }
 
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
