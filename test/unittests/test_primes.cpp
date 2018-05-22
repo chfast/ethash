@@ -9,23 +9,6 @@
 
 #include <gtest/gtest.h>
 
-
-TEST(primes, is_prime)
-{
-    int primes[] = {
-        2, 3, 17, 19, 577, 2069, 3011, 7919, 142540787, 1974468569, 2147483629};
-    for (auto p : primes)
-        EXPECT_TRUE(ethash::is_prime(p));
-}
-
-TEST(primes, is_not_prime)
-{
-    int not_primes[] = {
-        0, 1, 4, 6, 8, 9, 10, 12, 14, 15, 16, 18, 32, 512, 2048, 8192, 1974468568, 1974468570};
-    for (auto n : not_primes)
-        EXPECT_FALSE(ethash::is_prime(n));
-}
-
 TEST(primes, find_largest_prime)
 {
     /// Test pairs for find_largest_prime() are taken from generated ethash

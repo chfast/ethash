@@ -6,8 +6,6 @@
 
 namespace ethash
 {
-bool is_prime(int number) noexcept;
-
 /**
  * Finds the largest prime number not greater than the provided upper bound.
  *
@@ -16,4 +14,4 @@ bool is_prime(int number) noexcept;
  *          In case `upper_bound <= 1`, returns 0.
  */
 int find_largest_prime(int upper_bound) noexcept;
-}
+}  // namespace ethash
