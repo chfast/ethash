@@ -199,6 +199,16 @@ namespace
 {
 using lookup_fn = hash1024 (*)(const epoch_context&, size_t);
 
+inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
+{
+    nonce = fix_endianness(nonce);
+    uint8_t init_data[sizeof(header_hash) + sizeof(nonce)];
+    std::memcpy(&init_data[0], &header_hash, sizeof(header_hash));
+    std::memcpy(&init_data[sizeof(header_hash)], &nonce, sizeof(nonce));
+
+    return keccak512(init_data, sizeof(init_data));
+}
+
 inline result hash_kernel(
     const epoch_context& context, const hash256& header_hash, uint64_t nonce, lookup_fn lookup)
 {
@@ -206,15 +216,7 @@ inline result hash_kernel(
     const int num_items = context.full_dataset_num_items;
     const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
-    nonce = fix_endianness(nonce);
-    uint8_t init_data[sizeof(header_hash) + sizeof(nonce)];
-    std::memcpy(&init_data[0], &header_hash, sizeof(header_hash));
-    std::memcpy(&init_data[sizeof(header_hash)], &nonce, sizeof(nonce));
-
-    // Do not convert it to array of native 32-bit words, because bytes are
-    // needed in the end.
-    const hash512 s = keccak512(init_data, sizeof(init_data));
-
+    const hash512 s = hash_seed(header_hash, nonce);
     const uint32_t s_init = fix_endianness(s.half_words[0]);
 
     hash1024 mix;
