@@ -224,16 +224,16 @@ inline result hash_kernel(
     const int num_items = context.full_dataset_num_items;
     const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
-    const hash512 s = hash_seed(header_hash, nonce);
-    const uint32_t s_init = fix_endianness(s.half_words[0]);
+    const hash512 seed = hash_seed(header_hash, nonce);
+    const uint32_t seed_init = fix_endianness(seed.half_words[0]);
 
     hash1024 mix;
-    mix.hashes[0] = fix_endianness32(s);
-    mix.hashes[1] = fix_endianness32(s);
+    mix.hashes[0] = fix_endianness32(seed);
+    mix.hashes[1] = fix_endianness32(seed);
 
     for (uint32_t i = 0; i < num_dataset_accesses; ++i)
     {
-        auto p = fnv(i ^ s_init, mix.hwords[i % mix_hwords]) % index_limit;
+        auto p = fnv(i ^ seed_init, mix.hwords[i % mix_hwords]) % index_limit;
         hash1024 newdata = fix_endianness32(lookup(context, p));
 
         for (size_t j = 0; j < mix_hwords; ++j)
@@ -250,7 +250,7 @@ inline result hash_kernel(
     }
     mix_hash = fix_endianness32(mix_hash);
 
-    return {hash_final(s, mix_hash), mix_hash};
+    return {hash_final(seed, mix_hash), mix_hash};
 }
 }
 
