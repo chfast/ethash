@@ -600,9 +600,13 @@ TEST(ethash, verify_hash_light)
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_hash_hex);
 
-        bool v = verify(*context, header_hash, mix_hash, nonce, boundary);
+        bool v = verify_final_hash(header_hash, mix_hash, nonce, boundary);
+        EXPECT_TRUE(v);
+        v = verify(*context, header_hash, mix_hash, nonce, boundary);
         EXPECT_TRUE(v);
 
+        v = verify_final_hash(header_hash, mix_hash, nonce + 1, boundary);
+        EXPECT_FALSE(v);
         v = verify(*context, header_hash, mix_hash, nonce + 1, boundary);
         EXPECT_FALSE(v);
     }
@@ -633,6 +637,19 @@ TEST(ethash, verify_hash)
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_hash_hex);
     }
+}
+
+TEST(ethash, verify_final_hash_only)
+{
+    auto context = create_epoch_context(0);
+    const hash256 header_hash = {};
+    const hash256 mix_hash = {};
+    uint64_t nonce = 3221208;
+    const hash256 boundary =
+        to_hash256("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+    EXPECT_TRUE(verify_final_hash(header_hash, mix_hash, nonce, boundary));
+    EXPECT_FALSE(verify(*context, header_hash, mix_hash, nonce, boundary));
 }
 
 TEST(ethash, verify_boundary)

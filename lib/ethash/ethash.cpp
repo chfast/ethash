@@ -277,13 +277,18 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
     return {hash_final(seed, mix_hash), mix_hash};
 }
 
+bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
+    const hash256& boundary) noexcept
+{
+    const hash512 seed = hash_seed(header_hash, nonce);
+    return is_less_or_equal(hash_final(seed, mix_hash), boundary);
+}
+
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
     uint64_t nonce, const hash256& boundary) noexcept
 {
     const hash512 seed = hash_seed(header_hash, nonce);
-    const hash256 final_hash = hash_final(seed, mix_hash);
-
-    if (!is_less_or_equal(final_hash, boundary))
+    if (!is_less_or_equal(hash_final(seed, mix_hash), boundary))
         return false;
 
     const hash256 expected_mix_hash = hash_kernel(context, seed, calculate_dataset_item);

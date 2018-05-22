@@ -109,6 +109,9 @@ result hash_light(
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept;
 
+bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
+    const hash256& boundary) noexcept;
+
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
     uint64_t nonce, const hash256& boundary) noexcept;
 
