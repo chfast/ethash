@@ -79,6 +79,21 @@ static void calculate_dataset_item(benchmark::State& state)
 BENCHMARK(calculate_dataset_item);
 
 
+static void hash(benchmark::State& state)
+{
+    const int block_number = 5000000;
+    const ethash::hash256 header_hash =
+        to_hash256("bc544c2baba832600013bd5d1983f592e9557d04b0fb5ef7a100434a5fc8d52a");
+    const uint64_t nonce = 0x4617a20003ba3f25;
+
+    static const auto ctx = ethash::create_epoch_context(ethash::get_epoch_number(block_number));
+
+    for (auto _ : state)
+        ethash::hash_light(*ctx, header_hash, nonce);
+}
+BENCHMARK(hash);
+
+
 static void verify(benchmark::State& state)
 {
     const int block_number = 5000000;
@@ -95,7 +110,26 @@ static void verify(benchmark::State& state)
     for (auto _ : state)
         ethash::verify(*ctx, header_hash, mix_hash, nonce, boundry);
 }
-BENCHMARK(verify)->Threads(1)->Threads(2)->Threads(4)->Threads(8);
+BENCHMARK(verify);
+
+
+static void verify_mt(benchmark::State& state)
+{
+    const int block_number = 5000000;
+    const ethash::hash256 header_hash =
+        to_hash256("bc544c2baba832600013bd5d1983f592e9557d04b0fb5ef7a100434a5fc8d52a");
+    const ethash::hash256 mix_hash =
+        to_hash256("94cd4e844619ee20989578276a0a9046877d569d37ba076bf2e8e34f76189dea");
+    const uint64_t nonce = 0x4617a20003ba3f25;
+    const ethash::hash256 boundry =
+        to_hash256("0000000000001a5c000000000000000000000000000000000000000000000000");
+
+    static const auto ctx = ethash::create_epoch_context(ethash::get_epoch_number(block_number));
+
+    for (auto _ : state)
+        ethash::verify(*ctx, header_hash, mix_hash, nonce, boundry);
+}
+BENCHMARK(verify_mt)->Threads(1)->Threads(2)->Threads(4)->Threads(8);
 
 
 static void verify_managed(benchmark::State& state)
