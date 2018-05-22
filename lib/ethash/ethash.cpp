@@ -217,7 +217,7 @@ inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
     return keccak256(final_data, sizeof(final_data));
 }
 
-inline result hash_kernel(const epoch_context& context, const hash512& seed, lookup_fn lookup)
+inline hash256 hash_kernel(const epoch_context& context, const hash512& seed, lookup_fn lookup)
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
     const uint32_t index_limit = static_cast<uint32_t>(context.full_dataset_num_items);
@@ -244,15 +244,16 @@ inline result hash_kernel(const epoch_context& context, const hash512& seed, loo
         uint32_t h3 = fnv(h2, mix.hwords[i + 3]);
         mix_hash.hwords[i / 4] = h3;
     }
-    mix_hash = fix_endianness32(mix_hash);
 
-    return {hash_final(seed, mix_hash), mix_hash};
+    return fix_endianness32(mix_hash);
 }
 }
 
 result hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce)
 {
-    return hash_kernel(context, hash_seed(header_hash, nonce), calculate_dataset_item);
+    const hash512 seed = hash_seed(header_hash, nonce);
+    const hash256 mix_hash = hash_kernel(context, seed, calculate_dataset_item);
+    return {hash_final(seed, mix_hash), mix_hash};
 }
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce)
@@ -270,22 +271,22 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
         return item;
     };
 
-    return hash_kernel(context, hash_seed(header_hash, nonce), lazy_lookup);
+    const hash512 seed = hash_seed(header_hash, nonce);
+    const hash256 mix_hash = hash_kernel(context, seed, lazy_lookup);
+    return {hash_final(seed, mix_hash), mix_hash};
 }
 
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
     uint64_t nonce, const hash256& boundary)
 {
-    // TODO: Not optimal strategy.
-    // First we should check if mix -> final transition is correct,
-    // then check if the mix itself is valid.
+    const hash512 seed = hash_seed(header_hash, nonce);
+    const hash256 final_hash = hash_final(seed, mix_hash);
 
-    result r = hash_light(context, header_hash, nonce);
-
-    if (std::memcmp(&r.mix_hash, &mix_hash, sizeof(mix_hash)) != 0)
+    if (!is_less_or_equal(final_hash, boundary))
         return false;
 
-    return is_less_or_equal(r.final_hash, boundary);
+    const hash256 expected_mix_hash = hash_kernel(context, seed, calculate_dataset_item);
+    return std::memcmp(expected_mix_hash.bytes, mix_hash.bytes, sizeof(mix_hash)) == 0;
 }
 
 uint64_t search_light(const epoch_context& context, const hash256& header_hash,
