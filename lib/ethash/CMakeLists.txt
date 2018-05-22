@@ -19,8 +19,8 @@ add_library(
     ${include_dir}/ethash/keccak.hpp
     keccak.c
     keccakf1600.c
-    primes.hpp
-    primes.cpp
+    primes.h
+    primes.c
 )
 
 target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)

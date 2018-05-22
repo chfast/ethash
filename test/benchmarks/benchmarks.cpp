@@ -6,7 +6,7 @@
 
 #include <ethash/ethash-internal.hpp>
 #include <ethash/keccak.hpp>
-#include <ethash/primes.hpp>
+#include <ethash/primes.h>
 
 #include <benchmark/benchmark.h>
 
