@@ -275,3 +275,10 @@ TEST(helpers, to_hash256)
     std::string s = to_hex(h);
     EXPECT_EQ(s, hex);
 }
+
+TEST(helpers, to_hash256_empty)
+{
+    std::string hex;
+    hash256 h = to_hash256(hex);
+    EXPECT_EQ(h, hash256{});
+}

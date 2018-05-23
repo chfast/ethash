@@ -25,7 +25,7 @@ inline ethash::hash256 to_hash256(const std::string& hex)
 {
     auto parse_digit = [](char d) -> int { return d <= '9' ? (d - '0') : (d - 'a' + 10); };
 
-    ethash::hash256 hash;
+    ethash::hash256 hash = {};
     for (size_t i = 1; i < hex.size(); i += 2)
     {
         int h = parse_digit(hex[i - 1]);
