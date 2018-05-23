@@ -113,7 +113,7 @@ int find_epoch_number(const hash256& seed) noexcept
     return -1;
 }
 
-void build_light_cache(hash512* cache, int num_items, const hash256 &seed) noexcept
+void build_light_cache(hash512* cache, int num_items, const hash256& seed) noexcept
 {
     hash512 item = keccak512(seed.bytes, sizeof(seed));
     cache[0] = item;
@@ -239,7 +239,7 @@ inline hash256 hash_kernel(
 
     return fix_endianness32(mix_hash);
 }
-}
+}  // namespace
 
 result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
 {
@@ -338,7 +338,7 @@ int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
     static constexpr int num_items_init = full_dataset_init_size / item_size;
     static constexpr int num_items_growth = full_dataset_growth / item_size;
     static_assert(full_dataset_init_size % item_size == 0,
-                  "full_dataset_init_size not multiple of item size");
+        "full_dataset_init_size not multiple of item size");
     static_assert(
         full_dataset_growth % item_size == 0, "full_dataset_growth not multiple of item size");
 

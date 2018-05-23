@@ -137,4 +137,4 @@ inline uint64_t from_be(uint64_t x)
 }
 
 #endif
-}
+}  // namespace ethash
