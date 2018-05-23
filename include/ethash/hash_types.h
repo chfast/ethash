@@ -27,7 +27,6 @@ union ethash_hash512
 
 union ethash_hash1024
 {
-    /* TODO: Is the array worse than 2 fields for memory aliasing? */
     union ethash_hash512 hashes[2];
     uint64_t words[16];
     uint32_t hwords[32];

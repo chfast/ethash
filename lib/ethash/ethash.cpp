@@ -153,7 +153,7 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
     const hash512* cache = context.light_cache;
 
     static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
-    const int64_t num_cache_items = static_cast<int64_t>(context.light_cache_num_items);
+    const int64_t num_cache_items = context.light_cache_num_items;
 
     const int64_t index0 = int64_t(index) * 2;
     const int64_t index1 = int64_t(index) * 2 + 1;
@@ -161,33 +161,32 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
     const uint32_t init0 = static_cast<uint32_t>(index0);
     const uint32_t init1 = static_cast<uint32_t>(index1);
 
-    hash1024 mix;
-    mix.hashes[0] = cache[index0 % num_cache_items];
-    mix.hashes[1] = cache[index1 % num_cache_items];
+    hash512 mix0 = cache[index0 % num_cache_items];
+    hash512 mix1 = cache[index1 % num_cache_items];
 
-    mix.hashes[0].half_words[0] ^= fix_endianness(init0);
-    mix.hashes[1].half_words[0] ^= fix_endianness(init1);
+    mix0.half_words[0] ^= fix_endianness(init0);
+    mix1.half_words[0] ^= fix_endianness(init1);
 
     // Hash and convert to little-endian 32-bit words.
-    mix.hashes[0] = fix_endianness32(keccak512(mix.hashes[0]));
-    mix.hashes[1] = fix_endianness32(keccak512(mix.hashes[1]));
+    mix0 = fix_endianness32(keccak512(mix0));
+    mix1 = fix_endianness32(keccak512(mix1));
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
-        uint32_t t0 = fnv(init0 ^ j, mix.hashes[0].half_words[j % num_half_words]);
+        uint32_t t0 = fnv(init0 ^ j, mix0.half_words[j % num_half_words]);
         int64_t parent_index0 = t0 % num_cache_items;
-        mix.hashes[0] = fnv(mix.hashes[0], fix_endianness32(cache[parent_index0]));
+        mix0 = fnv(mix0, fix_endianness32(cache[parent_index0]));
 
-        uint32_t t1 = fnv(init1 ^ j, mix.hashes[1].half_words[j % num_half_words]);
+        uint32_t t1 = fnv(init1 ^ j, mix1.half_words[j % num_half_words]);
         int64_t parent_index1 = t1 % num_cache_items;
-        mix.hashes[1] = fnv(mix.hashes[1], fix_endianness32(cache[parent_index1]));
+        mix1 = fnv(mix1, fix_endianness32(cache[parent_index1]));
     }
 
     // Covert 32-bit words back to bytes and hash.
-    mix.hashes[0] = keccak512(fix_endianness32(mix.hashes[0]));
-    mix.hashes[1] = keccak512(fix_endianness32(mix.hashes[1]));
+    mix0 = keccak512(fix_endianness32(mix0));
+    mix1 = keccak512(fix_endianness32(mix1));
 
-    return mix;
+    return hash1024{{mix0, mix1}};
 }
 
 namespace
