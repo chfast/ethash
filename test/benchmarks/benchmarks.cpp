@@ -146,11 +146,11 @@ static void verify_managed(benchmark::State& state)
     const int epoch_number = ethash::get_epoch_number(block_number);
 
     // This should create the light cache.
-    ethash::managed::get_epoch_context(epoch_number);
+    ethash::get_global_epoch_context(epoch_number);
 
     for (auto _ : state)
     {
-        auto& context = ethash::managed::get_epoch_context(epoch_number);
+        auto& context = ethash::get_global_epoch_context(epoch_number);
         ethash::verify(context, header_hash, mix_hash, nonce, boundry);
     }
 }

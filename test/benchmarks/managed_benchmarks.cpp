@@ -10,11 +10,11 @@ static void get_epoch_context(benchmark::State& state)
 {
     const auto e = static_cast<int>(state.range(0));
 
-    ethash::managed::get_epoch_context(0);
+    ethash::get_global_epoch_context(0);
 
     for (auto _ : state)
     {
-        auto& ctx = ethash::managed::get_epoch_context(e);
+        auto& ctx = ethash::get_global_epoch_context(e);
         benchmark::DoNotOptimize(&ctx);
     }
 }

@@ -34,7 +34,7 @@ class ethash_light : public ethash_interface
 
 public:
     explicit ethash_light(int epoch_number)
-      : context(ethash::managed::get_epoch_context(epoch_number))
+      : context(ethash::get_global_epoch_context(epoch_number))
     {}
 
     void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
@@ -50,7 +50,7 @@ class ethash_full : public ethash_interface
 
 public:
     explicit ethash_full(int epoch_number)
-      : context(ethash::managed::get_epoch_context_full(epoch_number))
+      : context(ethash::get_global_epoch_context_full(epoch_number))
     {}
 
     void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const

@@ -27,7 +27,7 @@ TEST(managed_multithreaded, hash_all)
                 const hash256 header_hash = to_hash256(t.header_hash_hex);
                 const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
                 const int epoch_number = get_epoch_number(t.block_number);
-                auto& context = managed::get_epoch_context(epoch_number);
+                auto& context = get_global_epoch_context(epoch_number);
                 const result res = hash(context, header_hash, nonce);
                 EXPECT_EQ(to_hex(res.mix_hash), t.mix_hash_hex);
                 EXPECT_EQ(to_hex(res.final_hash), t.final_hash_hex);
@@ -48,7 +48,7 @@ TEST(managed_multithreaded, hash_parallel)
             const hash256 header_hash = to_hash256(t.header_hash_hex);
             const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
             const int epoch_number = get_epoch_number(t.block_number);
-            auto& context = managed::get_epoch_context(epoch_number);
+            auto& context = get_global_epoch_context(epoch_number);
             const result res = hash(context, header_hash, nonce);
             return (to_hex(res.mix_hash) == t.mix_hash_hex) &&
                    (to_hex(res.final_hash) == t.final_hash_hex);
@@ -75,7 +75,7 @@ TEST(managed_multithreaded, verify_all)
                 const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
                 const hash256 boundary = final_hash;
                 const int epoch_number = get_epoch_number(t.block_number);
-                auto& context = managed::get_epoch_context(epoch_number);
+                auto& context = get_global_epoch_context(epoch_number);
                 const bool valid = verify(context, header_hash, mix_hash, nonce, boundary);
                 EXPECT_TRUE(valid);
             }
@@ -98,7 +98,7 @@ TEST(managed_multithreaded, verify_parallel)
             const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
             const hash256 boundary = final_hash;
             const int epoch_number = get_epoch_number(t.block_number);
-            auto& context = managed::get_epoch_context(epoch_number);
+            auto& context = get_global_epoch_context(epoch_number);
             return verify(context, header_hash, mix_hash, nonce, boundary);
         }));
     }
@@ -121,7 +121,7 @@ TEST(managed_multithreaded, get_epoch_context_random)
             {
                 // Epoch number sequence: 0, 0, 1, 1, 0, 0, 1, 1, ...
                 int epoch_number = (j / 2) % 2;
-                managed::get_epoch_context(epoch_number);
+                get_global_epoch_context(epoch_number);
                 sum += epoch_number;
 
                 // Add sleep, otherwise this thread will starve others by quickly
@@ -145,8 +145,8 @@ TEST(managed_multithreaded, get_epoch_context_full)
     for (int i = 0; i < num_threads; ++i)
     {
         futures.emplace_back(std::async(std::launch::async, [] {
-            hash1024* full_dataset1 = managed::get_epoch_context_full(7).full_dataset;
-            hash1024* full_dataset2 = managed::get_epoch_context_full(7).full_dataset;
+            hash1024* full_dataset1 = get_global_epoch_context_full(7).full_dataset;
+            hash1024* full_dataset2 = get_global_epoch_context_full(7).full_dataset;
             return (full_dataset1 == full_dataset2) && (full_dataset1 != nullptr);
         }));
     }

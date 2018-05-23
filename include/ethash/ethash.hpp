@@ -132,12 +132,9 @@ uint64_t search(const epoch_context_full& context, const hash256& header_hash,
 int find_epoch_number(const hash256& seed) noexcept;
 
 
-namespace managed
-{
 /// Get global shared epoch context.
-const epoch_context& get_epoch_context(int epoch_number);
+const epoch_context& get_global_epoch_context(int epoch_number);
 
 /// Get global shared epoch context with full dataset initialized.
-const epoch_context_full& get_epoch_context_full(int epoch_number);
-}  // namespace managed
+const epoch_context_full& get_global_epoch_context_full(int epoch_number);
 }  // namespace ethash
