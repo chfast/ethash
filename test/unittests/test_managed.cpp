@@ -28,7 +28,7 @@ TEST(managed_multithreaded, hash_all)
                 const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
                 const int epoch_number = get_epoch_number(t.block_number);
                 auto& context = managed::get_epoch_context(epoch_number);
-                const result res = hash_light(context, header_hash, nonce);
+                const result res = hash(context, header_hash, nonce);
                 EXPECT_EQ(to_hex(res.mix_hash), t.mix_hash_hex);
                 EXPECT_EQ(to_hex(res.final_hash), t.final_hash_hex);
             }
@@ -49,7 +49,7 @@ TEST(managed_multithreaded, hash_parallel)
             const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
             const int epoch_number = get_epoch_number(t.block_number);
             auto& context = managed::get_epoch_context(epoch_number);
-            const result res = hash_light(context, header_hash, nonce);
+            const result res = hash(context, header_hash, nonce);
             return (to_hex(res.mix_hash) == t.mix_hash_hex) &&
                    (to_hex(res.final_hash) == t.final_hash_hex);
         }));

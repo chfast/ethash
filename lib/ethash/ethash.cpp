@@ -241,7 +241,7 @@ inline hash256 hash_kernel(
 }
 }
 
-result hash_light(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
+result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
 {
     const hash512 seed = hash_seed(header_hash, nonce);
     const hash256 mix_hash = hash_kernel(context, seed, calculate_dataset_item);
@@ -292,7 +292,7 @@ uint64_t search_light(const epoch_context& context, const hash256& header_hash,
     const uint64_t end_nonce = start_nonce + iterations;
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
-        result r = hash_light(context, header_hash, nonce);
+        result r = hash(context, header_hash, nonce);
         if (is_less_or_equal(r.final_hash, boundary))
             return nonce;
     }

@@ -89,7 +89,7 @@ static void hash(benchmark::State& state)
     static const auto ctx = ethash::create_epoch_context(ethash::get_epoch_number(block_number));
 
     for (auto _ : state)
-        ethash::hash_light(*ctx, header_hash, nonce);
+        ethash::hash(*ctx, header_hash, nonce);
 }
 BENCHMARK(hash);
 
