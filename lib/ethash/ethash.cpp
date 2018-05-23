@@ -147,10 +147,9 @@ void build_light_cache(hash512* cache, int num_items, const hash256 &seed) noexc
 ///
 /// This consist of two 512-bit items produced by calculate_dataset_item_partial().
 /// Here the computation is done interleaved for better performance.
-hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noexcept
+hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) noexcept
 {
-    // FIXME: Consider changing the type of index.
-    const hash512* cache = context.light_cache;
+    const hash512* const cache = context.light_cache;
 
     static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
     const int64_t num_cache_items = context.light_cache_num_items;
@@ -191,7 +190,7 @@ hash1024 calculate_dataset_item(const epoch_context& context, size_t index) noex
 
 namespace
 {
-using lookup_fn = hash1024 (*)(const epoch_context&, size_t);
+using lookup_fn = hash1024 (*)(const epoch_context&, uint32_t);
 
 inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
 {
@@ -251,7 +250,7 @@ result hash_light(const epoch_context& context, const hash256& header_hash, uint
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept
 {
-    static const auto lazy_lookup = [](const epoch_context& context, size_t index) noexcept
+    static const auto lazy_lookup = [](const epoch_context& context, uint32_t index) noexcept
     {
         auto full_dataset = static_cast<const epoch_context_full&>(context).full_dataset;
         hash1024& item = full_dataset[index];

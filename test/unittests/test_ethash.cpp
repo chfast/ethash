@@ -410,7 +410,7 @@ TEST(ethash, fake_dataset_partial_items)
 {
     struct full_dataset_item_test_case
     {
-        size_t index;
+        uint32_t index;
         const char* hash_hex;
     };
 
@@ -450,7 +450,7 @@ TEST(ethash, fake_dataset_items)
 {
     struct full_dataset_item_test_case
     {
-        size_t index;
+        uint32_t index;
         const char* hash1_hex;
         const char* hash2_hex;
     };
@@ -515,7 +515,7 @@ TEST(ethash, dataset_items_epoch13)
 {
     struct full_dataset_item_test_case
     {
-        size_t index;
+        uint32_t index;
         const char* hash1_hex;
         const char* hash2_hex;
     };
