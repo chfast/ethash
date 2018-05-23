@@ -24,7 +24,7 @@ HunterGate(
 )
 
 project(ethash)
-set(PROJECT_VERSION 0.3.0.dev0)
+set(PROJECT_VERSION 0.3.0)
 
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug Release RelWithDebInfo)
 
