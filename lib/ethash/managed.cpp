@@ -38,7 +38,6 @@ thread_local std::shared_ptr<epoch_context_full> thread_local_context_full;
 /// This function is on the slow path. It's separated to allow inlining the fast
 /// path.
 ///
-/// @todo: Check noexpect.
 /// @todo: Redesign to guarantee deallocation before new allocation.
 ATTRIBUTE_NOINLINE
 void update_local_context(int epoch_number)
