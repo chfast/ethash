@@ -103,13 +103,6 @@ inline hash1024 fix_endianness32(hash1024 hash)
     return hash;
 }
 
-inline hash1024 fix_endianness64(hash1024 hash)
-{
-    for (auto& w : hash.words)
-        w = fix_endianness(w);
-    return hash;
-}
-
 inline hash512 fix_endianness32(hash512 hash)
 {
     for (auto& w : hash.half_words)
