@@ -57,7 +57,7 @@ static constexpr auto calculate_full_dataset_num_items = ethash_calculate_full_d
 
 
 /// Calculates the epoch number out of the block number.
-inline int get_epoch_number(int block_number)
+inline int get_epoch_number(int block_number) noexcept
 {
     return block_number / epoch_length;
 }
