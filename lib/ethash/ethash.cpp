@@ -218,14 +218,12 @@ inline hash256 hash_kernel(
     const uint32_t index_limit = static_cast<uint32_t>(context.full_dataset_num_items);
     const uint32_t seed_init = fix_endianness(seed.half_words[0]);
 
-    hash1024 mix;
-    mix.hashes[0] = fix_endianness32(seed);
-    mix.hashes[1] = fix_endianness32(seed);
+    hash1024 mix{{fix_endianness32(seed), fix_endianness32(seed)}};
 
     for (uint32_t i = 0; i < num_dataset_accesses; ++i)
     {
-        auto p = fnv(i ^ seed_init, mix.hwords[i % mix_hwords]) % index_limit;
-        hash1024 newdata = fix_endianness32(lookup(context, p));
+        const uint32_t p = fnv(i ^ seed_init, mix.hwords[i % mix_hwords]) % index_limit;
+        const hash1024 newdata = fix_endianness32(lookup(context, p));
 
         for (size_t j = 0; j < mix_hwords; ++j)
             mix.hwords[j] = fnv(mix.hwords[j], newdata.hwords[j]);
@@ -234,9 +232,9 @@ inline hash256 hash_kernel(
     hash256 mix_hash;
     for (size_t i = 0; i < mix_hwords; i += 4)
     {
-        uint32_t h1 = fnv(mix.hwords[i], mix.hwords[i + 1]);
-        uint32_t h2 = fnv(h1, mix.hwords[i + 2]);
-        uint32_t h3 = fnv(h2, mix.hwords[i + 3]);
+        const uint32_t h1 = fnv(mix.hwords[i], mix.hwords[i + 1]);
+        const uint32_t h2 = fnv(h1, mix.hwords[i + 2]);
+        const uint32_t h3 = fnv(h2, mix.hwords[i + 3]);
         mix_hash.hwords[i / 4] = h3;
     }
 
