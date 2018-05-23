@@ -51,20 +51,17 @@ inline hash512 fnv(const hash512& u, const hash512& v) noexcept
     hash512 r;
     for (size_t i = 0; i < sizeof(r) / sizeof(r.half_words[0]); ++i)
         r.half_words[i] = fnv(u.half_words[i], v.half_words[i]);
-
     return r;
 }
 
-hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
+inline hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 {
-    // TODO: Nicely optimized by clang, horribly by GCC.
-
     hash512 z;
     for (size_t i = 0; i < sizeof(z) / sizeof(z.words[0]); ++i)
         z.words[i] = x.words[i] ^ y.words[i];
     return z;
 }
-}
+}  // namespace
 
 hash256 calculate_seed(int epoch_number) noexcept
 {
