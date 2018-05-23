@@ -118,6 +118,9 @@ int main(int argc, const char* argv[])
             start_nonce = std::stoul(argv[++i]);
     }
 
+    auto flags = std::cout.flags();
+    std::cout << std::fixed << std::setprecision(2);
+
     // clang-format off
     std::cout << "Fakeminer Benchmark\n\nParameters:"
               << "\n  dataset:     " << (light ? "light" : "full")
@@ -184,11 +187,10 @@ int main(int argc, const char* argv[])
         current_bandwidth = double(current_hashes * khps_mbps_ratio) / 1024 / current_duration;
         average_bandwidth = double(all_hashes * khps_mbps_ratio) / 1024 / all_duration;
 
-        std::cout << std::setw(7) << e << std::setw(9) << block_number << std::fixed
-                  << std::setw(10) << std::setprecision(2) << current_khps << " kh/s"
-                  << std::setw(9) << std::setprecision(2) << average_khps << " kh/s"
-                  << std::setw(10) << std::setprecision(2) << current_bandwidth << " GiB/s"
-                  << std::setw(8) << std::setprecision(2) << average_bandwidth << " GiB/s\n";
+        std::cout << std::setw(7) << e << std::setw(9) << block_number << std::setw(10)
+                  << current_khps << " kh/s" << std::setw(9) << average_khps << " kh/s"
+                  << std::setw(10) << current_bandwidth << " GiB/s" << std::setw(8)
+                  << average_bandwidth << " GiB/s\n";
 
         sleep_time = block_time_ms - duration_cast<milliseconds>(timer::now() - now);
     }
@@ -199,13 +201,13 @@ int main(int argc, const char* argv[])
 
     auto total_seconds = all_duration / 1000;
 
-    std::cout << "\nSummary:\n  time:                     " << std::fixed << std::setw(7)
-              << std::setprecision(2) << total_seconds
-              << " s\n  latest hashrate:          " << std::setw(7) << std::setprecision(2)
-              << current_khps << " kh/s\n  average hashrate:         " << std::setw(7)
-              << std::setprecision(2) << average_khps
-              << " kh/s\n  latest memory bandwitdh:  " << std::setw(7) << std::setprecision(2)
-              << current_bandwidth << " GiB/s\n  average memory bandwitdh: " << std::setw(7)
-              << std::setprecision(2) << average_bandwidth << " GiB/s\n";
+    std::cout << "\nSummary:\n  time:                     " << std::setw(7) << total_seconds
+              << " s\n  latest hashrate:          " << std::setw(7) << current_khps
+              << " kh/s\n  average hashrate:         " << std::setw(7) << average_khps
+              << " kh/s\n  latest memory bandwitdh:  " << std::setw(7) << current_bandwidth
+              << " GiB/s\n  average memory bandwitdh: " << std::setw(7) << average_bandwidth
+              << " GiB/s\n";
+
+    std::cout.flags(flags);
     return 0;
 }
