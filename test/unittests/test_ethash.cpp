@@ -597,8 +597,13 @@ TEST(ethash, verify_hash_light)
         v = verify(*context, header_hash, mix_hash, nonce, boundary);
         EXPECT_TRUE(v);
 
-        v = verify_final_hash(header_hash, mix_hash, nonce + 1, boundary);
-        EXPECT_FALSE(v);
+        const bool within_significant_boundary = r.final_hash.bytes[0] == 0;
+        if (within_significant_boundary)
+        {
+            v = verify_final_hash(header_hash, mix_hash, nonce + 1, boundary);
+            EXPECT_FALSE(v) << t.final_hash_hex;
+        }
+
         v = verify(*context, header_hash, mix_hash, nonce + 1, boundary);
         EXPECT_FALSE(v);
     }
