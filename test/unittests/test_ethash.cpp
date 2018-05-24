@@ -333,13 +333,6 @@ TEST(ethash, get_epoch_number)
     EXPECT_EQ(get_epoch_number(5000000), 166);
 }
 
-TEST(ethash, epoch_context)
-{
-    const auto context = create_epoch_context(3);
-    EXPECT_EQ(context->light_cache_num_items, 268283);
-    EXPECT_EQ(context->full_dataset_num_items, 8585209);
-}
-
 TEST(ethash, light_cache)
 {
     struct light_cache_test_case
@@ -537,6 +530,8 @@ TEST(ethash, dataset_items_epoch13)
 
 TEST(ethash, verify_hash_light)
 {
+    epoch_context_ptr context{nullptr, ethash_destroy_epoch_context};
+
     for (const auto& t : hash_test_cases)
     {
         const int epoch_number = t.block_number / epoch_length;
@@ -545,7 +540,8 @@ TEST(ethash, verify_hash_light)
         const hash256 mix_hash = to_hash256(t.mix_hash_hex);
         const hash256 boundary = to_hash256(t.final_hash_hex);
 
-        auto context = create_epoch_context(epoch_number);
+        if (!context || context->epoch_number != epoch_number)
+            context = create_epoch_context(epoch_number);
 
         result r = hash(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
@@ -570,6 +566,8 @@ TEST(ethash, verify_hash_light)
 
 TEST(ethash, verify_hash)
 {
+    epoch_context_full_ptr context{nullptr, ethash_destroy_epoch_context_full};
+
     for (const auto& t : hash_test_cases)
     {
         const int epoch_number = t.block_number / epoch_length;
@@ -579,7 +577,9 @@ TEST(ethash, verify_hash)
         const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
         const uint64_t full_dataset_size = get_full_dataset_size(full_dataset_num_items);
 
-        auto context = create_epoch_context_full(epoch_number);
+        if (!context || context->epoch_number != epoch_number)
+            context = create_epoch_context_full(epoch_number);
+
 #if _WIN32 && !_WIN64
         // On Windows 32-bit you can only allocate ~ 2GB of memory.
         static constexpr uint64_t allocation_size_limit = uint64_t(2) * 1024 * 1024 * 1024;
