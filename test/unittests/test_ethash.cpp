@@ -175,62 +175,35 @@ TEST(ethash, full_dataset_size)
 }
 
 
-TEST(ethash, calculate_seed_0)
+struct epoch_seed_test_case
 {
-    hash256 s0 = calculate_epoch_seed(0);
-    for (auto w : s0.words)
-        EXPECT_EQ(w, 0);
+    const int epoch_number;
+    const char* const epoch_seed_hex;
+};
+
+static epoch_seed_test_case epoch_seed_test_cases[] = {
+    {0, "0000000000000000000000000000000000000000000000000000000000000000"},
+    {1, "290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563"},
+    {171, "a9b0e0c9aca72c07ba06b5bbdae8b8f69e61878301508473379bb4f71807d707"},
+    {2048, "20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920"},
+    {29998, "1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164"},
+    {29999, "ee1d0f61b054dff0f3025ebba821d405c8dc19a983e582e9fa5436fc3e7a07d8"},
+};
+
+TEST(ethash, calculate_epoch_seed)
+{
+    for (auto& t : epoch_seed_test_cases)
+    {
+        const hash256 epoch_seed = calculate_epoch_seed(t.epoch_number);
+        EXPECT_EQ(epoch_seed, to_hash256(t.epoch_seed_hex));
+    }
 }
 
-TEST(ethash, calculate_seed_1)
-{
-    hash256 seed = calculate_epoch_seed(1);
-    std::string sh = to_hex(seed);
-    EXPECT_EQ(sh, "290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563");
-}
-
-TEST(ethash, calculate_seed_171)
-{
-    hash256 seed = calculate_epoch_seed(171);
-    std::string sh = to_hex(seed);
-    EXPECT_EQ(sh, "a9b0e0c9aca72c07ba06b5bbdae8b8f69e61878301508473379bb4f71807d707");
-}
-
-TEST(ethash, calculate_seed_2048)
-{
-    hash256 seed = calculate_epoch_seed(2048);
-    std::string sh = to_hex(seed);
-    EXPECT_EQ(sh, "20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920");
-}
-
-TEST(ethash, calculate_seed_29998)
-{
-    hash256 seed = calculate_epoch_seed(29998);
-    std::string sh = to_hex(seed);
-    EXPECT_EQ(sh, "1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164");
-}
-
-TEST(ethash, calculate_seed_29999)
-{
-    hash256 seed = calculate_epoch_seed(29999);
-    std::string sh = to_hex(seed);
-    EXPECT_EQ(sh, "ee1d0f61b054dff0f3025ebba821d405c8dc19a983e582e9fa5436fc3e7a07d8");
-}
-
-TEST(ethash, find_epoch_number_29998)
-{
-    hash256 seed = to_hash256("1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164");
-
-    int epoch = find_epoch_number(seed);
-    EXPECT_EQ(epoch, 29998);
-}
 
 TEST(ethash, find_epoch_number_double_ascending)
 {
-    hash256 seed_29998 =
-        to_hash256("1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164");
-    hash256 seed_29999 =
-        to_hash256("ee1d0f61b054dff0f3025ebba821d405c8dc19a983e582e9fa5436fc3e7a07d8");
+    const hash256 seed_29998 = to_hash256(epoch_seed_test_cases[4].epoch_seed_hex);
+    const hash256 seed_29999 = to_hash256(epoch_seed_test_cases[5].epoch_seed_hex);
 
     int epoch = find_epoch_number(seed_29998);
     EXPECT_EQ(epoch, 29998);
@@ -242,10 +215,8 @@ TEST(ethash, find_epoch_number_double_ascending)
 
 TEST(ethash, find_epoch_number_double_descending)
 {
-    hash256 seed_29998 =
-        to_hash256("1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164");
-    hash256 seed_29999 =
-        to_hash256("ee1d0f61b054dff0f3025ebba821d405c8dc19a983e582e9fa5436fc3e7a07d8");
+    const hash256 seed_29998 = to_hash256(epoch_seed_test_cases[4].epoch_seed_hex);
+    const hash256 seed_29999 = to_hash256(epoch_seed_test_cases[5].epoch_seed_hex);
 
     int epoch = find_epoch_number(seed_29999);
     EXPECT_EQ(epoch, 29999);
