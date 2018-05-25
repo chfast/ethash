@@ -55,6 +55,9 @@ static constexpr auto calculate_light_cache_num_items = ethash_calculate_light_c
 /// Alias for ethash_calculate_full_dataset_num_items().
 static constexpr auto calculate_full_dataset_num_items = ethash_calculate_full_dataset_num_items;
 
+/// Alias for ethash_calculate_epoch_seed().
+static constexpr auto calculate_epoch_seed = ethash_calculate_epoch_seed;
+
 
 /// Calculates the epoch number out of the block number.
 inline constexpr int get_epoch_number(int block_number) noexcept
@@ -103,6 +106,7 @@ inline epoch_context_full_ptr create_epoch_context_full(int epoch_number) noexce
 {
     return {ethash_create_epoch_context_full(epoch_number), ethash_destroy_epoch_context_full};
 }
+
 
 result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept;
 

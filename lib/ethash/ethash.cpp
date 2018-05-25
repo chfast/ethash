@@ -63,14 +63,6 @@ inline hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 }
 }  // namespace
 
-hash256 calculate_seed(int epoch_number) noexcept
-{
-    hash256 seed = {};
-    for (int i = 0; i < epoch_number; ++i)
-        seed = keccak256(seed);
-    return seed;
-}
-
 int find_epoch_number(const hash256& seed) noexcept
 {
     static constexpr int num_tries = 30000;  // Divisible by 16.
@@ -317,6 +309,14 @@ using namespace ethash;
 
 extern "C" {
 
+ethash_hash256 ethash_calculate_epoch_seed(int epoch_number) noexcept
+{
+    ethash_hash256 epoch_seed = {};
+    for (int i = 0; i < epoch_number; ++i)
+        epoch_seed = ethash_keccak256_32(epoch_seed.bytes);
+    return epoch_seed;
+}
+
 int ethash_calculate_light_cache_num_items(int epoch_number) noexcept
 {
     static constexpr int item_size = sizeof(hash512);
@@ -363,8 +363,8 @@ epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
         return nullptr;  // Signal out-of-memory by returning null pointer.
 
     hash512* const light_cache = reinterpret_cast<hash512*>(alloc_data + context_alloc_size);
-    const hash256 seed = calculate_seed(epoch_number);
-    build_light_cache(light_cache, light_cache_num_items, seed);
+    const hash256 epoch_seed = calculate_epoch_seed(epoch_number);
+    build_light_cache(light_cache, light_cache_num_items, epoch_seed);
 
     const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
     hash1024* full_dataset = nullptr;

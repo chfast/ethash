@@ -42,7 +42,7 @@ static void seed(benchmark::State& state)
 
     for (auto _ : state)
     {
-        auto seed = ethash::calculate_seed(epoch_number);
+        auto seed = ethash::calculate_epoch_seed(epoch_number);
         benchmark::DoNotOptimize(seed.bytes);
     }
 }
@@ -53,7 +53,7 @@ static void light_cache(benchmark::State& state)
 {
     const int epoch_number = static_cast<int>(state.range(0));
     const auto num_items = ethash::calculate_light_cache_num_items(epoch_number);
-    const auto seed = ethash::calculate_seed(epoch_number);
+    const auto seed = ethash::calculate_epoch_seed(epoch_number);
 
     std::unique_ptr<ethash::hash512[]> light_cache{new ethash::hash512[num_items]};
 

@@ -60,6 +60,13 @@ int ethash_calculate_light_cache_num_items(int epoch_number) NOEXCEPT;
  */
 int ethash_calculate_full_dataset_num_items(int epoch_number) NOEXCEPT;
 
+/**
+ * Calculates the epoch seed hash.
+ * @param epoch_number  The epoch number.
+ * @return              The epoch seed hash.
+ */
+union ethash_hash256 ethash_calculate_epoch_seed(int epoch_number) NOEXCEPT;
+
 
 struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXCEPT;
 
