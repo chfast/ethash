@@ -17,6 +17,19 @@ void fake_keccakf1600(uint64_t* state) noexcept
 }
 
 
+static void keccakf1600(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        ethash_keccakf1600(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600);
+
+
 static void keccak256(benchmark::State& state)
 {
     const auto data_size = static_cast<size_t>(state.range(0));
