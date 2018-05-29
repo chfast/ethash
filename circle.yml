@@ -91,7 +91,7 @@ defaults:
       name: "Benchmark"
       working_directory: ~/build
       command: |
-        test/benchmarks/bench
+        test/ethash-bench
 
   upload-coverage-data: &upload-coverage-data
     run:
