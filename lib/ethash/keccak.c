@@ -79,7 +79,9 @@ static INLINE ALWAYS_INLINE void keccak(
             data += word_size;
         }
 
-        ethash_keccakf1600(state);
+        keccak_f1600(state);
+        //ethash_keccakf1600(state);
+        //sha3_keccakf(state);
 
         size -= block_size;
     }
