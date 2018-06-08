@@ -23,7 +23,7 @@ namespace
 {
 struct test_context_full : epoch_context
 {
-    hash1024* full_dataset;
+    hash2048* full_dataset;
 };
 
 /// Creates the epoch context of the correct size but filled with fake data.
@@ -86,6 +86,13 @@ TEST(hash, hash1024_init)
     hash1024 hash = {};
     for (auto w : hash.words)
         EXPECT_EQ(w, 0);
+}
+
+TEST(hash, hash2048_init)
+{
+	hash2048 hash = {};
+	for (auto w : hash.words)
+		EXPECT_EQ(w, 0);
 }
 
 struct dataset_size_test_case
@@ -620,7 +627,7 @@ TEST(ethash_multithreaded, small_dataset)
     auto context = create_epoch_context_mock(0);
     const_cast<int&>(context->full_dataset_num_items) = num_dataset_items;
 
-    std::unique_ptr<hash1024[]> full_dataset{new hash1024[num_dataset_items]{}};
+    std::unique_ptr<hash2048[]> full_dataset{new hash2048[num_dataset_items]{}};
     reinterpret_cast<test_context_full*>(context.get())->full_dataset = full_dataset.get();
     auto context_full = reinterpret_cast<epoch_context_full*>(context.get());
 
