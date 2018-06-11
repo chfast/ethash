@@ -17,14 +17,15 @@
 
 extern "C" struct ethash_epoch_context_full : ethash_epoch_context
 {
-    ethash_hash1024* full_dataset;
+    ethash_hash2048* full_dataset;
+	ethash_hash32* full_l1_dataset;
 
     constexpr ethash_epoch_context_full(int epoch_number, int light_cache_num_items,
         const ethash_hash512* light_cache, int full_dataset_num_items,
-        ethash_hash1024* full_dataset) noexcept
+        ethash_hash2048* full_dataset, ethash_hash32* full_l1_dataset) noexcept
       : ethash_epoch_context{epoch_number, light_cache_num_items, light_cache,
             full_dataset_num_items},
-        full_dataset{full_dataset}
+        full_dataset{full_dataset}, full_l1_dataset{ full_l1_dataset }
     {}
 };
 
@@ -45,5 +46,7 @@ inline bool is_less_or_equal(const hash256& a, const hash256& b) noexcept
 void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept;
 
 hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) noexcept;
+
+hash2048 calculate_dataset_item_progpow(const epoch_context& context, uint32_t index) noexcept;
 
 }  // namespace ethash

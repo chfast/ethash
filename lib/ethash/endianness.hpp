@@ -54,6 +54,11 @@ inline uint64_t fix_endianness(uint64_t x)
     return x;
 }
 
+inline const hash2048& fix_endianness32(const hash2048& h)
+{
+	return h;
+}
+
 inline const hash1024& fix_endianness32(const hash1024& h)
 {
     return h;
@@ -94,6 +99,13 @@ inline uint32_t fix_endianness(uint32_t x)
 inline uint64_t fix_endianness(uint64_t x)
 {
     return bswap64(x);
+}
+
+inline hash2048 fix_endianness32(hash2048 hash)
+{
+	for (auto& w : hash.hwords)
+		w = fix_endianness(w);
+	return hash;
 }
 
 inline hash1024 fix_endianness32(hash1024 hash)

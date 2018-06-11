@@ -29,6 +29,7 @@ extern "C" {
  */
 void ethash_keccakf1600(uint64_t state[25]) NOEXCEPT;
 void keccak_f1600(uint64_t state[25]) NOEXCEPT;
+void keccak_f800_round(uint32_t st[25], const int r) NOEXCEPT;
 
 union ethash_hash256 ethash_keccak256(const uint8_t* data, size_t size) NOEXCEPT;
 union ethash_hash256 ethash_keccak256_32(const uint8_t data[32]) NOEXCEPT;
