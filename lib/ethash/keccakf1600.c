@@ -287,7 +287,7 @@ static inline uint64_t ROTL64(uint64_t n, unsigned int c)
 // https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
 // before converted from 64->32 bit words */
 
-__device__ __constant__ const uint64_t keccakf_rndc[24] = {
+__device__ __constant__ const uint64_t keccakf_rndc64[24] = {
 	0x0000000000000001ULL, 0x0000000000008082ULL, 0x800000000000808AULL,
 	0x8000000080008000ULL, 0x000000000000808BULL, 0x0000000080000001ULL,
 	0x8000000080008081ULL, 0x8000000000008009ULL, 0x000000000000008AULL,
@@ -339,7 +339,7 @@ __device__ __forceinline__ void keccak_f1600_round(uint64_t st[25], const int r)
 	}
 
 	//  Iota
-	st[0] ^= keccakf_rndc[r];
+	st[0] ^= keccakf_rndc64[r];
 }
 
 __device__ __forceinline__ void keccak_f1600(uint64_t st[25])
