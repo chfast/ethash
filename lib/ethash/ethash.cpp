@@ -44,7 +44,7 @@ constexpr static int full_dataset_item_parents = 256;
 
 // Verify constants:
 static_assert(sizeof(hash512) == ETHASH_LIGHT_CACHE_ITEM_SIZE, "");
-static_assert(sizeof(hash2048) == ETHASH_FULL_DATASET_ITEM_SIZE, "");
+static_assert(sizeof(hash2048) == ETHASH_FULL_DATASET_ITEM_SIZE_256, "");
 static_assert(light_cache_item_size == ETHASH_LIGHT_CACHE_ITEM_SIZE, "");
 static_assert(full_dataset_item_size == ETHASH_FULL_DATASET_ITEM_SIZE, "");
 
@@ -387,7 +387,8 @@ hash2048 calculate_dataset_item_progpow(const epoch_context& context, uint32_t i
 
 namespace
 {
-using lookup_fn = hash2048 (*)(const epoch_context&, uint32_t);
+using lookup_fn = hash1024 (*)(const epoch_context&, uint32_t);
+using lookup_fn2 = hash2048 (*)(const epoch_context&, uint32_t);
 using lookup_fn_l1 = hash32(*)(const epoch_context&, uint32_t);
 
 inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
@@ -491,7 +492,7 @@ void progPowLoop(
     const uint64_t prog_seed,
     const uint32_t loop,
     uint32_t mix[PROGPOW_LANES][PROGPOW_REGS],
-    lookup_fn  g_lut,
+    lookup_fn2  g_lut,
     lookup_fn_l1 c_lut)
 {
     // All lanes share a base address for the global load
@@ -543,7 +544,37 @@ void progPowLoop(
 }
 
 inline hash256 hash_kernel(
-    const epoch_context& context, const uint64_t& seed, lookup_fn g_lut, lookup_fn_l1 c_lut) noexcept
+    const epoch_context& context, const hash512& seed, lookup_fn lookup) noexcept
+{
+    static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
+    const uint32_t index_limit = static_cast<uint32_t>(context.full_dataset_num_items);
+    const uint32_t seed_init = fix_endianness(seed.half_words[0]);
+
+    hash1024 mix{{fix_endianness32(seed), fix_endianness32(seed)}};
+
+    for (uint32_t i = 0; i < num_dataset_accesses; ++i)
+    {
+        const uint32_t p = fnv(i ^ seed_init, mix.hwords[i % mix_hwords]) % index_limit;
+        const hash1024 newdata = fix_endianness32(lookup(context, p));
+
+        for (size_t j = 0; j < mix_hwords; ++j)
+            mix.hwords[j] = fnv(mix.hwords[j], newdata.hwords[j]);
+    }
+
+    hash256 mix_hash;
+    for (size_t i = 0; i < mix_hwords; i += 4)
+    {
+        const uint32_t h1 = fnv(mix.hwords[i], mix.hwords[i + 1]);
+        const uint32_t h2 = fnv(h1, mix.hwords[i + 2]);
+        const uint32_t h3 = fnv(h2, mix.hwords[i + 3]);
+        mix_hash.hwords[i / 4] = h3;
+    }
+
+    return fix_endianness32(mix_hash);
+}
+
+inline hash256 progpow_kernel(
+    const epoch_context& context, const uint64_t& seed, lookup_fn2 g_lut, lookup_fn_l1 c_lut) noexcept
 {
     uint32_t mix[PROGPOW_LANES][PROGPOW_REGS];
     hash256 result;
@@ -580,14 +611,9 @@ inline hash256 hash_kernel(
 
 result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
 {
-    uint32_t result[4];
-    for (int i = 0; i < 4; i++)
-        result[i] = 0;
-    uint64_t seed = keccak_f800(header_hash, nonce, result);
-
-    const hash256 mix_hash = hash_kernel(context, seed, calculate_dataset_item_progpow, calculate_L1dataset_item);
-    
-    return { ethash_keccak256(header_hash, seed, &mix_hash.hwords[0]), mix_hash};
+    const hash512 seed = hash_seed(header_hash, nonce);
+    const hash256 mix_hash = hash_kernel(context, seed, calculate_dataset_item);
+    return {hash_final(seed, mix_hash), mix_hash};
 }
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept
@@ -595,6 +621,38 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
     static const auto lazy_lookup = [](const epoch_context& context, uint32_t index) noexcept
     {
         auto full_dataset = static_cast<const epoch_context_full&>(context).full_dataset;
+        hash1024& item = full_dataset[index];
+        if (item.words[0] == 0)
+        {
+            // TODO: Copy elision here makes it thread-safe?
+            item = calculate_dataset_item(context, index);
+        }
+
+        return item;
+    };
+
+    const hash512 seed = hash_seed(header_hash, nonce);
+    const hash256 mix_hash = hash_kernel(context, seed, lazy_lookup);
+    return {hash_final(seed, mix_hash), mix_hash};
+}
+
+result progpow(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
+{
+    uint32_t result[4];
+    for (int i = 0; i < 4; i++)
+        result[i] = 0;
+    uint64_t seed = keccak_f800(header_hash, nonce, result);
+
+    const hash256 mix_hash = progpow_kernel(context, seed, calculate_dataset_item_progpow, calculate_L1dataset_item);
+
+    return { ethash_keccak256(header_hash, seed, &mix_hash.hwords[0]), mix_hash};
+}
+
+result progpow(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept
+{
+    static const auto lazy_lookup = [](const epoch_context& context, uint32_t index) noexcept
+    {
+        auto full_dataset = static_cast<const epoch_context_full&>(context).full_dataset2;
         hash2048& item = full_dataset[index];
         if (item.words[0] == 0)
         {
@@ -623,11 +681,18 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
         result[i] = 0;
     uint64_t seed = keccak_f800(header_hash, nonce, result);
 
-    const hash256 mix_hash = hash_kernel(context, seed, lazy_lookup, lazy_l1_lookup);
+    const hash256 mix_hash = progpow_kernel(context, seed, lazy_lookup, lazy_l1_lookup);
     return { ethash_keccak256(header_hash, seed, &mix_hash.hwords[0]), mix_hash};
 }
 
 bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
+    const hash256& boundary) noexcept
+{
+    const hash512 seed = hash_seed(header_hash, nonce);
+    return is_less_or_equal(hash_final(seed, mix_hash), boundary);
+}
+
+bool verify_final_progpow(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
     const hash256& boundary) noexcept
 {
     uint32_t result[4];
@@ -641,6 +706,17 @@ bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
     uint64_t nonce, const hash256& boundary) noexcept
 {
+    const hash512 seed = hash_seed(header_hash, nonce);
+    if (!is_less_or_equal(hash_final(seed, mix_hash), boundary))
+        return false;
+
+    const hash256 expected_mix_hash = hash_kernel(context, seed, calculate_dataset_item);
+    return std::memcmp(expected_mix_hash.bytes, mix_hash.bytes, sizeof(mix_hash)) == 0;
+}
+
+bool verify_progpow(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
+    uint64_t nonce, const hash256& boundary) noexcept
+{
     uint32_t result[4];
     for (int i = 0; i < 4; i++)
         result[i] = 0;
@@ -649,7 +725,7 @@ bool verify(const epoch_context& context, const hash256& header_hash, const hash
     if (!is_less_or_equal(ethash_keccak256(header_hash, seed, &mix_hash.hwords[0]), boundary))
         return false;
 
-    const hash256 expected_mix_hash = hash_kernel(context, seed, calculate_dataset_item_progpow, calculate_L1dataset_item);
+    const hash256 expected_mix_hash = progpow_kernel(context, seed, calculate_dataset_item_progpow, calculate_L1dataset_item);
     return std::memcmp(expected_mix_hash.bytes, mix_hash.bytes, sizeof(mix_hash)) == 0;
 }
 
@@ -709,13 +785,12 @@ int ethash_calculate_light_cache_num_items(int epoch_number) noexcept
 
 int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
 {
-    static constexpr int item_size = sizeof(hash2048);
-    static constexpr int num_items_init = full_dataset_init_size / item_size;
-    static constexpr int num_items_growth = full_dataset_growth / item_size;
-    static_assert(full_dataset_init_size % item_size == 0,
-        "full_dataset_init_size not multiple of item size");
-    static_assert(
-        full_dataset_growth % item_size == 0, "full_dataset_growth not multiple of item size");
+    static int item_size = sizeof(hash2048);
+    if (epoch_number < 1357) item_size = sizeof(hash1024);
+    static int num_items_init = full_dataset_init_size / item_size;
+    static int num_items_growth = full_dataset_growth / item_size;
+    assert(full_dataset_init_size % item_size == 0);
+    assert(full_dataset_growth % item_size == 0);
 
     int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
     int num_items = ethash_find_largest_prime(num_items_upper_bound);
@@ -750,8 +825,12 @@ epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
         // TODO: This can be "optimized" by doing single allocation for light and full caches.
         const size_t num_items = static_cast<size_t>(full_dataset_num_items);
         const size_t num_l1_items = static_cast<size_t>(full_l1_dataset_num_items);
+      if (epoch_number < 1357) {
+        full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash1024)));
+      } else {
         full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash2048)));
         full_l1_dataset = static_cast<hash32*>(std::calloc(num_l1_items, sizeof(hash32)));
+      }
         if (!full_dataset)
         {
             std::free(alloc_data);

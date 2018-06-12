@@ -145,8 +145,27 @@ TEST(managed_multithreaded, get_epoch_context_full)
     for (int i = 0; i < num_threads; ++i)
     {
         futures.emplace_back(std::async(std::launch::async, [] {
-            hash2048* full_dataset1 = get_global_epoch_context_full(7).full_dataset;
-            hash2048* full_dataset2 = get_global_epoch_context_full(7).full_dataset;
+            hash1024* full_dataset1 = get_global_epoch_context_full(7).full_dataset;
+            hash1024* full_dataset2 = get_global_epoch_context_full(7).full_dataset;
+            return (full_dataset1 == full_dataset2) && (full_dataset1 != nullptr);
+        }));
+    }
+
+    for (auto& f : futures)
+        EXPECT_TRUE(f.get());
+}
+
+TEST(managed_multithreaded, get_epoch_context_full2)
+{
+    static constexpr int num_threads = 4;
+
+    std::vector<std::future<bool>> futures;
+
+    for (int i = 0; i < num_threads; ++i)
+    {
+        futures.emplace_back(std::async(std::launch::async, [] {
+            hash2048* full_dataset1 = get_global_epoch_context_full(1357).full_dataset2;
+            hash2048* full_dataset2 = get_global_epoch_context_full(1377).full_dataset2;
             return (full_dataset1 == full_dataset2) && (full_dataset1 != nullptr);
         }));
     }

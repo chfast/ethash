@@ -17,7 +17,10 @@
 
 extern "C" struct ethash_epoch_context_full : ethash_epoch_context
 {
-    ethash_hash2048* full_dataset;
+  union {
+    ethash_hash1024* full_dataset;
+    ethash_hash2048* full_dataset2;
+  };
 	ethash_hash32* full_l1_dataset;
 
     constexpr ethash_epoch_context_full(int epoch_number, int light_cache_num_items,
@@ -25,7 +28,7 @@ extern "C" struct ethash_epoch_context_full : ethash_epoch_context
         ethash_hash2048* full_dataset, ethash_hash32* full_l1_dataset) noexcept
       : ethash_epoch_context{epoch_number, light_cache_num_items, light_cache,
             full_dataset_num_items},
-        full_dataset{full_dataset}, full_l1_dataset{ full_l1_dataset }
+        full_dataset2{full_dataset}, full_l1_dataset{ full_l1_dataset }
     {}
 };
 

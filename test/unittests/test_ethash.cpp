@@ -23,6 +23,10 @@ namespace
 {
 struct test_context_full : epoch_context
 {
+    hash1024* full_dataset;
+};
+struct test_context_full2 : epoch_context
+{
     hash2048* full_dataset;
 };
 
@@ -627,7 +631,8 @@ TEST(ethash_multithreaded, small_dataset)
     auto context = create_epoch_context_mock(0);
     const_cast<int&>(context->full_dataset_num_items) = num_dataset_items;
 
-    std::unique_ptr<hash2048[]> full_dataset{new hash2048[num_dataset_items]{}};
+    std::unique_ptr<hash1024[]> full_dataset{new hash1024[num_dataset_items]{}};
+    std::unique_ptr<hash2048[]> full_dataset2{new hash2048[num_dataset_items]{}};
     reinterpret_cast<test_context_full*>(context.get())->full_dataset = full_dataset.get();
     auto context_full = reinterpret_cast<epoch_context_full*>(context.get());
 
