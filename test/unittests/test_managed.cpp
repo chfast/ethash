@@ -165,7 +165,7 @@ TEST(managed_multithreaded, get_epoch_context_full2)
     {
         futures.emplace_back(std::async(std::launch::async, [] {
             hash2048* full_dataset1 = get_global_epoch_context_full(1357).full_dataset2;
-            hash2048* full_dataset2 = get_global_epoch_context_full(1377).full_dataset2;
+            hash2048* full_dataset2 = get_global_epoch_context_full(1357).full_dataset2;
             return (full_dataset1 == full_dataset2) && (full_dataset1 != nullptr);
         }));
     }

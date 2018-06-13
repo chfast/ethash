@@ -32,6 +32,7 @@ namespace ethash
 #define PROGPOW_CNT_CACHE               8
 #define PROGPOW_CNT_MATH                8
 #define PROGPOW_CACHE_WORDS  (PROGPOW_CACHE_BYTES / sizeof(uint32_t))
+#define PROGPOW_EPOCH_START (135)
 
 // Internal constants:
 constexpr static int light_cache_init_size = 1 << 24;
@@ -748,7 +749,12 @@ uint64_t search(const epoch_context_full& context, const hash256& header_hash,
     const uint64_t end_nonce = start_nonce + iterations;
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
-        result r = hash(context, header_hash, nonce);
+        result r;
+		if (context.epoch_number < PROGPOW_EPOCH_START) {
+		    r = hash(context, header_hash, nonce);
+		} else {
+		    r = progpow(context, header_hash, nonce);
+		}
         if (is_less_or_equal(r.final_hash, boundary))
             return nonce;
     }
@@ -786,7 +792,7 @@ int ethash_calculate_light_cache_num_items(int epoch_number) noexcept
 int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
 {
     static int item_size = sizeof(hash2048);
-    if (epoch_number < 1357) item_size = sizeof(hash1024);
+    if (epoch_number < PROGPOW_EPOCH_START) item_size = sizeof(hash1024);
     static int num_items_init = full_dataset_init_size / item_size;
     static int num_items_growth = full_dataset_growth / item_size;
     assert(full_dataset_init_size % item_size == 0);
@@ -808,6 +814,7 @@ epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
     const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
     const size_t alloc_size = context_alloc_size + light_cache_size;
 
+	if (alloc_size >= 131088776768) return nullptr;
     char* const alloc_data = static_cast<char*>(std::malloc(alloc_size));
     if (!alloc_data)
         return nullptr;  // Signal out-of-memory by returning null pointer.
@@ -825,7 +832,7 @@ epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
         // TODO: This can be "optimized" by doing single allocation for light and full caches.
         const size_t num_items = static_cast<size_t>(full_dataset_num_items);
         const size_t num_l1_items = static_cast<size_t>(full_l1_dataset_num_items);
-      if (epoch_number < 1357) {
+      if (epoch_number < PROGPOW_EPOCH_START) {
         full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash1024)));
       } else {
         full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash2048)));

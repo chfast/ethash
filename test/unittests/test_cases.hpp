@@ -17,7 +17,10 @@ struct hash_test_case
     const char* nonce_hex;
     const char* mix_hash_hex;
     const char* final_hash_hex;
+    const char* final_progpow;
+    const char* mix_progpow;
 };
+
 
 hash_test_case hash_test_cases[] = {
     {
@@ -26,6 +29,8 @@ hash_test_case hash_test_cases[] = {
         "4242424242424242",
         "58f759ede17a706c93f13030328bcea40c1d1341fb26f2facd21ceb0dae57017",
         "dd47fd2d98db51078356852d7c4014e6a5d6c387c35f40e2875b74a256ed7906",
+    "eea066ec18bef61d315c9bcf51a8f7fbcf98dac180f37b202194abed54b432ec",
+    "7be04b6b19690ef9a1d950b61927ac1c00000000000000000000000000000000"
     },
     {
         2,
@@ -33,6 +38,8 @@ hash_test_case hash_test_cases[] = {
         "307692cf71b12f6d",
         "e55d02c555a7969361cf74a9ec6211d8c14e4517930a00442f171bdb1698d175",
         "ab9b13423cface72cbec8424221651bc2e384ef0f7a560e038fc68c8d8684829",
+    "ae0f146b56b3df979c97c1c2c22e52a826b310dad3779386dc85b3674501d8e3",
+    "1d474ca7790a78c6db2d6f21c24e05d000000000000000000000000000000000",
     },
     {
         2683077,
@@ -40,6 +47,8 @@ hash_test_case hash_test_cases[] = {
         "8c5eaec000788d41",
         "93e85c97b34ccd8091e09ddb513fdc9e680fa8898d4a0737205e60af710a3dcb",
         "00000000000204882a6213f68fe89bc368df25c1ad999f82532a7433e99bc48e",
+    "b5fc7b4c3eeb5c40efe9f07f48437e1e1bb43db7d4059479beb81212351e5f3a",
+    "e1d849c5e98176cd9d865fa0ea9cffee00000000000000000000000000000000"
     },
     {
         5000000,
@@ -47,6 +56,8 @@ hash_test_case hash_test_cases[] = {
         "4617a20003ba3f25",
         "94cd4e844619ee20989578276a0a9046877d569d37ba076bf2e8e34f76189dea",
         "0000000000001a5b18ae31b7417b7c045bc6dd78cc3b694c4bebfaefef6b3c56",
+    "f946b8787c2a0dfd4bb97b75706c856a75a771e8efc05ffd3ffc631c425e8e96",
+    "10310e88bee733c9834f1c6fdb09258f00000000000000000000000000000000",
     },
     {
         5000001,
@@ -54,6 +65,8 @@ hash_test_case hash_test_cases[] = {
         "1af47f2007922384",
         "46cb1268ac6b218eb01b9bd46f1533561d085620c9bfc23eadb8ab106f84b2d8",
         "0000000000000a4230cfc483a3f739a5101192c3d4f9c8314f4508be24c28257",
+    "a4ac72cbe861ae48ac14f9283512fdf8b9d73ea29264fe37916ffbd618f3ac41",
+    "5adf6ffbcbdfd77f28570049a691de6200000000000000000000000000000000"
     },
     {
         5000002,
@@ -61,6 +74,8 @@ hash_test_case hash_test_cases[] = {
         "c9a044201dd998f2",
         "028a19d6dcf0975972285f71a23fe3a468886ad24cc63f969158d427556d6bb5",
         "0000000000000eec80fbc4c472507b6c212c4f216043318f3fb3e696a0e80b06",
+    "94f4c1662dd53d83379678f0a46b9596016c8ef00807ec3d541ade5f7505f946",
+    "013799c879b55cace3ddc8c4ffa9a73500000000000000000000000000000000"
     },
     {
         5306861,
@@ -68,6 +83,8 @@ hash_test_case hash_test_cases[] = {
         "d337f82001e992c5",
         "26c64f063dac85ae3585526b446be6754faf044876aa3e20f770bea567e04d1d",
         "00000000000003f1554d8071ff0903268fcb70f30f4af3bf7ec7dc69cdf509f3",
+    "0ef740e7ebf5487d85e133ccff37786b48521ce4346c646d1542b46f9e0315e1",
+    "fbd463b27977fed261d4c764da02b7f300000000000000000000000000000000"
     },
 };
 }  // namespace

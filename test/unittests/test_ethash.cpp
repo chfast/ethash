@@ -529,6 +529,10 @@ TEST(ethash, verify_hash_light)
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_hash_hex);
 
+        r = progpow(*context, header_hash, nonce);
+        EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
+        EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
+
         bool v = verify_final_hash(header_hash, mix_hash, nonce, boundary);
         EXPECT_TRUE(v);
         v = verify(*context, header_hash, mix_hash, nonce, boundary);

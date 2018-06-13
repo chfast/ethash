@@ -107,6 +107,9 @@ inline epoch_context_full_ptr create_epoch_context_full(int epoch_number) noexce
     return {ethash_create_epoch_context_full(epoch_number), ethash_destroy_epoch_context_full};
 }
 
+result progpow(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept;
+
+result progpow(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept;
 
 result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept;
 
