@@ -288,36 +288,12 @@ hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) no
 /// Calculates a full l1 dataset item
 ///
 /// This consist of one 32-bit items produced by calculate_dataset_item_partial().
-/// Here the computation is done interleaved for better performance.
 hash32 calculate_L1dataset_item(const epoch_context& context, uint32_t index) noexcept
 {
-    const hash512* const cache = context.light_cache;
-
-    static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
-    const int64_t num_cache_items = context.light_cache_num_items;
-
-    const int64_t index0 = int64_t(index) * 2;
-
-    const uint32_t init0 = static_cast<uint32_t>(index0);
-
-    hash512 mix0 = cache[index0 % num_cache_items];
-
-    mix0.half_words[0] ^= fix_endianness(init0);
-
-    // Hash and convert to little-endian 32-bit words.
-    mix0 = fix_endianness32(keccak512(mix0));
-
-    for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
-    {
-        uint32_t t0 = fnv(init0 ^ j, mix0.half_words[j % num_half_words]);
-        int64_t parent_index0 = t0 % num_cache_items;
-        mix0 = fnv(mix0, fix_endianness32(cache[parent_index0]));
-    }
-
-    // Covert 32-bit words back to bytes and hash.
-    mix0 = keccak512(fix_endianness32(mix0));
-    hash32 ret;
-    ret.hwords[0] = mix0.half_words[15];
+    const uint32_t* const cache = &context.light_cache[0].half_words[0];
+    const int64_t num_l1_cache_items = PROGPOW_CACHE_BYTES/4;
+	hash32 ret;
+	ret.hwords[0] = cache[index % num_l1_cache_items];
     return ret;
 }
 
@@ -477,7 +453,7 @@ kiss99_t progPowInit(uint64_t prog_seed, uint32_t mix_seq[PROGPOW_REGS])
     prog_rnd.jcong = fnv1a(&fnv_hash, (uint32_t)(prog_seed >> 32));
     // Create a random sequence of mix destinations for merge()
     // guaranteeing every location is touched once
-    // Uses Fisher¨CYates shuffle
+    // Uses Fisherï¿½CYates shuffle
     for (uint32_t i = 0; i < PROGPOW_REGS; i++)
         mix_seq[i] = i;
     for (uint32_t i = PROGPOW_REGS - 1; i > 0; i--)
@@ -601,10 +577,10 @@ inline hash256 progpow_kernel(
             fnv1a(&lane_hash[l], mix[l][i]);
     }
     // Reduce all lanes to a single 128-bit result
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 8; i++)
         result.hwords[i] = 0x811c9dc5;
     for (int l = 0; l < PROGPOW_LANES; l++)
-        fnv1a(&result.hwords[l % 4], lane_hash[l]);
+        fnv1a(&result.hwords[l % 8], lane_hash[l]);
 
     return fix_endianness32(result);
 }
