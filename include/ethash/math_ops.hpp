@@ -21,7 +21,7 @@ uint32_t mul_hi (uint32_t a, uint32_t b){
 uint32_t clz (uint32_t a){
     uint32_t result = 0;
     for(int i=31;i>=0;i--){
-        if(((a>>i)&1) == 1)
+        if(((a>>i)&1) == 0)
             result ++;
         else
             break;

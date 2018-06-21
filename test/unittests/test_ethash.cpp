@@ -55,6 +55,7 @@ epoch_context_ptr create_epoch_context_mock(int epoch_number)
         light_cache_num_items,
         light_cache,
         calculate_full_dataset_num_items(epoch_number),
+        0
     };
     return {context, ethash_destroy_epoch_context};
 }
@@ -508,7 +509,7 @@ TEST(ethash, dataset_items_epoch13)
         EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
         EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
     }
-    const auto c = create_epoch_context(193);
+    const auto c = create_epoch_context(194);
     //std::cout << "cache "<< to_hex(c->light_cache[0])<<std::endl;
     for (uint32_t j=0;j<125;j++) {
         hash2048 i2 = calculate_dataset_item_progpow(*c, j);
@@ -520,6 +521,25 @@ TEST(ethash, dataset_items_epoch13)
     }
 //light_cache b823956409c8cfa7bceede3a2fdd4634c85f3de6d81a3c7883c010dc920eba0792911581be6be764b8e53dac746671f70fc9f599ab06095c35cd52ebcbbe6295
 //b28ed8191cb50bd8697a4c45e22b47edbc59983983dcab684d2eefb811c92e862a5aeaf06aefc6d962486b0acc7894c64f8b38f90c165c949cddf3c74ff62072ea1554fcbd4b8a6b17a0503750987abaab5d9a5cf4538f23a1627b93803964dcb1b8f43c87efc92b50df1ca2fcd9c7ac71cfafbd0fd3b914504cdd100f5990da05492226a0dbfad7a34eecb3553a4c88d29099c700d28115b904c4727d782c7db754959d0db80c203cf29655a9fd3eb573555022b6d9bccabe642e44def8782990011a341a1f0008c9b0b847a9dbefdabd13f25ac5c87cc7bed0079f2ca0587980de6da2c2c4f71629e5cfc794287215e7a2f585ec2d484aefedeebad3a7bb8f
+}
+
+TEST(ethash, verify_progpow)
+{
+    epoch_context_ptr context{nullptr, ethash_destroy_epoch_context};
+
+    {
+        const int epoch_number = 193;
+        const uint64_t nonce = std::stoull("63f73acb95306f11", nullptr, 16);
+        const hash256 header_hash = to_hash256("d29bbd19f429715150488a228798092bb9f18777120dd112be9cdd9f08f9e514");
+
+        if (!context || context->epoch_number != epoch_number)
+            context = create_epoch_context(epoch_number);
+
+        result r = progpow(*context, header_hash, nonce);
+        //EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
+	std::cout<<(to_hex(r.mix_hash));
+
+    }
 }
 
 TEST(ethash, verify_hash_light)

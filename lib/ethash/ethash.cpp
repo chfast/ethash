@@ -139,7 +139,7 @@ void merge(uint32_t *a, uint32_t b, uint32_t r)
 
 // Random math between two input values
 uint32_t math(uint32_t a, uint32_t b, uint32_t r)
-{
+{       
 	switch (r % 11)
 	{
 	case 0: return a + b; break;
@@ -290,10 +290,11 @@ hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) no
 /// This consist of one 32-bit items produced by calculate_dataset_item_partial().
 hash32 calculate_L1dataset_item(const epoch_context& context, uint32_t index) noexcept
 {
-    const uint32_t* const cache = &context.light_cache[0].half_words[0];
-    const int64_t num_l1_cache_items = PROGPOW_CACHE_BYTES/4;
-	hash32 ret;
-	ret.hwords[0] = cache[index % num_l1_cache_items];
+    uint32_t idx = index/2;
+    const hash2048 dag = calculate_dataset_item_progpow(context, (idx*2+101));
+    uint64_t data = dag.words[0];
+    hash32 ret;
+    ret.hwords[0] = (uint32_t)((index%2)?(data>>32):(data));
     return ret;
 }
 
@@ -378,14 +379,14 @@ inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
     return keccak512(init_data, sizeof(init_data));
 }
 
-uint64_t keccak_f800(const ethash_hash256 header, const uint64_t seed, const uint32_t *result)
+uint64_t keccak_f800(const ethash_hash256& header, const uint64_t seed, const uint32_t *result)
 {
     uint32_t st[25];
 
     for (int i = 0; i < 25; i++)
         st[i] = 0;
     for (int i = 0; i < 8; i++)
-        st[i] = header .hwords[i];
+        st[i] = header.hwords[i];
     st[8] = (uint32_t)seed;
     st[9] = (uint32_t)(seed >> 32);
     st[10] = result[0];
@@ -443,9 +444,8 @@ inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
     return keccak256(final_data, sizeof(final_data));
 }
 
-kiss99_t progPowInit(uint64_t prog_seed, uint32_t mix_seq[PROGPOW_REGS])
+void progPowInit(kiss99_t& prog_rnd, uint64_t prog_seed, uint32_t mix_seq[PROGPOW_REGS])
 {
-    kiss99_t prog_rnd;
     uint32_t fnv_hash = 0x811c9dc5;
     prog_rnd.z = fnv1a(&fnv_hash, (uint32_t)prog_seed);
     prog_rnd.w = fnv1a(&fnv_hash, (uint32_t)(prog_seed >> 32));
@@ -460,8 +460,7 @@ kiss99_t progPowInit(uint64_t prog_seed, uint32_t mix_seq[PROGPOW_REGS])
     {
         uint32_t j = kiss99(&prog_rnd) % (i + 1);
         swap(&(mix_seq[i]), &(mix_seq[j]));
-    }
-    return prog_rnd;
+    }    
 }
 
 void progPowLoop(
@@ -474,10 +473,10 @@ void progPowLoop(
 {
     // All lanes share a base address for the global load
     // Global offset uses mix[0] to guarantee it depends on the load result
-    uint32_t offset_g = mix[loop%PROGPOW_LANES][0] % (uint32_t)context.full_dataset_num_items;
+    uint32_t offset_g = mix[loop%PROGPOW_LANES][0] % (uint32_t)(context.full_dataset_num_items/2);
 
     const hash2048 data256 = fix_endianness32(g_lut(context, offset_g));
-
+    
     // Lanes can execute in parallel and will be convergent
     for (uint32_t l = 0; l < PROGPOW_LANES; l++)
     {
@@ -487,7 +486,8 @@ void progPowLoop(
         // initialize the seed and mix destination sequence
         uint32_t mix_seq[PROGPOW_REGS];
         int mix_seq_cnt = 0;
-        kiss99_t prog_rnd = progPowInit(prog_seed, mix_seq);
+        kiss99_t prog_rnd;
+        progPowInit(prog_rnd, prog_seed, mix_seq);
 
         uint32_t offset, data32;
         //int max_i = max(PROGPOW_CNT_CACHE, PROGPOW_CNT_MATH);
@@ -518,6 +518,7 @@ void progPowLoop(
         merge(&(mix[l][0]), (uint32_t)data64, rnd());
         merge(&(mix[l][mix_dst()]), (uint32_t)(data64 >> 32), rnd());
     }
+    return;
 }
 
 inline hash256 hash_kernel(
@@ -554,6 +555,7 @@ inline hash256 progpow_kernel(
     const epoch_context& context, const uint64_t& seed, lookup_fn2 g_lut, lookup_fn_l1 c_lut) noexcept
 {
     uint32_t mix[PROGPOW_LANES][PROGPOW_REGS];
+    for(int i=0;i<PROGPOW_LANES;i++)for(int j=0;j<PROGPOW_REGS;j++)mix[i][j]=0;
     hash256 result;
     for (int i = 0; i < 8; i++)
         result.hwords[i] = 0;
