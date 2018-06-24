@@ -509,15 +509,19 @@ TEST(ethash, dataset_items_epoch13)
         EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
         EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
     }
+}
+
+TEST(ethash, verify_progpow_dag)
+{
     const auto c = create_epoch_context(194);
     //std::cout << "cache "<< to_hex(c->light_cache[0])<<std::endl;
-    for (uint32_t j=0;j<125;j++) {
+    for (uint32_t j=0;j<1024;j++) {
         hash2048 i2 = calculate_dataset_item_progpow(*c, j);
         hash1024 i = calculate_dataset_item(*c, j*2+1);
         EXPECT_EQ(to_hex(i2.hashes[2]),to_hex(i.hashes[0]));
-        if(j<124) {
-	    for(int k=0;k<4;k++)std::cout<<j<<" "<<to_hex(i2.hashes[k])<<std::endl;
-	}
+        if(j==0 or j==123) {
+	        for(int k=0;k<4;k++)std::cout<<j<<" "<<to_hex(i2.hashes[k])<<std::endl;
+	    }
     }
 //light_cache b823956409c8cfa7bceede3a2fdd4634c85f3de6d81a3c7883c010dc920eba0792911581be6be764b8e53dac746671f70fc9f599ab06095c35cd52ebcbbe6295
 //b28ed8191cb50bd8697a4c45e22b47edbc59983983dcab684d2eefb811c92e862a5aeaf06aefc6d962486b0acc7894c64f8b38f90c165c949cddf3c74ff62072ea1554fcbd4b8a6b17a0503750987abaab5d9a5cf4538f23a1627b93803964dcb1b8f43c87efc92b50df1ca2fcd9c7ac71cfafbd0fd3b914504cdd100f5990da05492226a0dbfad7a34eecb3553a4c88d29099c700d28115b904c4727d782c7db754959d0db80c203cf29655a9fd3eb573555022b6d9bccabe642e44def8782990011a341a1f0008c9b0b847a9dbefdabd13f25ac5c87cc7bed0079f2ca0587980de6da2c2c4f71629e5cfc794287215e7a2f585ec2d484aefedeebad3a7bb8f
@@ -561,10 +565,6 @@ TEST(ethash, verify_hash_light)
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_hash_hex);
 
-        r = progpow(*context, header_hash, nonce);
-        EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
-        EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
-
         bool v = verify_final_hash(header_hash, mix_hash, nonce, boundary);
         EXPECT_TRUE(v);
         v = verify(*context, header_hash, mix_hash, nonce, boundary);
@@ -579,6 +579,26 @@ TEST(ethash, verify_hash_light)
 
         v = verify(*context, header_hash, mix_hash, nonce + 1, boundary);
         EXPECT_FALSE(v);
+    }
+}
+
+TEST(ethash, verify_progpow_light)
+{
+    epoch_context_ptr context{nullptr, ethash_destroy_epoch_context};
+
+    for (const auto& t : hash_test_cases)
+    {
+        const int epoch_number = t.block_number / epoch_length;
+        const uint64_t nonce = std::stoull(t.nonce_hex, nullptr, 16);
+        const hash256 header_hash = to_hash256(t.header_hash_hex);
+
+        if (!context || context->epoch_number != epoch_number)
+            context = create_epoch_context(epoch_number);
+
+        result r;
+        r = progpow(*context, header_hash, nonce);
+        EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
+        EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
     }
 }
 

@@ -243,47 +243,43 @@ void build_light_cache(hash512* cache, int num_items, const hash256& seed) noexc
 ///
 /// This consist of two 512-bit items produced by calculate_dataset_item_partial().
 /// Here the computation is done interleaved for better performance.
-hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) noexcept
+static hash512 calculate_dag_item(const epoch_context& context, int64_t index) noexcept
 {
     const hash512* const cache = context.light_cache;
 
     static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
     const int64_t num_cache_items = context.light_cache_num_items;
 
-    const int64_t index0 = int64_t(index) * 2;
-    const int64_t index1 = int64_t(index) * 2 + 1;
+    uint32_t idx32 = static_cast<uint32_t>(index);
 
-    const uint32_t init0 = static_cast<uint32_t>(index0);
-    const uint32_t init1 = static_cast<uint32_t>(index1);
+    hash512 mix0 = cache[index % num_cache_items];
 
-    hash512 mix0 = cache[index0 % num_cache_items];
-    hash512 mix1 = cache[index1 % num_cache_items];
-
-    mix0.half_words[0] ^= fix_endianness(init0);
-    mix1.half_words[0] ^= fix_endianness(init1);
+    mix0.half_words[0] ^= fix_endianness(idx32);
 
     // Hash and convert to little-endian 32-bit words.
     mix0 = fix_endianness32(keccak512(mix0));
-    mix1 = fix_endianness32(keccak512(mix1));
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
-        uint32_t t0 = fnv(init0 ^ j, mix0.half_words[j % num_half_words]);
+        uint32_t t0 = fnv(idx32 ^ j, mix0.half_words[j % num_half_words]);
         int64_t parent_index0 = t0 % num_cache_items;
         mix0 = fnv(mix0, fix_endianness32(cache[parent_index0]));
-
-        uint32_t t1 = fnv(init1 ^ j, mix1.half_words[j % num_half_words]);
-        int64_t parent_index1 = t1 % num_cache_items;
-        mix1 = fnv(mix1, fix_endianness32(cache[parent_index1]));
     }
 
     // Covert 32-bit words back to bytes and hash.
     mix0 = keccak512(fix_endianness32(mix0));
-    mix1 = keccak512(fix_endianness32(mix1));
 
-    return hash1024{{mix0, mix1}};
+    return {mix0};
 }
 
+hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) noexcept
+{
+    hash512 n1,n2;
+    int64_t idx64 = static_cast<int64_t>(index);
+    n1 = calculate_dag_item(context, idx64*2);
+    n2 = calculate_dag_item(context, idx64*2+1);
+    return hash1024{{n1, n2}};    
+}
 
 /// Calculates a full l1 dataset item
 ///
@@ -304,63 +300,10 @@ hash32 calculate_L1dataset_item(const epoch_context& context, uint32_t index) no
 /// Here the computation is done interleaved for better performance.
 hash2048 calculate_dataset_item_progpow(const epoch_context& context, uint32_t index) noexcept
 {
-    const hash512* const cache = context.light_cache;
-
-    static constexpr size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
-    const int64_t num_cache_items = context.light_cache_num_items;
-
-    const int64_t index0 = int64_t(index) * 4;
-    const int64_t index1 = int64_t(index) * 4 + 1;
-    const int64_t index2 = int64_t(index) * 4 + 2;
-    const int64_t index3 = int64_t(index) * 4 + 3;
-
-    const uint32_t init0 = static_cast<uint32_t>(index0);
-    const uint32_t init1 = static_cast<uint32_t>(index1);
-    const uint32_t init2 = static_cast<uint32_t>(index2);
-    const uint32_t init3 = static_cast<uint32_t>(index3);
-
-    hash512 mix0 = cache[index0 % num_cache_items];
-    hash512 mix1 = cache[index1 % num_cache_items];
-    hash512 mix2 = cache[index2 % num_cache_items];
-    hash512 mix3 = cache[index3 % num_cache_items];
-
-    mix0.half_words[0] ^= fix_endianness(init0);
-    mix1.half_words[0] ^= fix_endianness(init1);
-    mix2.half_words[0] ^= fix_endianness(init2);
-    mix3.half_words[0] ^= fix_endianness(init3);
-
-    // Hash and convert to little-endian 32-bit words.
-    mix0 = fix_endianness32(keccak512(mix0));
-    mix1 = fix_endianness32(keccak512(mix1));
-    mix2 = fix_endianness32(keccak512(mix2));
-    mix3 = fix_endianness32(keccak512(mix3));
-
-    for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
-    {
-        uint32_t t0 = fnv(init0 ^ j, mix0.half_words[j % num_half_words]);
-        int64_t parent_index0 = t0 % num_cache_items;
-        mix0 = fnv(mix0, fix_endianness32(cache[parent_index0]));
-
-        uint32_t t1 = fnv(init1 ^ j, mix1.half_words[j % num_half_words]);
-        int64_t parent_index1 = t1 % num_cache_items;
-        mix1 = fnv(mix1, fix_endianness32(cache[parent_index1]));
-
-        uint32_t t2 = fnv(init2 ^ j, mix2.half_words[j % num_half_words]);
-        int64_t parent_index2 = t2 % num_cache_items;
-        mix2 = fnv(mix2, fix_endianness32(cache[parent_index2]));
-
-        uint32_t t3 = fnv(init3 ^ j, mix3.half_words[j % num_half_words]);
-        int64_t parent_index3 = t3 % num_cache_items;
-        mix3 = fnv(mix3, fix_endianness32(cache[parent_index3]));
-    }
-
-    // Covert 32-bit words back to bytes and hash.
-    mix0 = keccak512(fix_endianness32(mix0));
-    mix1 = keccak512(fix_endianness32(mix1));
-    mix2 = keccak512(fix_endianness32(mix2));
-    mix3 = keccak512(fix_endianness32(mix3));
-
-    return hash2048{{mix0, mix1, mix2, mix3}};
+    hash1024 n1,n2;
+    n1 = calculate_dataset_item(context, index*2);
+    n2 = calculate_dataset_item(context, index*2+1);
+    return hash2048{{n1.hashes[0], n1.hashes[1], n2.hashes[0], n2.hashes[1]}};
 }
 
 namespace
