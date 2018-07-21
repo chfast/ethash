@@ -587,6 +587,11 @@ TEST(ethash, verify_hash_light)
     }
 }
 
+extern "C" { 
+    void create_light_cache(uint32_t index, uint8_t value[64]); 
+    uint32_t get_block_progpow_hash(uint32_t epoch, uint8_t header[32],
+                       uint64_t nonce, uint8_t out[64]);
+    }
 TEST(ethash, verify_progpow_light)
 {
     epoch_context_ptr context{nullptr, ethash_destroy_epoch_context};
@@ -599,8 +604,16 @@ TEST(ethash, verify_progpow_light)
 
         if (!context || context->epoch_number != epoch_number)
             context = create_epoch_context(epoch_number);
-
+        uint32_t len = (uint32_t)context->light_cache_num_items;
+        for (uint32_t i=0;i<len;i++) {
+            create_light_cache(len-i-1, (uint8_t*)&context->light_cache[len-i-1]);
+        }
         result r;
+        get_block_progpow_hash((uint32_t)epoch_number, (uint8_t*)&header_hash, nonce,
+           (uint8_t*)&r);
+        EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
+        EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
+         
         r = progpow(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
