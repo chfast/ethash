@@ -75,10 +75,10 @@ void keccak_f800_round(uint32_t st[25], const int r)
 typedef int bool;
 
 #define ETHASH_REVISION (23)
-#define ETHASH_DATASET_BYTES_INIT (1073741824U) // 2**30
-#define ETHASH_DATASET_BYTES_GROWTH 8388608U  // 2**23
-#define ETHASH_CACHE_BYTES_INIT 1677216U // 2**24
-#define ETHASH_CACHE_BYTES_GROWTH 131072U  // 2**17
+#define ETHASH_DATASET_BYTES_INIT (1<<30) // 2**30
+#define ETHASH_DATASET_BYTES_GROWTH (1<<23)  // 2**23
+#define ETHASH_CACHE_BYTES_INIT (1<<24) // 2**24
+#define ETHASH_CACHE_BYTES_GROWTH (1<<17)  // 2**17
 #define ETHASH_EPOCH_LENGTH 30000U
 #define ETHASH_MIX_BYTES 128
 #define ETHASH_HASH_BYTES 64
@@ -173,7 +173,7 @@ void keccak_f800_arr(uint32_t* out, const ethash_hash256* header,
         out[i] = st[i];
 }
 
-/**********keccakf1600***********************/
+/********** keccakf1600.c ***********************/
 /* ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
  * Copyright 2018 Pawel Bylica.
  * Licensed under the Apache License, Version 2.0. See the LICENSE file.
@@ -431,7 +431,7 @@ void ethash_keccakf1600(uint64_t state[25])
     state[24] = Asu;
 }
 
-/*********************keccak*******************/
+/********************* keccak.c *******************/
 #define to_le64(X) X
 /** Loads 64-bit integer from given memory location as little-endian number. */
 static inline uint64_t load_le(const uint8_t* data)
@@ -514,6 +514,12 @@ typedef union
     uint32_t half_words[16];
     uint8_t bytes[64];
 } hash512;
+
+typedef union 
+{
+        hash512 hashes[2];
+        uint8_t bytes[128];        
+} hash1024;
 
 typedef union 
 {
@@ -683,7 +689,12 @@ uint32_t math(uint32_t a, uint32_t b, uint32_t r)
 static 
 void keccak512_64(const uint8_t data[64])
 {
-    keccak((uint64_t*)data, 64, data, 64);
+    keccak((uint64_t*)data, 512, data, 64);
+}
+
+void test_keccak512_64(const uint8_t data[64])
+{
+    keccak512_64((uint8_t*)data);
 }
 
 static void fnv_512(hash512* u, const hash512* v)
@@ -691,14 +702,14 @@ static void fnv_512(hash512* u, const hash512* v)
     for (size_t i = 0; i < sizeof(*u) / sizeof(u->half_words[0]); ++i)
         u->half_words[i] = fnv(u->half_words[i], v->half_words[i]);
 }
-/// Calculates just 512bit dataset item
+
 static void
-calculate_dag_item(hash512* mix0, const epoch_context* context, int64_t index) 
+calculate_dag_item(hash512* mix0, const epoch_context* context, uint64_t index) 
 {
     const hash512* const cache = context->light_cache;
 
-    static const size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
-    const int64_t num_cache_items = context->light_cache_num_items;
+    const size_t num_half_words = sizeof(hash512) / sizeof(uint32_t);
+    const uint32_t num_cache_items = context->light_cache_num_items;
 
     uint32_t idx32 = (uint32_t)(index);
 
@@ -712,7 +723,7 @@ calculate_dag_item(hash512* mix0, const epoch_context* context, int64_t index)
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
         uint32_t t0 = fnv(idx32 ^ j, mix0->half_words[j % num_half_words]);
-        int64_t parent_index0 = t0 % num_cache_items;
+        uint32_t parent_index0 = t0 % num_cache_items;
         fnv_512(mix0, &cache[parent_index0]);
     }
 
@@ -720,23 +731,30 @@ calculate_dag_item(hash512* mix0, const epoch_context* context, int64_t index)
     keccak512_64(mix0->bytes);
 }
 
+static hash1024* 
+calculate_dataset_item(hash1024* r, const epoch_context* context, uint32_t index)
+{
+    hash512 n1,n2;
+    uint64_t idx64 = (uint64_t)(index);
+    calculate_dag_item(&n1, context, idx64*2);
+    calculate_dag_item(&n2, context, idx64*2+1);
+    memcpy(r->bytes, n1.bytes, 64);
+    memcpy(r->bytes+64, n2.bytes, 64);
+    return r;  
+}
 
 static hash2048* 
 calculate_dataset_item_progpow(hash2048* r, const epoch_context* context,
  uint32_t index)
 {
-
-  hash512 n1,n2;
-  calculate_dag_item( &n1, context, index*2);
-  calculate_dag_item( &n2, context, index*2+1);
-  memcpy(r->bytes, n1.bytes, 64);
-  memcpy(r->bytes+64, n2.bytes, 64);
+  hash1024 n1,n2;
+  calculate_dataset_item( &n1, context, index*2);
+  calculate_dataset_item( &n2, context, index*2+1);
+  memcpy(r->bytes, n1.bytes, 128);
+  memcpy(r->bytes+128, n2.bytes, 128);
   return r;
 }
 
-/// Calculates a full l1 dataset item
-///
-/// This consist of one 32-bit items produced by calculate_dataset_item_partial().
 static uint32_t calculate_L1dataset_item(const epoch_context* context, uint32_t index)
 {
     uint32_t idx = index/2;
@@ -781,7 +799,7 @@ static void progPowLoop(
 {
 	// All lanes share a base address for the global load
     // Global offset uses mix[0] to guarantee it depends on the load result
-    uint32_t offset_g = mix[loop%PROGPOW_LANES][0] % (uint32_t)context->full_dataset_num_items;
+    uint32_t offset_g = mix[loop%PROGPOW_LANES][0] % (uint32_t)(context->full_dataset_num_items/2);
 	
     hash2048 data256;
     fix_endianness32((hash2048*)g_lut(&data256, context, offset_g));
@@ -835,6 +853,7 @@ progpow_search(	ethash_return_value_t* ret,
     )
 {
     uint32_t mix[PROGPOW_LANES][PROGPOW_REGS];
+    for(int i=0;i<PROGPOW_LANES;i++)for(int j=0;j<PROGPOW_REGS;j++)mix[i][j]=0;
     hash256 result;
     for (int i = 0; i < 8; i++)
         result.hwords[i] = 0;
@@ -1055,6 +1074,12 @@ get_block_progpow_hash(uint32_t epoch, uint8_t header[32],
     return ctx.light_cache_num_items;
 }
 
+void  
+get_dataset_item(uint8_t r[256], uint32_t epoch, uint32_t index) {
+    epoch_context ctx;
+    set_epoch_context(epoch, &ctx, (hash512*)g_light_cache);
+    calculate_dataset_item_progpow((hash2048*)r, &ctx, index);     
+ }
 
 /****
 [2018-06-30 09:59:54] GPU #0: start=31300181 end=315a9f6d range=002a9dec

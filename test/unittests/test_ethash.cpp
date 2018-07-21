@@ -588,9 +588,27 @@ TEST(ethash, verify_hash_light)
 }
 
 extern "C" { 
+    void test_keccak512_64(const uint8_t data[64]);
+}
+TEST(ethash, testc)
+{
+    uint8_t data[64];
+    hash512 d2;
+    for (int i=0;i<64;i++) {
+        data[i] = 42;
+        d2.bytes[i] = 42;
+    }
+
+    test_keccak512_64((uint8_t*)&d2);
+    EXPECT_EQ(to_hex(d2), to_hex(ethash_keccak512_64(data)));
+}
+
+extern "C" { 
     void create_light_cache(uint32_t index, uint8_t value[64]); 
     uint32_t get_block_progpow_hash(uint32_t epoch, uint8_t header[32],
                        uint64_t nonce, uint8_t out[64]);
+void  
+get_dataset_item(uint8_t r[64], uint32_t epoch, uint32_t index);
     }
 TEST(ethash, verify_progpow_light)
 {
@@ -617,7 +635,14 @@ TEST(ethash, verify_progpow_light)
         r = progpow(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
-    }
+
+        for (uint32_t j=0;j<1;j++) {
+            hash2048 i2 = calculate_dataset_item_progpow(*context, j);
+            hash2048 i;
+            get_dataset_item((uint8_t*)&i, (uint32_t)epoch_number, j);
+            EXPECT_EQ(to_hex(i2.hashes[3]),to_hex(i.hashes[3]));
+        }
+    }    
 }
 
 TEST(ethash, verify_hash)
