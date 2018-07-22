@@ -589,6 +589,8 @@ TEST(ethash, verify_hash_light)
 
 extern "C" { 
     void test_keccak(uint8_t* r, uint32_t bs, const uint8_t* data, uint32_t sz);
+    void test_progpow_init(uint8_t out[16], uint64_t seed, uint32_t m[16]);    
+    void test_progpow_init2(uint8_t out[16], uint64_t seed, uint32_t m[16]);
 }
 TEST(ethash, testc_64)
 {
@@ -603,6 +605,18 @@ TEST(ethash, testc_32)
     hash256 d2 = {42};  
     test_keccak((uint8_t*)&d2, 256, (uint8_t*)&d2, 32);
     EXPECT_EQ(to_hex(d2), to_hex(ethash_keccak256_32(data)));    
+}
+
+TEST(ethash, testc_progpow_init)
+{
+    hash256 k1,k2; 
+    hash512 m1,m2;
+    uint64_t s = 0x1357246886425731;
+    test_progpow_init(k1.bytes, s, m1.half_words);
+    test_progpow_init2(k2.bytes, s, m2.half_words);
+    EXPECT_EQ((k1.words[0]), (k2.words[0]));    
+    EXPECT_EQ((k1.words[1]), (k2.words[1]));    
+    EXPECT_EQ(to_hex(m1), to_hex(m2));    
 }
 
 extern "C" { 
@@ -690,6 +704,12 @@ TEST(ethash, verify_progpow_light)
         r = progpow(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
+
+        create_light_cache((uint32_t)epoch_number);
+        struct {hash256 v; hash256 m; } out;
+        get_block_progpow_hash((uint8_t*)&header_hash, nonce, (uint8_t*)&out);
+        EXPECT_EQ(to_hex(out.v), to_hex(r.final_hash));
+        EXPECT_EQ(to_hex(out.m), to_hex(r.mix_hash));        
     }    
 }
 

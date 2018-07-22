@@ -846,7 +846,7 @@ void progPowInit(kiss99_t* prog_rnd, uint64_t prog_seed, uint32_t mix_seq[PROGPO
     prog_rnd->jcong = fnv1a(&fnv_hash, (uint32_t)(prog_seed >> 32));
     // Create a random sequence of mix destinations for merge()
     // guaranteeing every location is touched once
-    // Uses Fisher¨CYates shuffle
+    // Uses Fisher Yates shuffle
     for (uint32_t i = 0; i < PROGPOW_REGS; i++)
         mix_seq[i] = i;
     for (uint32_t i = PROGPOW_REGS - 1; i > 0; i--)
@@ -854,6 +854,9 @@ void progPowInit(kiss99_t* prog_rnd, uint64_t prog_seed, uint32_t mix_seq[PROGPO
         uint32_t j = kiss99(prog_rnd) % (i + 1);
         swap(&(mix_seq[i]), &(mix_seq[j]));
     }
+}
+void test_progpow_init(uint8_t out[16], uint64_t seed, uint32_t m[16]) {
+    progPowInit((kiss99_t*)out, seed, m);
 }
 
 typedef  hash2048* (*lookup_fn2)(hash2048 *, const epoch_context*, uint32_t);
@@ -873,7 +876,6 @@ static void progPowLoop(
 	
     hash2048 data256;
     fix_endianness32((hash2048*)g_lut(&data256, context, offset_g));
-    for(int i=0;i<256;i++)data256.bytes[i] = 43;
 
     // Lanes can execute in parallel and will be convergent
     for (uint32_t l = 0; l < PROGPOW_LANES; l++)
@@ -901,8 +903,7 @@ static void progPowLoop(
                 // Cached memory access
                 // lanes access random location
                 offset = mix[l][mix_src()] % (uint32_t)PROGPOW_CACHE_WORDS;
-                data32 = fix_endianness(c_lut(context, offset));
-                data32 = 0; //del
+                data32 = fix_endianness(c_lut(context, offset));                
                 merge(&(mix[l][mix_dst()]), data32, rnd());
             }
             if (i < PROGPOW_CNT_MATH)
@@ -948,13 +949,13 @@ progpow_kernel(	hash256* ret, const epoch_context* context, const uint64_t seed,
             fnv1a(&lane_hash[l], mix[l][i]);
     }
     // Reduce all lanes to a single 128-bit result
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 8; i++)
         result.hwords[i] = 0x811c9dc5;
-    }
-    for (int l = 0; l < PROGPOW_LANES; l++) {
+
+    for (int l = 0; l < PROGPOW_LANES; l++)
+    {
         fnv1a(&result.hwords[l % 8], lane_hash[l]);
     }
-
 	memcpy(ret, &result, sizeof(result));
 }
 
@@ -993,7 +994,7 @@ uint32_t calculate_light_cache_num_items(uint32_t epoch_number)
 static 
 uint32_t calculate_full_dataset_num_items(uint32_t epoch_number) 
 {
-    uint32_t item_size = sizeof(hash2048);
+    uint32_t item_size = sizeof(hash1024);
     uint32_t num_items_init = ETHASH_DATASET_BYTES_INIT / item_size;
     uint32_t num_items_growth = ETHASH_DATASET_BYTES_GROWTH / item_size;
 
@@ -1015,6 +1016,7 @@ hash512* create_light_cache(uint32_t epoch)
     g_ctx.light_cache_num_items = calculate_light_cache_num_items(epoch);
     g_ctx.full_dataset_num_items = calculate_full_dataset_num_items(epoch);
     g_ctx.light_cache = malloc(g_ctx.light_cache_num_items * 64);
+    g_ctx.epoch_number = epoch;
 
     hash256 epoch_seed = {0};
     calculate_epoch_seed(&epoch_seed, epoch);

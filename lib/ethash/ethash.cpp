@@ -88,6 +88,7 @@ typedef struct {
 // KISS99 is simple, fast, and passes the TestU01 suite
 // https://en.wikipedia.org/wiki/KISS_(algorithm)
 // http://www.cse.yorku.ca/~oz/marsaglia-rng.html
+static
 uint32_t kiss99(kiss99_t * st)
 {
 	uint32_t znew = (st->z = 36969 * (st->z & 65535) + (st->z >> 16));
@@ -98,11 +99,13 @@ uint32_t kiss99(kiss99_t * st)
 	return ((MWC^CONG) + SHR3);
 }
 
+static
 uint32_t fnv1a(uint32_t *h, uint32_t d)
 {
 	return *h = (*h ^ d) * 0x1000193;
 }
 
+static
 void fill_mix(
 	uint64_t seed,
 	uint32_t lane_id,
@@ -121,7 +124,7 @@ void fill_mix(
 		mix[i] = kiss99(&st);
 }
 
-
+static
 void swap(uint32_t *a, uint32_t *b)
 {
 	uint32_t t = *a;
@@ -133,6 +136,7 @@ void swap(uint32_t *a, uint32_t *b)
 // Assuming A has high entropy only do ops that retain entropy
 // even if B is low entropy
 // (IE don't do A&B)
+static
 void merge(uint32_t *a, uint32_t b, uint32_t r)
 {
 	switch (r % 4)
@@ -145,6 +149,7 @@ void merge(uint32_t *a, uint32_t b, uint32_t r)
 }
 
 // Random math between two input values
+static
 uint32_t math(uint32_t a, uint32_t b, uint32_t r)
 {       
 	switch (r % 11)
@@ -387,6 +392,7 @@ inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
     return keccak256(final_data, sizeof(final_data));
 }
 
+static
 void progPowInit(kiss99_t* prog_rnd, uint64_t prog_seed, uint32_t mix_seq[PROGPOW_REGS])
 {
     uint32_t fnv_hash = 0x811c9dc5;
@@ -396,7 +402,7 @@ void progPowInit(kiss99_t* prog_rnd, uint64_t prog_seed, uint32_t mix_seq[PROGPO
     prog_rnd->jcong = fnv1a(&fnv_hash, (uint32_t)(prog_seed >> 32));
     // Create a random sequence of mix destinations for merge()
     // guaranteeing every location is touched once
-    // Uses Fisher�CYates shuffle
+    // Uses Fisher Yates shuffle
     for (uint32_t i = 0; i < PROGPOW_REGS; i++)
         mix_seq[i] = i;
     for (uint32_t i = PROGPOW_REGS - 1; i > 0; i--)
@@ -406,6 +412,7 @@ void progPowInit(kiss99_t* prog_rnd, uint64_t prog_seed, uint32_t mix_seq[PROGPO
     }    
 }
 
+static
 void progPowLoop(
     const epoch_context& context,
     const uint64_t prog_seed,
@@ -419,7 +426,6 @@ void progPowLoop(
     uint32_t offset_g = mix[loop%PROGPOW_LANES][0] % (uint32_t)(context.full_dataset_num_items/2);
 
     hash2048 data256 = fix_endianness32(g_lut(context, offset_g));
-    //for(int i=0;i<256;i++)data256.bytes[i] = 43; // todel
     
     // Lanes can execute in parallel and will be convergent
     for (uint32_t l = 0; l < PROGPOW_LANES; l++)
@@ -448,7 +454,6 @@ void progPowLoop(
                 // lanes access random location
                 offset = mix[l][mix_src()] % (uint32_t)PROGPOW_CACHE_WORDS;
                 data32 = fix_endianness(c_lut(context, offset));
-                //data32= 0; //todel
                 merge(&(mix[l][mix_dst()]), data32, rnd());
             }
             if (i < PROGPOW_CNT_MATH)
@@ -712,7 +717,7 @@ int ethash_calculate_light_cache_num_items(int epoch_number) noexcept
 
 int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
 {
-    static int item_size = sizeof(hash2048);
+    static int item_size = sizeof(hash2048); //TODO this is questionable, we should use the legacy notion
     if (epoch_number < PROGPOW_EPOCH_START) item_size = sizeof(hash1024);
     static int num_items_init = full_dataset_init_size / item_size;
     static int num_items_growth = full_dataset_growth / item_size;
@@ -799,6 +804,10 @@ void ethash_destroy_epoch_context(epoch_context* context) noexcept
 {
     context->~epoch_context();
     std::free(context);
+}
+
+void test_progpow_init2(uint8_t out[16], uint64_t seed, uint32_t m[16]) {
+    progPowInit((kiss99_t*)out, seed, m);
 }
 
 }  // extern "C"
