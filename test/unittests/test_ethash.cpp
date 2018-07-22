@@ -588,28 +588,92 @@ TEST(ethash, verify_hash_light)
 }
 
 extern "C" { 
-    void test_keccak512_64(const uint8_t data[64]);
+    void test_keccak(uint8_t* r, uint32_t bs, const uint8_t* data, uint32_t sz);
 }
-TEST(ethash, testc)
+TEST(ethash, testc_64)
 {
-    uint8_t data[64];
-    hash512 d2;
-    for (int i=0;i<64;i++) {
-        data[i] = 42;
-        d2.bytes[i] = 42;
-    }
-
-    test_keccak512_64((uint8_t*)&d2);
+    uint8_t data[64] = {42};
+    hash512 d2 = {42};
+    test_keccak((uint8_t*)&d2, 512, (uint8_t*)&d2, 64);
     EXPECT_EQ(to_hex(d2), to_hex(ethash_keccak512_64(data)));
+}
+TEST(ethash, testc_32)
+{
+    uint8_t data[32] = {42};
+    hash256 d2 = {42};  
+    test_keccak((uint8_t*)&d2, 256, (uint8_t*)&d2, 32);
+    EXPECT_EQ(to_hex(d2), to_hex(ethash_keccak256_32(data)));    
 }
 
 extern "C" { 
-    void create_light_cache(uint32_t index, uint8_t value[64]); 
-    uint32_t get_block_progpow_hash(uint32_t epoch, uint8_t header[32],
-                       uint64_t nonce, uint8_t out[64]);
-void  
-get_dataset_item(uint8_t r[64], uint32_t epoch, uint32_t index);
-    }
+hash512* create_light_cache(uint32_t epoch); 
+void get_block_progpow_hash(uint8_t header[32], uint64_t nonce, uint8_t out[64]);
+void get_dataset_item(uint8_t r[64], uint32_t index);
+}
+
+TEST(ethash, verify_c_light_cache)
+{
+    epoch_context_ptr context{nullptr, ethash_destroy_epoch_context};
+    int arr[] = {0,1,2,13,193,1021};
+    for (int t=0;t<6;t++)
+    {
+        const int epoch_number = arr[t];
+
+        if (!context || context->epoch_number != epoch_number)
+            context = create_epoch_context(epoch_number);
+
+        hash512* p = create_light_cache((uint32_t)epoch_number);
+        for (uint32_t i=0;i<(uint32_t)context->light_cache_num_items;i++){
+            EXPECT_EQ(to_hex(*(p+i)), to_hex(*(context->light_cache+i)));
+        }
+    }    
+}
+
+TEST(ethash, verify_c_dag)
+{
+    epoch_context_ptr context{nullptr, ethash_destroy_epoch_context};
+    int arr[] = {0,1,2,13,193,1021};
+    for (int t=0;t<6;t++)
+    {
+        const int epoch_number = arr[t];
+
+        if (!context || context->epoch_number != epoch_number)
+            context = create_epoch_context(epoch_number);
+
+        create_light_cache((uint32_t)epoch_number);
+        uint32_t a2[] = {0,1,2,13,193,1021};
+        for (uint32_t j=0;j<6;j++) {
+            uint32_t index = a2[j];
+            hash2048 i2 = calculate_dataset_item_progpow(*context, index);
+            hash2048 i;
+            get_dataset_item((uint8_t*)&i, index);
+            for (size_t k=0;k<4;k++)
+              EXPECT_EQ(to_hex(i2.hashes[k]),to_hex(i.hashes[k]));
+        }
+    }    
+}
+
+TEST(ethash, verify_c_progpow_light)
+{
+    epoch_context_ptr context{nullptr, ethash_destroy_epoch_context};
+
+    const int epoch_number = 193;
+    const uint64_t nonce = 0;
+    const hash256 header_hash = to_hash256("2a8de2adf89af77358250bf908bf04ba94a6e8c3ba87775564a41d269a05e4ce");
+
+    if (!context || context->epoch_number != epoch_number)
+        context = create_epoch_context(epoch_number);
+
+    create_light_cache((uint32_t)epoch_number);
+
+    struct {hash256 v; hash256 m; } out;
+    get_block_progpow_hash((uint8_t*)&header_hash, nonce, (uint8_t*)&out);
+    result r;
+    r = progpow(*context, header_hash, nonce);
+    EXPECT_EQ(to_hex(out.v), to_hex(r.final_hash));
+    EXPECT_EQ(to_hex(out.m), to_hex(r.mix_hash));
+}
+
 TEST(ethash, verify_progpow_light)
 {
     epoch_context_ptr context{nullptr, ethash_destroy_epoch_context};
@@ -622,26 +686,10 @@ TEST(ethash, verify_progpow_light)
 
         if (!context || context->epoch_number != epoch_number)
             context = create_epoch_context(epoch_number);
-        uint32_t len = (uint32_t)context->light_cache_num_items;
-        for (uint32_t i=0;i<len;i++) {
-            create_light_cache(len-i-1, (uint8_t*)&context->light_cache[len-i-1]);
-        }
         result r;
-        get_block_progpow_hash((uint32_t)epoch_number, (uint8_t*)&header_hash, nonce,
-           (uint8_t*)&r);
-        EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
-        EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
-         
         r = progpow(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
-
-        for (uint32_t j=0;j<1;j++) {
-            hash2048 i2 = calculate_dataset_item_progpow(*context, j);
-            hash2048 i;
-            get_dataset_item((uint8_t*)&i, (uint32_t)epoch_number, j);
-            EXPECT_EQ(to_hex(i2.hashes[3]),to_hex(i.hashes[3]));
-        }
     }    
 }
 

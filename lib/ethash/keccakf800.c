@@ -6,171 +6,45 @@
 #include <stdint.h>
 #include <string.h>
 
- /* Implementation based on:
-	https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
-	converted from 64->32 bit words*/
-const uint32_t keccakf_rndc[24] = {
-	0x00000001, 0x00008082, 0x0000808a, 0x80008000, 0x0000808b, 0x80000001,
-	0x80008081, 0x00008009, 0x0000008a, 0x00000088, 0x80008009, 0x8000000a,
-	0x8000808b, 0x0000008b, 0x00008089, 0x00008003, 0x00008002, 0x00000080,
-	0x0000800a, 0x8000000a, 0x80008081, 0x00008080, 0x80000001, 0x80008008
-};
+/*   math_ops.hpp     */
+
+//#define ROTR32(x, n)  (((0U + (x)) << (32 - (n))) | ((x) >> (n)))  // Assumes that x is uint32_t and 0 < n < 32
 
 #define ROTL(x,n,w) (((x) << (n)) | ((x) >> ((w) - (n))))
-#define ROTL32(x,n) ROTL(x,n,32)	/* 32 bits word */
+#define ROTL32(x,n) ROTL(x,n,32)        /* 32 bits word */
 
-void keccak_f800_round(uint32_t st[25], const int r)
-{
+#define ROTR(x,n,w) (((x) >> (n)) | ((x) << ((w) - (n))))
 
-	const uint32_t keccakf_rotc[24] = {
-		1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14,
-		27, 41, 56, 8,  25, 43, 62, 18, 39, 61, 20, 44
-	};
-	const uint32_t keccakf_piln[24] = {
-		10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4,
-		15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1
-	};
+#define ROTR32(x,n) ROTR(x,n,32)        /* 32 bits word */
 
-	uint32_t t, bc[5];
-	/* Theta*/
-	uint32_t i = 0, j = 0;
-	for (i = 0; i < 5; i++)
-		bc[i] = st[i] ^ st[i + 5] ^ st[i + 10] ^ st[i + 15] ^ st[i + 20];
-
-	i = 0;
-	for (i = 0; i < 5; i++) {
-		t = bc[(i + 4) % 5] ^ ROTL32(bc[(i + 1) % 5], 1);
-		j = 0;
-		for (j = 0; j < 25; j += 5)
-			st[j + i] ^= t;
-	}
-
-	/*Rho Pi*/
-	i = 0;
-	t = st[1];
-	for (i = 0; i < 24; i++) {
-		uint32_t jj = keccakf_piln[i];
-		bc[0] = st[jj];
-		st[jj] = ROTL32(t, keccakf_rotc[i]);
-		t = bc[0];
-	}
-
-	/* Chi*/
-	j = 0;
-	for (j = 0; j < 25; j += 5) {
-		i = 0;
-		for (i = 0; i < 5; i++)
-			bc[i] = st[j + i];
-		i = 0;
-		for (i = 0; i < 5; i++)
-			st[j + i] ^= (~bc[(i + 1) % 5]) & bc[(i + 2) % 5];
-	}
-
-	/* Iota*/
-	st[0] ^= keccakf_rndc[r];
-}
-
-
-/* ------------------------- progpow.c ------------------------- */
-typedef int bool;
-
-#define ETHASH_REVISION (23)
-#define ETHASH_DATASET_BYTES_INIT (1<<30) // 2**30
-#define ETHASH_DATASET_BYTES_GROWTH (1<<23)  // 2**23
-#define ETHASH_CACHE_BYTES_INIT (1<<24) // 2**24
-#define ETHASH_CACHE_BYTES_GROWTH (1<<17)  // 2**17
-#define ETHASH_EPOCH_LENGTH 30000U
-#define ETHASH_MIX_BYTES 128
-#define ETHASH_HASH_BYTES 64
-#define ETHASH_DATASET_PARENTS 256
-#define ETHASH_CACHE_ROUNDS 3
-#define ETHASH_ACCESSES 64
-
-// compile time settings
-#define NODE_WORDS (64/4)
-#define MIX_WORDS (ETHASH_MIX_BYTES/4)
-#define MIX_NODES (MIX_WORDS / NODE_WORDS)
-
-typedef union node {
-	uint8_t bytes[NODE_WORDS * 4];
-	uint32_t words[NODE_WORDS];
-	uint64_t double_words[NODE_WORDS / 2];
-} node;
-
-typedef struct {
-	void* cache;
-	uint64_t cache_size;
-	uint64_t block_number;
-} ethash_light;
-
-typedef struct ethash_light* ethash_light_t;
-
-typedef union
-{
-    uint64_t words[4];
-    uint32_t hwords[8];
-    uint8_t bytes[32];
-}ethash_hash256;
-
-static 
-uint32_t bswap32(uint32_t s)
-{
-    return ((s&0xff) <<24 | (s&0xff00) <<8 | (s&0xff0000) >> 8 |
-            (s&0xff000000) >> 24);
-}
-
-
+#define min_(a,b) ((a<b) ? a : b)
+//#define mul_hi(a, b) __umulhi(a, b)
 static
-uint64_t keccak_f800(const ethash_hash256* header, const uint64_t seed,
- const uint32_t *result)
-{
-    uint32_t st[25];
-
-    for (int i = 0; i < 25; i++)
-        st[i] = 0;
-    for (int i = 0; i < 8; i++)
-        st[i] = header->hwords[i];
-    st[8] = (uint32_t)seed;
-    st[9] = (uint32_t)(seed >> 32);
-    st[10] = result[0];
-    st[11] = result[1];
-    st[12] = result[2];
-    st[13] = result[3];
-
-    for (int r = 0; r < 21; r++) {
-        keccak_f800_round(st, r);
-    }
-    // last round can be simplified due to partial output
-    keccak_f800_round(st, 21);
-
-    return (uint64_t)st[0] << 32 | st[1];//should be return (uint64_t)st[0] << 32 | st[1];
+uint32_t mul_hi (uint32_t a, uint32_t b){
+    uint64_t result = (uint64_t) a * (uint64_t) b;
+    return  (uint32_t) (result>>32);
 }
-
+//#define clz(a) __clz(a)
 static
-void keccak_f800_arr(uint32_t* out, const ethash_hash256* header,
- const uint64_t seed, const uint32_t *result)
-{
-    uint32_t st[25];
-
-    for (int i = 0; i < 25; i++)
-        st[i] = 0;
-    for (int i = 0; i < 8; i++)
-        st[i] = header->hwords[i];
-    st[8] = (uint32_t)seed;
-    st[9] = (uint32_t)(seed >> 32);
-    st[10] = result[0];
-    st[11] = result[1];
-    st[12] = result[2];
-    st[13] = result[3];
-
-    for (int r = 0; r < 21; r++) {
-        keccak_f800_round(st, r);
+uint32_t clz (uint32_t a){
+    uint32_t result = 0;
+    for(int i=31;i>=0;i--){
+        if(((a>>i)&1) == 0)
+            result ++;
+        else
+            break;
     }
-    // last round can be simplified due to partial output
-    keccak_f800_round(st, 21);
-
-    for (int i = 0; i < 8; ++i)
-        out[i] = st[i];
+    return result;
+}
+//#define popcount(a) __popc(a)
+static
+uint32_t popcount(uint32_t a) {
+	uint32_t result = 0;
+	for (int i = 31; i >= 0; i--) {
+		if (((a >> i) & 1) == 1)
+			result++;
+	}
+	return result;
 }
 
 /********** keccakf1600.c ***********************/
@@ -434,7 +308,7 @@ void ethash_keccakf1600(uint64_t state[25])
 /********************* keccak.c *******************/
 #define to_le64(X) X
 /** Loads 64-bit integer from given memory location as little-endian number. */
-static inline uint64_t load_le(const uint8_t* data)
+static uint64_t load_le(const uint8_t* data)
 {
     /* memcpy is the best way of expressing the intention. Every compiler will
        optimize is to single load instruction if the target architecture
@@ -501,12 +375,187 @@ static void keccak(
         out[i] = to_le64(state[i]);
 }
 
-typedef union 
+/* origin keccakf800.c */
+ /* Implementation based on:
+	https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
+	converted from 64->32 bit words*/
+static const uint32_t keccakf_rndc[24] = {
+	0x00000001, 0x00008082, 0x0000808a, 0x80008000, 0x0000808b, 0x80000001,
+	0x80008081, 0x00008009, 0x0000008a, 0x00000088, 0x80008009, 0x8000000a,
+	0x8000808b, 0x0000008b, 0x00008089, 0x00008003, 0x00008002, 0x00000080,
+	0x0000800a, 0x8000000a, 0x80008081, 0x00008080, 0x80000001, 0x80008008
+};
+
+void keccak_f800_round(uint32_t st[25], const int r)
+{
+	const uint32_t keccakf_rotc[24] = {
+		1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14,
+		27, 41, 56, 8,  25, 43, 62, 18, 39, 61, 20, 44
+	};
+	const uint32_t keccakf_piln[24] = {
+		10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4,
+		15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1
+	};
+
+	uint32_t t, bc[5];
+	/* Theta*/
+	uint32_t i = 0, j = 0;
+	for (i = 0; i < 5; i++)
+		bc[i] = st[i] ^ st[i + 5] ^ st[i + 10] ^ st[i + 15] ^ st[i + 20];
+
+	i = 0;
+	for (i = 0; i < 5; i++) {
+		t = bc[(i + 4) % 5] ^ ROTL32(bc[(i + 1) % 5], 1);
+		j = 0;
+		for (j = 0; j < 25; j += 5)
+			st[j + i] ^= t;
+	}
+
+	/*Rho Pi*/
+	i = 0;
+	t = st[1];
+	for (i = 0; i < 24; i++) {
+		uint32_t jj = keccakf_piln[i];
+		bc[0] = st[jj];
+		st[jj] = ROTL32(t, keccakf_rotc[i]);
+		t = bc[0];
+	}
+
+	/* Chi*/
+	j = 0;
+	for (j = 0; j < 25; j += 5) {
+		i = 0;
+		for (i = 0; i < 5; i++)
+			bc[i] = st[j + i];
+		i = 0;
+		for (i = 0; i < 5; i++)
+			st[j + i] ^= (~bc[(i + 1) % 5]) & bc[(i + 2) % 5];
+	}
+
+	/* Iota*/
+	st[0] ^= keccakf_rndc[r];
+}
+
+/*    primes.c  */
+static int is_prime(uint32_t number)
+{
+    uint32_t d;
+
+    if (number <= 1)
+        return 0;
+
+    if (number % 2 == 0 && number > 2)
+        return 0;
+
+    /* Check factors up to sqrt(number).
+       To avoid computing sqrt, compare d*d <= number with 64-bit precision. */
+    for (d = 3; (int64_t)d * (int64_t)d <= (int64_t)number; d += 2)
+    {
+        if (number % d == 0)
+            return 0;
+    }
+
+    return 1;
+}
+
+static
+uint32_t ethash_find_largest_prime(uint32_t upper_bound)
+{
+    uint32_t n = upper_bound;
+
+    if (n < 2)
+        return 0;
+
+    if (n == 2)
+        return 2;
+
+    /* If even number, skip it. */
+    if (n % 2 == 0)
+        --n;
+
+    /* Test descending odd numbers. */
+    while (!is_prime(n))
+        n -= 2;
+
+    return n;
+}
+
+/* ------------------------- progpow.c ------------------------- */
+typedef int bool;
+
+#define ETHASH_DATASET_BYTES_INIT (1<<30) // 2**30
+#define ETHASH_DATASET_BYTES_GROWTH (1<<23)  // 2**23
+#define ETHASH_CACHE_BYTES_INIT (1<<24) // 2**24
+#define ETHASH_CACHE_BYTES_GROWTH (1<<17)  // 2**17
+#define ETHASH_EPOCH_LENGTH 30000U
+#define ETHASH_MIX_BYTES 128
+#define ETHASH_HASH_BYTES 64
+#define ETHASH_DATASET_PARENTS 256
+#define ETHASH_CACHE_ROUNDS 3
+#define ETHASH_ACCESSES 64
+
+
+typedef union
 {
     uint64_t words[4];
     uint32_t hwords[8];
     uint8_t bytes[32];
 } hash256;
+
+
+static
+uint64_t keccak_f800(const hash256* header, const uint64_t seed,
+ const uint32_t *result)
+{
+    uint32_t st[25];
+
+    for (int i = 0; i < 25; i++)
+        st[i] = 0;
+    for (int i = 0; i < 8; i++)
+        st[i] = header->hwords[i];
+    st[8] = (uint32_t)seed;
+    st[9] = (uint32_t)(seed >> 32);
+    st[10] = result[0];
+    st[11] = result[1];
+    st[12] = result[2];
+    st[13] = result[3];
+
+    for (int r = 0; r < 21; r++) {
+        keccak_f800_round(st, r);
+    }
+    // last round can be simplified due to partial output
+    keccak_f800_round(st, 21);
+
+    return (uint64_t)st[0] << 32 | st[1];//should be return (uint64_t)st[0] << 32 | st[1];
+}
+
+static
+void keccak_f800_arr(uint32_t* out, const hash256* header,
+ const uint64_t seed, const uint32_t result[4])
+{
+    uint32_t st[25];
+
+    for (int i = 0; i < 25; i++)
+        st[i] = 0;
+    for (int i = 0; i < 8; i++)
+        st[i] = header->hwords[i];
+    st[8] = (uint32_t)seed;
+    st[9] = (uint32_t)(seed >> 32);
+    st[10] = result[0];
+    st[11] = result[1];
+    st[12] = result[2];
+    st[13] = result[3];
+
+    for (int r = 0; r < 21; r++) {
+        keccak_f800_round(st, r);
+    }
+    // last round can be simplified due to partial output
+    keccak_f800_round(st, 21);
+
+    for (int i = 0; i < 8; ++i)
+        out[i] = st[i];
+}
+
 
 typedef union 
 {
@@ -537,12 +586,23 @@ typedef struct
     uint32_t full_dataset_num_items;
 } epoch_context;
 
+static
+uint32_t fnv(uint32_t u, uint32_t v)
+{
+    return (u * 0x01000193) ^ v;
+}
+
+static hash2048* fix_endianness32(hash2048 *h) { return h;}
+static uint32_t fix_endianness(uint32_t h) { return h;}
+
 typedef struct {
-	uint32_t z, w, jsr, jcong;
-} kiss99_t;
+	hash256 result;
+	hash256 mix_hash;
+} ethash_return_value_t;
 
 #define ETHASH_NUM_DATASET_ACCESSES 64
 #define full_dataset_item_parents 256
+
 #define PROGPOW_LANES			32
 #define PROGPOW_REGS			16
 #define PROGPOW_CACHE_BYTES             (16*1024)
@@ -551,14 +611,6 @@ typedef struct {
 #define PROGPOW_CNT_MATH		8
 #define PROGPOW_CACHE_WORDS  (PROGPOW_CACHE_BYTES / sizeof(uint32_t))
 
-#define ROTL(x,n,w) (((x) << (n)) | ((x) >> ((w) - (n))))
-#define ROTL32(x,n) ROTL(x,n,32)        /* 32 bits word */
-
-#define ROTR(x,n,w) (((x) >> (n)) | ((x) << ((w) - (n))))
-#define ROTR32(x,n) ROTR(x,n,32)        /* 32 bits word */
-
-static hash2048* fix_endianness32(hash2048 *h) { return h;}
-static uint32_t fix_endianness(uint32_t h) { return h;}
 
 // Helper to get the next value in the per-program random sequence
 #define rnd()    (kiss99(&prog_rnd))
@@ -567,44 +619,21 @@ static uint32_t fix_endianness(uint32_t h) { return h;}
 // Helper to access the sequence of mix destinations
 #define mix_dst() (mix_seq[(mix_seq_cnt++)%PROGPOW_REGS])
 
-#define min_(a,b) ((a<b) ? a : b)
-
-typedef struct { uint8_t b[32]; } ethash_h256_t;
-
-typedef struct ethash_return_value {
-	ethash_h256_t result;
-	ethash_h256_t mix_hash;
-	bool success;
-} ethash_return_value_t;
-
-uint32_t mul_hi (uint32_t a, uint32_t b){
-    uint64_t result = (uint64_t) a * (uint64_t) b;
-    return  (uint32_t) (result>>32);
+static hash512* bitwise_xor(hash512* z, const hash512* x, const hash512* y)
+{
+    for (size_t i = 0; i < sizeof(*z) / sizeof(z->words[0]); ++i)
+        z->words[i] = x->words[i] ^ y->words[i];
+    return z;
 }
 
-uint32_t clz (uint32_t a){
-    uint32_t result = 0;
-    for(int i=31;i>=0;i--){
-        if(((a>>i)&1) == 0)
-            result ++;
-        else
-            break;
-    }
-    return result;
-}
-
-uint32_t popcount(uint32_t a) {
-	uint32_t result = 0;
-	for (int i = 31; i >= 0; i--) {
-		if (((a >> i) & 1) == 1)
-			result++;
-	}
-	return result;
-}
+typedef struct {
+	uint32_t z, w, jsr, jcong;
+} kiss99_t;
 
 // KISS99 is simple, fast, and passes the TestU01 suite
 // https://en.wikipedia.org/wiki/KISS_(algorithm)
 // http://www.cse.yorku.ca/~oz/marsaglia-rng.html
+static
 uint32_t kiss99(kiss99_t * st)
 {
     uint32_t znew = (st->z = 36969 * (st->z & 65535) + (st->z >> 16));
@@ -615,16 +644,13 @@ uint32_t kiss99(kiss99_t * st)
     return ((MWC^CONG) + SHR3);
 }
 
+static
 uint32_t fnv1a(uint32_t *h, uint32_t d)
 {
   return *h = (*h ^ d) * 0x1000193;
 }
 
-uint32_t fnv(uint32_t u, uint32_t v)
-{
-    return (u * 0x01000193) ^ v;
-}
-
+static
 void fill_mix(
 	uint64_t seed,
 	uint32_t lane_id,
@@ -643,6 +669,7 @@ void fill_mix(
         mix[i] = kiss99(&st);
 }
 
+static
 void swap(uint32_t *a, uint32_t *b)
 {
 	uint32_t t = *a;
@@ -654,6 +681,7 @@ void swap(uint32_t *a, uint32_t *b)
 // Assuming A has high entropy only do ops that retain entropy
 // even if B is low entropy
 // (IE don't do A&B)
+static
 void merge(uint32_t *a, uint32_t b, uint32_t r)
 {
 	switch (r % 4)
@@ -666,6 +694,7 @@ void merge(uint32_t *a, uint32_t b, uint32_t r)
 }
 
 // Random math between two input values
+static
 uint32_t math(uint32_t a, uint32_t b, uint32_t r)
 {       
 	switch (r % 11)
@@ -692,15 +721,56 @@ void keccak512_64(const uint8_t data[64])
     keccak((uint64_t*)data, 512, data, 64);
 }
 
-void test_keccak512_64(const uint8_t data[64])
+void test_keccak(uint8_t* r, uint32_t bs, const uint8_t* data, uint32_t sz)
 {
-    keccak512_64((uint8_t*)data);
+    keccak((uint64_t*)r, bs, data, sz);
 }
 
 static void fnv_512(hash512* u, const hash512* v)
 {
     for (size_t i = 0; i < sizeof(*u) / sizeof(u->half_words[0]); ++i)
         u->half_words[i] = fnv(u->half_words[i], v->half_words[i]);
+}
+
+
+
+static
+void build_light_cache(hash512* cache, uint32_t num_items, const hash256* seed)
+{
+    hash512 item = {0};
+    keccak(item.words, 512, seed->bytes, sizeof(*seed));
+    memcpy(&cache[0], &item, 64);
+    for (uint32_t i = 1; i < num_items; ++i)
+    {
+        keccak512_64(item.bytes);
+        memcpy(&cache[i], item.bytes, 64);
+    }
+
+    for (uint32_t q = 0; q < ETHASH_CACHE_ROUNDS; ++q)
+    {
+        for (uint32_t i = 0; i < num_items; ++i)
+        {
+            const uint32_t index_limit = (uint32_t)(num_items);
+
+            // Fist index: 4 first bytes of the item as little-endian integer.
+            uint32_t t = fix_endianness(cache[i].half_words[0]);
+            uint32_t v = t % index_limit;
+
+            // Second index.
+            uint32_t w = (uint32_t)(num_items + (i - 1)) % index_limit;
+
+            // Pipelining functions returning structs gives small performance boost.
+            keccak512_64((uint8_t*)bitwise_xor(&cache[i], &cache[v], &cache[w]));
+        }
+    }
+}
+
+static
+hash256* calculate_epoch_seed(hash256* epoch_seed, uint32_t epoch_number)
+{
+    for (uint32_t i = 0; i < epoch_number; ++i)
+        keccak(epoch_seed->words, 256, epoch_seed->bytes, 32);
+    return epoch_seed;
 }
 
 static void
@@ -766,9 +836,9 @@ static uint32_t calculate_L1dataset_item(const epoch_context* context, uint32_t 
     return ret;
 }
 
+static
 void progPowInit(kiss99_t* prog_rnd, uint64_t prog_seed, uint32_t mix_seq[PROGPOW_REGS])
 {
-    //kiss99_t prog_rnd;
     uint32_t fnv_hash = 0x811c9dc5;
     prog_rnd->z = fnv1a(&fnv_hash, (uint32_t)prog_seed);
     prog_rnd->w = fnv1a(&fnv_hash, (uint32_t)(prog_seed >> 32));
@@ -803,6 +873,7 @@ static void progPowLoop(
 	
     hash2048 data256;
     fix_endianness32((hash2048*)g_lut(&data256, context, offset_g));
+    for(int i=0;i<256;i++)data256.bytes[i] = 43;
 
     // Lanes can execute in parallel and will be convergent
     for (uint32_t l = 0; l < PROGPOW_LANES; l++)
@@ -831,6 +902,7 @@ static void progPowLoop(
                 // lanes access random location
                 offset = mix[l][mix_src()] % (uint32_t)PROGPOW_CACHE_WORDS;
                 data32 = fix_endianness(c_lut(context, offset));
+                data32 = 0; //del
                 merge(&(mix[l][mix_dst()]), data32, rnd());
             }
             if (i < PROGPOW_CNT_MATH)
@@ -848,9 +920,8 @@ static void progPowLoop(
 }
 
 static void
-progpow_search(	ethash_return_value_t* ret,	
- const epoch_context* context, const uint64_t seed, lookup_fn2 g_lut, lookup_fn_l1 c_lut
-    )
+progpow_kernel(	hash256* ret, const epoch_context* context, const uint64_t seed,
+ lookup_fn2 g_lut, lookup_fn_l1 c_lut )
 {
     uint32_t mix[PROGPOW_LANES][PROGPOW_REGS];
     for(int i=0;i<PROGPOW_LANES;i++)for(int j=0;j<PROGPOW_REGS;j++)mix[i][j]=0;
@@ -884,71 +955,26 @@ progpow_search(	ethash_return_value_t* ret,
         fnv1a(&result.hwords[l % 8], lane_hash[l]);
     }
 
-	memcpy(&ret->result, &result, sizeof(result));
+	memcpy(ret, &result, sizeof(result));
 }
 
-bool progpow_hash(
+static void
+progpow(
        ethash_return_value_t* ret,
        const epoch_context *ctx,
-       const ethash_hash256 *header_hash,
+       const hash256 *header_hash,
        uint64_t const nonce
 )
 {
-    uint32_t result[4];
-    for (int i = 0; i < 4; i++)
-        result[i] = 0;
-    uint64_t seed;
-    seed = keccak_f800(header_hash, nonce, result);
+    uint32_t result[4] = {0};
+    
+    uint64_t seed = keccak_f800(header_hash, nonce, result);
 
-    progpow_search(ret, ctx, seed, calculate_dataset_item_progpow, calculate_L1dataset_item);
+    progpow_kernel(&ret->mix_hash, ctx, seed, calculate_dataset_item_progpow, calculate_L1dataset_item);
 
-    keccak_f800_arr((uint32_t*)&ret->result, header_hash, seed, (const uint32_t*)&ret->mix_hash);
-
-    return 1;
+    keccak_f800_arr(ret->result.hwords, header_hash, seed, ret->mix_hash.hwords);
 }
 
-static int is_prime(uint32_t number)
-{
-    uint32_t d;
-
-    if (number <= 1)
-        return 0;
-
-    if (number % 2 == 0 && number > 2)
-        return 0;
-
-    /* Check factors up to sqrt(number).
-       To avoid computing sqrt, compare d*d <= number with 64-bit precision. */
-    for (d = 3; (int64_t)d * (int64_t)d <= (int64_t)number; d += 2)
-    {
-        if (number % d == 0)
-            return 0;
-    }
-
-    return 1;
-}
-
-static
-uint32_t ethash_find_largest_prime(uint32_t upper_bound)
-{
-    uint32_t n = upper_bound;
-
-    if (n < 2)
-        return 0;
-
-    if (n == 2)
-        return 2;
-
-    /* If even number, skip it. */
-    if (n % 2 == 0)
-        --n;
-
-    /* Test descending odd numbers. */
-    while (!is_prime(n))
-        n -= 2;
-
-    return n;
-}
 
 
 static
@@ -977,175 +1003,41 @@ uint32_t calculate_full_dataset_num_items(uint32_t epoch_number)
 }
 
 
-static void
-set_epoch_context(uint32_t epoch_number, epoch_context* ctx, hash512* light_cache) 
-{
-    uint32_t light_cache_num_items = calculate_light_cache_num_items(epoch_number);
-    uint32_t full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
-    //printf("epoch %d cache num %d\n", epoch_number, light_cache_num_items);
-    ctx->epoch_number = epoch_number;
-    ctx->light_cache_num_items = light_cache_num_items;
-    ctx->light_cache = light_cache;
-    ctx->full_dataset_num_items = full_dataset_num_items;
-}
-
-static
-ethash_hash256* keccak256_arr(ethash_hash256* hash, const uint8_t* data, size_t size)
-{
-    keccak(hash->words, 256, data, size);
-    return hash;
-}
-
-static
-ethash_hash256* ethash_keccak256(ethash_hash256* hash, const ethash_hash256* header, const uint64_t seed, const uint32_t *result)
-{
-    keccak_f800_arr(hash->hwords, header, seed, result);
-    return hash;
-}
-
-void verify_final_progpow_hash(ethash_hash256* final_hash,
-                        const ethash_hash256* header_hash, 
-                        const ethash_hash256* mix_hash, uint64_t nonce)
-{
-    uint32_t result[4]; 
-    for (int i = 0; i < 4; i++)
-        result[i] = 0;
-    uint64_t seed = keccak_f800(header_hash, nonce, result);
-    ethash_hash256 h;
-    ethash_keccak256(&h, header_hash, seed, mix_hash->hwords);
-    //XXX keccak_f800 using st[0] << 32 | st[1], st[0], st[1] are little endian,
-    //here convert it back to big endian
-    for(int i = 0; i < 8; i ++) 
-        final_hash->hwords[i] = bswap32(h.hwords[i]);
-}
-
 /**************API********************************/
-/**************************************************
- * header is 140 bytes with zerod nonce
- * mix is 32 bytes, nonce is 64 bytes
- * return with hash uint8_t array
- * hash is big endian, nonce is little endian.
-***************************************************/
-int 
-get_block_progpow_hash_from_mix(uint8_t *header, uint8_t *mix,
- uint64_t nonce, uint8_t *out)
-{
-    memset(&header[108], 0, 32); 
-    ethash_hash256 header_hash;
-    keccak256_arr(&header_hash, header, 140);
-
-    ethash_hash256 mix_hash;
-    memcpy(mix_hash.bytes, mix, 32);
-
-    ethash_hash256 final_hash;
-    verify_final_progpow_hash(&final_hash, &header_hash, &mix_hash, nonce);   
-
-    memcpy(out, final_hash.bytes, 32);
-    return 0;
-}
 
 #include <stdlib.h>
-uint32_t g_total = 0;
-hash512* g_light_cache = 0;
-void create_light_cache(uint32_t index, uint8_t value[64]) 
+epoch_context g_ctx;
+hash512* create_light_cache(uint32_t epoch) 
 {
-    if ((index+1) > g_total) {
-        if (g_total > 0) {
-           free(g_light_cache); 
-        }
-        g_light_cache = malloc(64*(index+1));
-        g_total = index+1;
-        //if(g_light_cache) printf("alloc %d\n", g_total);
+    if (g_ctx.light_cache) {
+        free(g_ctx.light_cache); 
     }
-    memcpy(&g_light_cache[index], value, 64);
+    g_ctx.light_cache_num_items = calculate_light_cache_num_items(epoch);
+    g_ctx.full_dataset_num_items = calculate_full_dataset_num_items(epoch);
+    g_ctx.light_cache = malloc(g_ctx.light_cache_num_items * 64);
+
+    hash256 epoch_seed = {0};
+    calculate_epoch_seed(&epoch_seed, epoch);
+    build_light_cache(g_ctx.light_cache, g_ctx.light_cache_num_items, &epoch_seed);
+    return g_ctx.light_cache;
 }
 
-uint32_t 
-get_block_progpow_hash(uint32_t epoch, uint8_t header[32],
+void 
+get_block_progpow_hash(uint8_t header[32],
                        uint64_t nonce, uint8_t out[64])
 {
     ethash_return_value_t r;
-    epoch_context ctx;
-    set_epoch_context(epoch, &ctx, (hash512*)g_light_cache);
-    progpow_hash(&r, &ctx, (const ethash_hash256*)header, nonce);   
+    progpow(&r, &g_ctx, (const hash256*)header, nonce);   
 
     memcpy(out, &r.result, 32);
     memcpy(out+32, &r.mix_hash, 32);
-    return ctx.light_cache_num_items;
 }
 
 void  
-get_dataset_item(uint8_t r[256], uint32_t epoch, uint32_t index) {
-    epoch_context ctx;
-    set_epoch_context(epoch, &ctx, (hash512*)g_light_cache);
-    calculate_dataset_item_progpow((hash2048*)r, &ctx, index);     
- }
-
-/****
-[2018-06-30 09:59:54] GPU #0: start=31300181 end=315a9f6d range=002a9dec
-[2018-06-30 09:59:54] GPU #0: Target 1881cffffff.
-[2018-06-30 10:00:08] GPU #0: found count = 2,  buffer->count = 2
-[2018-06-30 10:00:08] GPU #0: found result 0: nonces=313dfc18, mixes=5883f27cabc838b98e7cd660c5ee91e8b1882bd17f9e428b5aa6bc951d5a16f8
-[2018-06-30 10:00:08] GPU #0: before verify, nonce = 313dfc18, header_hash =5d5378ed7576a89388fad85a628d1895483bf98bdb29b2fc9ad17db7263823f1, m_current_header=5d5378ed7576a89388fad85a628d1895483bf98bdb29b2fc9ad17db7263823f1, mix=5883f27cabc838b98e7cd660c5ee91e8b1882bd17f9e428b
-[2018-06-30 10:00:08] GPU #0: calc_hash: 00000148b6715b3a32a7b36e5c820fcd4660acb72947ab9ebe4949134688066e
-
-[2018-06-30 10:00:09] GPU #0: progpow hash results. final_hash 00000148b6715b3a32a7b36e5c820fcd4660acb72947ab9ebe4949134688066e, mix_hash 5883f27cabc838b98e7cd660c5ee91e8b1882bd17f9e428b5aa6bc951d5a16f8
-
-[2018-06-30 10:00:09] GPU #0: verify_final_progpow passed!
-
-[2018-06-30 10:00:10] GPU #0: verify passed!
-
-yang@ubuntu:~/bitcoinnewyork_newfork/Bitcoinnyc/src$ ./btc2-cli -datadir=/data/bitcoin_data/ -debug=1 getblock 00000148b6715b3a32a7b36e5c820fcd4660acb72947ab9ebe4949134688066e 0
-000000206812f2a87241851756cb79524ddb813a9f83bb4bbcdda51abe07daeba50000001280c5e80b3472eb0f63f14e0c2edebbbe0409fb30598ca0a5ee3674f9c7f875f3dd07000000000000000000000000000000000000000000000000000000000055b6375b1c88011e00000000000000000000000000000000000000000000000018fc3d3100000000fd40055883f27cabc838b98e7cd660c5ee91e8b1882bd17f9e428b5aa6bc951d5a16f80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-***/
-
-/*
-uint8_t inline parse_digit(uint8_t d) 
-{
-    return d <= '9' ? (d - '0') : (d - 'a' + 10);
+get_dataset_item(uint8_t r[256], uint32_t index) {
+    calculate_dataset_item_progpow((hash2048*)r, &g_ctx, index);     
 }
 
-inline void to_array (const std::string& hex, uint8_t *out)
-{
-    for (size_t i = 1; i < hex.size(); i += 2) {
 
-        int h = parse_digit(hex[i-1]);
-        int l = parse_digit(hex[i]);
-        out[i/2] = uint8_t((h<<4) | l);
-    }
-}hash512
-
-
-main() 
-{
-    
-    uint8_t header[140];
-    to_array (
-    "000000206812f2a87241851756cb79524ddb813a9f83bb4bbcdda51abe07daeba50000001280c5e80b3472eb0f63f14e0c2edebbbe0409fb30598ca0a5ee3674f9c7f875f3dd07000000000000000000000000000000000000000000000000000000000055b6375b1c88011e00000000000000000000000000000000000000000000000018fc3d3100000000", header);
-
-    uint8_t mix[32]; 
-    to_array (
-    "5883f27cabc838b98e7cd660c5ee91e8b1882bd17f9e428b5aa6bc951d5a16f8",
-    mix);
-
-    uint64_t nonce = 0x313dfc18;
-
-    uint8_t hash[32]; 
-    get_block_progpow_hash(header, mix, nonce, hash);
-    
-
-    uint8_t expected[32];
-    to_array (
-    "00000148b6715b3a32a7b36e5c820fcd4660acb72947ab9ebe4949134688066e", 
-    expected);
-
-    if (memcmp(expected, hash, 32)) {
-        std::cout << "hash calculation incorrect!!! "  << "\n";
-    } else {
-        std::cout << "hash calculation passed. "  << "\n";
-    }
-
-} 
-*/
 
 
