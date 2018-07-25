@@ -513,7 +513,8 @@ TEST(ethash, dataset_items_epoch13)
 
 TEST(ethash, verify_progpow_dag)
 {
-    const auto c = create_epoch_context(195);
+    int epoch = 174;
+    const auto c = create_epoch_context(epoch);
     //std::cout << "cache "<< to_hex(c->light_cache[0])<<std::endl;
     for (uint32_t j=0;j<1024;j++) {
         hash2048 i2 = calculate_dataset_item_progpow(*c, j);
@@ -523,7 +524,7 @@ TEST(ethash, verify_progpow_dag)
 	        for(int k=0;k<4;k++)std::cout<<j<<" "<<to_hex(i2.hashes[k])<<std::endl;
 	    }
     }
-    int j = calculate_full_dataset_num_items(195);
+    int j = calculate_full_dataset_num_items(epoch);
     j--;
 
     hash1024 i = calculate_dataset_item(*c, (uint32_t)j);

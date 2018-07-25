@@ -32,7 +32,7 @@ namespace ethash
 #define PROGPOW_CNT_CACHE               8
 #define PROGPOW_CNT_MATH                8
 #define PROGPOW_CACHE_WORDS  (PROGPOW_CACHE_BYTES / sizeof(uint32_t))
-#define PROGPOW_EPOCH_START (531)
+#define PROGPOW_EPOCH_START (931)
 
 // Helper to get the next value in the per-program random sequence
 #define rnd()    (kiss99(&prog_rnd))
@@ -676,10 +676,10 @@ uint64_t search(const epoch_context_full& context, const hash256& header_hash,
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r;
-		if (context.epoch_number < PROGPOW_EPOCH_START) {
-		    r = hash(context, header_hash, nonce);
-		} else {
+		if (context.epoch_number > PROGPOW_EPOCH_START) {
 		    r = progpow(context, header_hash, nonce);
+		} else {
+		    r = hash(context, header_hash, nonce);
 		}
         if (is_less_or_equal(r.final_hash, boundary))
             return nonce;
@@ -717,8 +717,7 @@ int ethash_calculate_light_cache_num_items(int epoch_number) noexcept
 
 int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
 {
-    static int item_size = sizeof(hash2048); //TODO this is questionable, we should use the legacy notion
-    if (epoch_number < PROGPOW_EPOCH_START) item_size = sizeof(hash1024);
+    static int item_size = sizeof(hash1024);
     static int num_items_init = full_dataset_init_size / item_size;
     static int num_items_growth = full_dataset_growth / item_size;
     assert(full_dataset_init_size % item_size == 0);
@@ -758,11 +757,11 @@ epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
         // TODO: This can be "optimized" by doing single allocation for light and full caches.
         const size_t num_items = static_cast<size_t>(full_dataset_num_items);
         const size_t num_l1_items = static_cast<size_t>(full_l1_dataset_num_items);
-      if (epoch_number < PROGPOW_EPOCH_START) {
-        full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash1024)));
-      } else {
+      if (epoch_number > PROGPOW_EPOCH_START) {
         full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash2048)));
         full_l1_dataset = static_cast<hash32*>(std::calloc(num_l1_items, sizeof(hash32)));
+      } else {
+        full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash1024)));
       }
         if (!full_dataset)
         {
