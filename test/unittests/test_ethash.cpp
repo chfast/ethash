@@ -623,6 +623,7 @@ TEST(ethash, testc_progpow_init)
 extern "C" { 
 hash512* create_light_cache(uint32_t epoch); 
 void get_block_progpow_hash(uint8_t header[32], uint64_t nonce, uint8_t out[64]);
+void get_from_mix(uint8_t header[32], uint64_t nonce, uint8_t mix[32], uint8_t out[32]);
 void get_dataset_item(uint8_t r[64], uint32_t index);
 }
 
@@ -705,12 +706,17 @@ TEST(ethash, verify_progpow_light)
         r = progpow(*context, header_hash, nonce);
         EXPECT_EQ(to_hex(r.final_hash), t.final_progpow);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_progpow);
+        bool v=verify_final_progpow(header_hash, r.mix_hash, nonce, r.final_hash);
+        EXPECT_TRUE(v);
 
         create_light_cache((uint32_t)epoch_number);
         struct {hash256 v; hash256 m; } out;
         get_block_progpow_hash((uint8_t*)&header_hash, nonce, (uint8_t*)&out);
         EXPECT_EQ(to_hex(out.v), to_hex(r.final_hash));
-        EXPECT_EQ(to_hex(out.m), to_hex(r.mix_hash));        
+        EXPECT_EQ(to_hex(out.m), to_hex(r.mix_hash));
+        hash256 b;
+        get_from_mix((uint8_t*)&header_hash, nonce, (uint8_t*)&out.m, (uint8_t*)&b);
+        EXPECT_EQ(to_hex(out.v), to_hex(b));        
     }    
 }
 

@@ -1024,6 +1024,15 @@ hash512* create_light_cache(uint32_t epoch)
     return g_ctx.light_cache;
 }
 
+void
+get_from_mix(uint8_t header[32], uint64_t nonce, uint8_t mix[32], uint8_t out[32])
+{
+    uint32_t result[4] = {0};
+    uint64_t seed = keccak_f800((const hash256*)header, nonce, result);
+
+    keccak_f800_arr((uint32_t*)out, (const hash256*)header, seed, (const uint32_t*)mix);
+}
+
 void 
 get_block_progpow_hash(uint8_t header[32],
                        uint64_t nonce, uint8_t out[64])
