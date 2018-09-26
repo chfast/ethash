@@ -18,6 +18,7 @@ add_library(
     ${include_dir}/ethash/keccak.h
     ${include_dir}/ethash/keccak.hpp
     keccak.c
+    keccakf800.c
     keccakf1600.c
     primes.h
     primes.c

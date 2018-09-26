@@ -29,6 +29,16 @@ extern "C" {
  */
 void ethash_keccakf1600(uint64_t state[25]) NOEXCEPT;
 
+/**
+ * The Keccak-f[800] function.
+ *
+ * The implementation of the Keccak-f function with 800-bit width of the permutation (b).
+ * The size of the state is also 800 bit what gives 25 32-bit words.
+ *
+ * @param state  The state of 25 32-bit words on which the permutation is to be performed.
+ */
+void ethash_keccakf800(uint32_t state[25]) NOEXCEPT;
+
 union ethash_hash256 ethash_keccak256(const uint8_t* data, size_t size) NOEXCEPT;
 union ethash_hash256 ethash_keccak256_32(const uint8_t data[32]) NOEXCEPT;
 union ethash_hash512 ethash_keccak512(const uint8_t* data, size_t size) NOEXCEPT;
