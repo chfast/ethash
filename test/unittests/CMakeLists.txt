@@ -12,6 +12,7 @@ add_executable(
     test_ethash.cpp
     test_ethash_cxx.cpp
     test_keccak.cpp
+    test_kiss.cpp
     test_managed.cpp
     test_primes.cpp
 )
