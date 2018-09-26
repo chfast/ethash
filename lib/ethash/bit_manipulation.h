@@ -41,6 +41,11 @@ static inline uint32_t popcount32(uint32_t x)
     return (uint32_t)__builtin_popcount(x);
 }
 
+static inline uint32_t mul_hi32(uint32_t x, uint32_t y)
+{
+    return (uint32_t)(((uint64_t)x * (uint64_t)y) >> 32);
+}
+
 #ifdef __cplusplus
 }
 #endif

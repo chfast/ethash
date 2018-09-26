@@ -69,3 +69,19 @@ TEST(bit_manipulation, popcount32)
     EXPECT_EQ(popcount32(9 << 18), 2);
     EXPECT_EQ(popcount32(~0u), 32);
 }
+
+TEST(bit_manipulation, mul_hi32)
+{
+    EXPECT_EQ(mul_hi32(0, 0), 0);
+    EXPECT_EQ(mul_hi32(0, 1), 0);
+    EXPECT_EQ(mul_hi32(1, 0), 0);
+    EXPECT_EQ(mul_hi32(1, 1), 0);
+
+    EXPECT_EQ(mul_hi32(1 << 16, 1 << 16), 1);
+    EXPECT_EQ(mul_hi32(1 << 16, (1 << 16) + 1), 1);
+
+    EXPECT_EQ(mul_hi32(1 << 30, 1 << 30), 1 << 28);
+    EXPECT_EQ(mul_hi32(1u << 31, 1u << 31), 1 << 30);
+
+    EXPECT_EQ(mul_hi32(~0u, ~0u), ~0u - 1);
+}
