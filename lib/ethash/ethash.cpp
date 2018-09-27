@@ -4,6 +4,7 @@
 
 #include "ethash-internal.hpp"
 
+#include "bit_manipulation.h"
 #include "endianness.hpp"
 #include "primes.h"
 
@@ -13,13 +14,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
-
-#if __clang__
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW \
-    __attribute__((no_sanitize("unsigned-integer-overflow")))
-#else
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
-#endif
 
 namespace ethash
 {
@@ -40,16 +34,7 @@ static_assert(full_dataset_item_size == ETHASH_FULL_DATASET_ITEM_SIZE, "");
 
 namespace
 {
-/**
- * The implementation of FNV-1 hash.
- *
- * See https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1_hash.
- */
-ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
-inline uint32_t fnv1(uint32_t u, uint32_t v) noexcept
-{
-    return (u * 0x01000193) ^ v;
-}
+using ::fnv1;
 
 inline hash512 fnv1(const hash512& u, const hash512& v) noexcept
 {

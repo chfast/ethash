@@ -9,6 +9,13 @@
 
 #include <stdint.h>
 
+#if __clang__
+#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW \
+    __attribute__((no_sanitize("unsigned-integer-overflow")))
+#else
+#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,6 +51,17 @@ static inline uint32_t popcount32(uint32_t x)
 static inline uint32_t mul_hi32(uint32_t x, uint32_t y)
 {
     return (uint32_t)(((uint64_t)x * (uint64_t)y) >> 32);
+}
+
+/**
+ * The implementation of FNV-1 hash.
+ *
+ * See https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1_hash.
+ */
+ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
+static inline uint32_t fnv1(uint32_t u, uint32_t v) noexcept
+{
+    return (u * 0x01000193) ^ v;
 }
 
 #ifdef __cplusplus
