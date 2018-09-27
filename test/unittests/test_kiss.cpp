@@ -2,17 +2,11 @@
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
+#include <ethash/bit_manipulation.h>
 #include <ethash/kiss99.h>
 
 #include <gtest/gtest.h>
 
-// FIXME: Move to bit_manipulation.h together with fnv1().
-#if __clang__
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW \
-    __attribute__((no_sanitize("unsigned-integer-overflow")))
-#else
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
-#endif
 
 // The KISS99 reference implementation from http://www.cse.yorku.ca/~oz/marsaglia-rng.html.
 #define znew (z = 36969 * (z & 65535) + (z >> 16))
