@@ -22,7 +22,7 @@ Build from source using CMake.
 mkdir build
 cd build
 cmake ..
-cmake --build build
+cmake --build .
 ```
 
 ## Usage
