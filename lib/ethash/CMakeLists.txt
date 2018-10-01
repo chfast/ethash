@@ -26,6 +26,8 @@ add_library(
     kiss99.h
     primes.h
     primes.c
+    progpow-internal.hpp
+    progpow.cpp
 )
 
 target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
