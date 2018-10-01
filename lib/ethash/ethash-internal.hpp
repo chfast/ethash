@@ -34,9 +34,9 @@ inline bool is_less_or_equal(const hash256& a, const hash256& b) noexcept
 {
     for (size_t i = 0; i < (sizeof(a) / sizeof(a.words[0])); ++i)
     {
-        if (from_be(a.words[i]) > from_be(b.words[i]))
+        if (be::uint64(a.words[i]) > be::uint64(b.words[i]))
             return false;
-        if (from_be(a.words[i]) < from_be(b.words[i]))
+        if (be::uint64(a.words[i]) < be::uint64(b.words[i]))
             return true;
     }
     return true;

@@ -112,7 +112,7 @@ void build_light_cache(hash512* cache, int num_items, const hash256& seed) noexc
             const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
             // Fist index: 4 first bytes of the item as little-endian integer.
-            uint32_t t = fix_endianness(cache[i].half_words[0]);
+            uint32_t t = le::uint32(cache[i].half_words[0]);
             uint32_t v = t % index_limit;
 
             // Second index.
@@ -145,27 +145,27 @@ hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) no
     hash512 mix0 = cache[index0 % num_cache_items];
     hash512 mix1 = cache[index1 % num_cache_items];
 
-    mix0.half_words[0] ^= fix_endianness(init0);
-    mix1.half_words[0] ^= fix_endianness(init1);
+    mix0.half_words[0] ^= le::uint32(init0);
+    mix1.half_words[0] ^= le::uint32(init1);
 
     // Hash and convert to little-endian 32-bit words.
-    mix0 = fix_endianness32(keccak512(mix0));
-    mix1 = fix_endianness32(keccak512(mix1));
+    mix0 = le::uint32s(keccak512(mix0));
+    mix1 = le::uint32s(keccak512(mix1));
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
         uint32_t t0 = fnv1(init0 ^ j, mix0.half_words[j % num_half_words]);
         int64_t parent_index0 = t0 % num_cache_items;
-        mix0 = fnv1(mix0, fix_endianness32(cache[parent_index0]));
+        mix0 = fnv1(mix0, le::uint32s(cache[parent_index0]));
 
         uint32_t t1 = fnv1(init1 ^ j, mix1.half_words[j % num_half_words]);
         int64_t parent_index1 = t1 % num_cache_items;
-        mix1 = fnv1(mix1, fix_endianness32(cache[parent_index1]));
+        mix1 = fnv1(mix1, le::uint32s(cache[parent_index1]));
     }
 
     // Covert 32-bit words back to bytes and hash.
-    mix0 = keccak512(fix_endianness32(mix0));
-    mix1 = keccak512(fix_endianness32(mix1));
+    mix0 = keccak512(le::uint32s(mix0));
+    mix1 = keccak512(le::uint32s(mix1));
 
     return hash1024{{mix0, mix1}};
 }
@@ -176,7 +176,7 @@ using lookup_fn = hash1024 (*)(const epoch_context&, uint32_t);
 
 inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
 {
-    nonce = fix_endianness(nonce);
+    nonce = le::uint64(nonce);
     uint8_t init_data[sizeof(header_hash) + sizeof(nonce)];
     std::memcpy(&init_data[0], &header_hash, sizeof(header_hash));
     std::memcpy(&init_data[sizeof(header_hash)], &nonce, sizeof(nonce));
@@ -197,14 +197,14 @@ inline hash256 hash_kernel(
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
     const uint32_t index_limit = static_cast<uint32_t>(context.full_dataset_num_items);
-    const uint32_t seed_init = fix_endianness(seed.half_words[0]);
+    const uint32_t seed_init = le::uint32(seed.half_words[0]);
 
-    hash1024 mix{{fix_endianness32(seed), fix_endianness32(seed)}};
+    hash1024 mix{{le::uint32s(seed), le::uint32s(seed)}};
 
     for (uint32_t i = 0; i < num_dataset_accesses; ++i)
     {
         const uint32_t p = fnv1(i ^ seed_init, mix.hwords[i % mix_hwords]) % index_limit;
-        const hash1024 newdata = fix_endianness32(lookup(context, p));
+        const hash1024 newdata = le::uint32s(lookup(context, p));
 
         for (size_t j = 0; j < mix_hwords; ++j)
             mix.hwords[j] = fnv1(mix.hwords[j], newdata.hwords[j]);
@@ -219,7 +219,7 @@ inline hash256 hash_kernel(
         mix_hash.hwords[i / 4] = h3;
     }
 
-    return fix_endianness32(mix_hash);
+    return le::uint32s(mix_hash);
 }
 }  // namespace
 

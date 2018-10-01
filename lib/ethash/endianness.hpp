@@ -44,97 +44,55 @@ namespace ethash
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 
-inline uint32_t fix_endianness(uint32_t x)
+struct le
 {
-    return x;
-}
+    static uint32_t uint32(uint32_t x) noexcept { return x; }
+    static uint64_t uint64(uint64_t x) noexcept { return x; }
 
-inline uint64_t fix_endianness(uint64_t x)
-{
-    return x;
-}
+    static const hash1024& uint32s(const hash1024& h) noexcept { return h; }
+    static const hash512& uint32s(const hash512& h) noexcept { return h; }
+    static const hash256& uint32s(const hash256& h) noexcept { return h; }
+};
 
-inline const hash1024& fix_endianness32(const hash1024& h)
+struct be
 {
-    return h;
-}
+    static uint64_t uint64(uint64_t x) noexcept { return bswap64(x); }
+};
 
-inline const hash512& fix_endianness32(const hash512& h)
-{
-    return h;
-}
-
-inline const hash512& fix_endianness64(const hash512& h)
-{
-    return h;
-}
-
-inline const hash256& fix_endianness32(const hash256& h)
-{
-    return h;
-}
-
-inline const hash256& fix_endianness64(const hash256& h)
-{
-    return h;
-}
-
-inline uint64_t from_be(uint64_t x)
-{
-    return bswap64(x);
-}
 
 #elif __BYTE_ORDER == __BIG_ENDIAN
 
-inline uint32_t fix_endianness(uint32_t x)
+struct le
 {
-    return bswap32(x);
-}
+    static uint32_t uint32(uint32_t x) noexcept { return bswap32(x); }
+    static uint64_t uint64(uint64_t x) noexcept { return bswap64(x); }
 
-inline uint64_t fix_endianness(uint64_t x)
-{
-    return bswap64(x);
-}
+    static hash1024 uint32s(hash1024 h) noexcept
+    {
+        for (auto& w : h.hwords)
+            w = uint32(w);
+        return h;
+    }
 
-inline hash1024 fix_endianness32(hash1024 hash)
-{
-    for (auto& w : hash.hwords)
-        w = fix_endianness(w);
-    return hash;
-}
+    static hash512 uint32s(hash512 h) noexcept
+    {
+        for (auto& w : h.half_words)
+            w = uint32(w);
+        return h;
+    }
 
-inline hash512 fix_endianness32(hash512 hash)
-{
-    for (auto& w : hash.half_words)
-        w = fix_endianness(w);
-    return hash;
-}
+    static hash256 uint32s(hash256 h) noexcept
+    {
+        for (auto& w : h.hwords)
+            w = uint32(w);
+        return h;
+    }
+};
 
-inline hash512 fix_endianness64(hash512 hash)
+struct be
 {
-    for (auto& w : hash.words)
-        w = fix_endianness(w);
-    return hash;
-}
-
-inline hash256 fix_endianness32(hash256 hash)
-{
-    for (auto& w : hash.hwords)
-        w = fix_endianness(w);
-    return hash;
-}
-
-inline hash256 fix_endianness64(hash256 hash)
-{
-    for (auto& w : hash.words)
-        w = fix_endianness(w);
-    return hash;
-}
-
-inline uint64_t from_be(uint64_t x)
-{
-    return x;
-}
+    static uint64_t uint64(uint64_t x) noexcept { return x; }
+};
 
 #endif
 }  // namespace ethash

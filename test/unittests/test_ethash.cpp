@@ -32,7 +32,7 @@ epoch_context_ptr create_epoch_context_mock(int epoch_number)
     // Prepare a constant endianness-independent cache item.
     hash512 fill;
     static constexpr uint64_t fill_word = 0xe14a54a1b2c3d4e5;
-    std::fill_n(fill.words, sizeof(hash512) / sizeof(uint64_t), fix_endianness(fill_word));
+    std::fill_n(fill.words, sizeof(hash512) / sizeof(uint64_t), le::uint64(fill_word));
 
     static const size_t context_alloc_size = std::max(sizeof(epoch_context), sizeof(hash512));
 
