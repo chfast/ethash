@@ -64,6 +64,17 @@ static inline uint32_t fnv1(uint32_t u, uint32_t v) noexcept
     return (u * 0x01000193) ^ v;
 }
 
+/**
+ * The implementation of FNV-1a hash.
+ *
+ * See https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1a_hash.
+ */
+ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
+static inline uint32_t fnv1a(uint32_t u, uint32_t v) noexcept
+{
+    return (u ^ v) * 0x01000193;
+}
+
 #ifdef __cplusplus
 }
 #endif
