@@ -46,4 +46,13 @@ void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noex
 
 hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) noexcept;
 
+namespace generic
+{
+using hash_fn512 = hash512 (*)(const uint8_t* data, size_t size);
+
+void build_light_cache(
+    hash_fn512 hash_fn, hash512 cache[], int num_items, const hash256& seed) noexcept;
+
+}  // namespace generic
+
 }  // namespace ethash

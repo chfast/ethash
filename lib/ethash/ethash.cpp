@@ -95,13 +95,16 @@ int find_epoch_number(const hash256& seed) noexcept
     return -1;
 }
 
-void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept
+namespace generic
 {
-    hash512 item = keccak512(seed.bytes, sizeof(seed));
+void build_light_cache(
+    hash_fn512 hash_fn, hash512 cache[], int num_items, const hash256& seed) noexcept
+{
+    hash512 item = hash_fn(seed.bytes, sizeof(seed));
     cache[0] = item;
     for (int i = 1; i < num_items; ++i)
     {
-        item = keccak512(item.bytes, sizeof(item));
+        item = hash_fn(item.bytes, sizeof(item));
         cache[i] = item;
     }
 
@@ -119,11 +122,16 @@ void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noex
             const uint32_t w = static_cast<uint32_t>(num_items + (i - 1)) % index_limit;
 
             const hash512 x = bitwise_xor(cache[v], cache[w]);
-            cache[i] = keccak512(x.bytes, sizeof(x));
+            cache[i] = hash_fn(x.bytes, sizeof(x));
         }
     }
 }
+}  // namespace generic
 
+void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept
+{
+    return generic::build_light_cache(keccak512, cache, num_items, seed);
+}
 
 /// Calculates a full dataset item
 ///
