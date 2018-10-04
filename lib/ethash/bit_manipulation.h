@@ -59,7 +59,7 @@ static inline uint32_t mul_hi32(uint32_t x, uint32_t y)
  * See https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1_hash.
  */
 ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
-static inline uint32_t fnv1(uint32_t u, uint32_t v) noexcept
+static inline uint32_t fnv1(uint32_t u, uint32_t v)
 {
     return (u * 0x01000193) ^ v;
 }
