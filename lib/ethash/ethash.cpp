@@ -101,7 +101,7 @@ void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noex
     cache[0] = item;
     for (int i = 1; i < num_items; ++i)
     {
-        item = keccak512(item);
+        item = keccak512(item.bytes, sizeof(item));
         cache[i] = item;
     }
 
@@ -112,14 +112,14 @@ void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noex
             const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
             // Fist index: 4 first bytes of the item as little-endian integer.
-            uint32_t t = le::uint32(cache[i].half_words[0]);
-            uint32_t v = t % index_limit;
+            const uint32_t t = le::uint32(cache[i].half_words[0]);
+            const uint32_t v = t % index_limit;
 
             // Second index.
-            uint32_t w = static_cast<uint32_t>(num_items + (i - 1)) % index_limit;
+            const uint32_t w = static_cast<uint32_t>(num_items + (i - 1)) % index_limit;
 
-            // Pipelining functions returning structs gives small performance boost.
-            cache[i] = keccak512(bitwise_xor(cache[v], cache[w]));
+            const hash512 x = bitwise_xor(cache[v], cache[w]);
+            cache[i] = keccak512(x.bytes, sizeof(x));
         }
     }
 }
