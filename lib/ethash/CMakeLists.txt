@@ -9,6 +9,7 @@ set(include_dir ${PROJECT_SOURCE_DIR}/include)
 add_library(
     ethash
     bit_manipulation.h
+    blake2b.c
     builtins.h
     endianness.hpp
     ${include_dir}/ethash/ethash.h
