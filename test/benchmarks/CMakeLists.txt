@@ -14,7 +14,6 @@ add_executable(ethash-bench
     threadsync_benchmarks.cpp
     threadsync_utils.hpp
     threadsync_utils.cpp
-    ubqhash_benchmarks.cpp
 )
 target_link_libraries(ethash-bench PRIVATE ethash benchmark::benchmark)
 target_include_directories(ethash-bench PRIVATE ${ETHASH_PRIVATE_INCLUDE_DIR})
