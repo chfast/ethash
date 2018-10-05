@@ -98,7 +98,7 @@ int find_epoch_number(const hash256& seed) noexcept
 namespace generic
 {
 void build_light_cache(
-    hash_fn512 hash_fn, hash512 cache[], int num_items, const hash256& seed) noexcept
+    hash_fn_512 hash_fn, hash512 cache[], int num_items, const hash256& seed) noexcept
 {
     hash512 item = hash_fn(seed.bytes, sizeof(seed));
     cache[0] = item;
