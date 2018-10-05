@@ -126,6 +126,48 @@ void build_light_cache(
         }
     }
 }
+
+epoch_context_full* create_epoch_context(
+    build_light_cache_fn build_fn, int epoch_number, bool full) noexcept
+{
+    static_assert(sizeof(epoch_context_full) < sizeof(hash512), "epoch_context too big");
+    static constexpr size_t context_alloc_size = sizeof(hash512);
+
+    const int light_cache_num_items = calculate_light_cache_num_items(epoch_number);
+    const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
+    const size_t alloc_size = context_alloc_size + light_cache_size;
+
+    char* const alloc_data = static_cast<char*>(std::malloc(alloc_size));
+    if (!alloc_data)
+        return nullptr;  // Signal out-of-memory by returning null pointer.
+
+    hash512* const light_cache = reinterpret_cast<hash512*>(alloc_data + context_alloc_size);
+    const hash256 epoch_seed = calculate_epoch_seed(epoch_number);
+    build_fn(light_cache, light_cache_num_items, epoch_seed);
+
+    const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
+    hash1024* full_dataset = nullptr;
+    if (full)
+    {
+        // TODO: This can be "optimized" by doing single allocation for light and full caches.
+        const size_t num_items = static_cast<size_t>(full_dataset_num_items);
+        full_dataset = static_cast<hash1024*>(std::calloc(num_items, sizeof(hash1024)));
+        if (!full_dataset)
+        {
+            std::free(alloc_data);
+            return nullptr;
+        }
+    }
+
+    epoch_context_full* const context = new (alloc_data) epoch_context_full{
+        epoch_number,
+        light_cache_num_items,
+        light_cache,
+        full_dataset_num_items,
+        full_dataset,
+    };
+    return context;
+}
 }  // namespace generic
 
 void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept
@@ -345,58 +387,14 @@ int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
     return num_items;
 }
 
-namespace
-{
-epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
-{
-    static_assert(sizeof(epoch_context_full) < sizeof(hash512), "epoch_context too big");
-    static constexpr size_t context_alloc_size = sizeof(hash512);
-
-    const int light_cache_num_items = calculate_light_cache_num_items(epoch_number);
-    const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
-    const size_t alloc_size = context_alloc_size + light_cache_size;
-
-    char* const alloc_data = static_cast<char*>(std::malloc(alloc_size));
-    if (!alloc_data)
-        return nullptr;  // Signal out-of-memory by returning null pointer.
-
-    hash512* const light_cache = reinterpret_cast<hash512*>(alloc_data + context_alloc_size);
-    const hash256 epoch_seed = calculate_epoch_seed(epoch_number);
-    build_light_cache(light_cache, light_cache_num_items, epoch_seed);
-
-    const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
-    hash1024* full_dataset = nullptr;
-    if (full)
-    {
-        // TODO: This can be "optimized" by doing single allocation for light and full caches.
-        const size_t num_items = static_cast<size_t>(full_dataset_num_items);
-        full_dataset = static_cast<hash1024*>(std::calloc(num_items, sizeof(hash1024)));
-        if (!full_dataset)
-        {
-            std::free(alloc_data);
-            return nullptr;
-        }
-    }
-
-    epoch_context_full* const context = new (alloc_data) epoch_context_full{
-        epoch_number,
-        light_cache_num_items,
-        light_cache,
-        full_dataset_num_items,
-        full_dataset,
-    };
-    return context;
-}
-}  // namespace
-
 epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
 {
-    return create_epoch_context(epoch_number, false);
+    return generic::create_epoch_context(build_light_cache, epoch_number, false);
 }
 
 epoch_context_full* ethash_create_epoch_context_full(int epoch_number) noexcept
 {
-    return create_epoch_context(epoch_number, true);
+    return generic::create_epoch_context(build_light_cache, epoch_number, true);
 }
 
 void ethash_destroy_epoch_context_full(epoch_context_full* context) noexcept
