@@ -30,6 +30,19 @@ static void keccakf1600(benchmark::State& state)
 BENCHMARK(keccakf1600);
 
 
+static void keccakf800(benchmark::State& state)
+{
+    uint32_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        ethash_keccakf800(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf800);
+
+
 static void keccak256(benchmark::State& state)
 {
     const auto data_size = static_cast<size_t>(state.range(0));

@@ -4,6 +4,7 @@
 
 #include "ethash-internal.hpp"
 
+#include "bit_manipulation.h"
 #include "endianness.hpp"
 #include "primes.h"
 
@@ -14,13 +15,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
-
-#if __clang__
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW \
-    __attribute__((no_sanitize("unsigned-integer-overflow")))
-#else
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
-#endif
 
 namespace ethash
 {
@@ -59,17 +53,13 @@ static_assert(full_dataset_item_size == ETHASH_FULL_DATASET_ITEM_SIZE, "");
 
 namespace
 {
-ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
-inline uint32_t fnv(uint32_t u, uint32_t v) noexcept
-{
-    return (u * 0x01000193) ^ v;
-}
+using ::fnv1;
 
-inline hash512 fnv(const hash512& u, const hash512& v) noexcept
+inline hash512 fnv1(const hash512& u, const hash512& v) noexcept
 {
     hash512 r;
     for (size_t i = 0; i < sizeof(r) / sizeof(r.half_words[0]); ++i)
-        r.half_words[i] = fnv(u.half_words[i], v.half_words[i]);
+        r.half_words[i] = fnv1(u.half_words[i], v.half_words[i]);
     return r;
 }
 
@@ -214,13 +204,16 @@ int find_epoch_number(const hash256& seed) noexcept
     return -1;
 }
 
-void build_light_cache(hash512* cache, int num_items, const hash256& seed) noexcept
+namespace generic
 {
-    hash512 item = keccak512(seed.bytes, sizeof(seed));
+void build_light_cache(
+    hash_fn512 hash_fn, hash512 cache[], int num_items, const hash256& seed) noexcept
+{
+    hash512 item = hash_fn(seed.bytes, sizeof(seed));
     cache[0] = item;
     for (int i = 1; i < num_items; ++i)
     {
-        item = keccak512(item);
+        item = hash_fn(item.bytes, sizeof(item));
         cache[i] = item;
     }
 
@@ -231,18 +224,23 @@ void build_light_cache(hash512* cache, int num_items, const hash256& seed) noexc
             const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
             // Fist index: 4 first bytes of the item as little-endian integer.
-            uint32_t t = fix_endianness(cache[i].half_words[0]);
-            uint32_t v = t % index_limit;
+            const uint32_t t = le::uint32(cache[i].half_words[0]);
+            const uint32_t v = t % index_limit;
 
             // Second index.
-            uint32_t w = static_cast<uint32_t>(num_items + (i - 1)) % index_limit;
+            const uint32_t w = static_cast<uint32_t>(num_items + (i - 1)) % index_limit;
 
-            // Pipelining functions returning structs gives small performance boost.
-            cache[i] = keccak512(bitwise_xor(cache[v], cache[w]));
+            const hash512 x = bitwise_xor(cache[v], cache[w]);
+            cache[i] = hash_fn(x.bytes, sizeof(x));
         }
     }
 }
+}  // namespace generic
 
+void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept
+{
+    return generic::build_light_cache(keccak512, cache, num_items, seed);
+}
 
 /// Calculates a full dataset item
 ///
@@ -259,20 +257,20 @@ static hash512 calculate_dag_item(const epoch_context& context, int64_t index) n
 
     hash512 mix0 = cache[index % num_cache_items];
 
-    mix0.half_words[0] ^= fix_endianness(idx32);
+    mix0.half_words[0] ^= le::uint32(idx32);
 
     // Hash and convert to little-endian 32-bit words.
-    mix0 = fix_endianness32(keccak512(mix0));
+    mix0 = le::uint32s(keccak512(mix0));
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
-        uint32_t t0 = fnv(idx32 ^ j, mix0.half_words[j % num_half_words]);
+        uint32_t t0 = fnv1(idx32 ^ j, mix0.half_words[j % num_half_words]);
         int64_t parent_index0 = t0 % num_cache_items;
-        mix0 = fnv(mix0, fix_endianness32(cache[parent_index0]));
+        mix0 = fnv1(mix0, le::uint32s(cache[parent_index0]));
     }
 
     // Covert 32-bit words back to bytes and hash.
-    mix0 = keccak512(fix_endianness32(mix0));
+    mix0 = keccak512(le::uint32s(mix0));
 
     return {mix0};
 }
@@ -319,7 +317,7 @@ using lookup_fn_l1 = uint32_t(*)(const epoch_context&, uint32_t);
 
 inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
 {
-    nonce = fix_endianness(nonce);
+    nonce = le::uint64(nonce);
     uint8_t init_data[sizeof(header_hash) + sizeof(nonce)];
     std::memcpy(&init_data[0], &header_hash, sizeof(header_hash));
     std::memcpy(&init_data[sizeof(header_hash)], &nonce, sizeof(nonce));
@@ -425,7 +423,7 @@ void progPowLoop(
     // Global offset uses mix[0] to guarantee it depends on the load result
     uint32_t offset_g = mix[loop%PROGPOW_LANES][0] % (uint32_t)(context.full_dataset_num_items/2);
 
-    hash2048 data256 = fix_endianness32(g_lut(context, offset_g));
+    hash2048 data256 = le::uint32s(g_lut(context, offset_g));
     
     // Lanes can execute in parallel and will be convergent
     for (uint32_t l = 0; l < PROGPOW_LANES; l++)
@@ -453,7 +451,7 @@ void progPowLoop(
                 // Cached memory access
                 // lanes access random location
                 offset = mix[l][mix_src()] % (uint32_t)PROGPOW_CACHE_WORDS;
-                data32 = fix_endianness(c_lut(context, offset));
+                data32 = le::uint32(c_lut(context, offset));
                 merge(&(mix[l][mix_dst()]), data32, rnd());
             }
             if (i < PROGPOW_CNT_MATH)
@@ -475,29 +473,29 @@ inline hash256 hash_kernel(
 {
     static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
     const uint32_t index_limit = static_cast<uint32_t>(context.full_dataset_num_items);
-    const uint32_t seed_init = fix_endianness(seed.half_words[0]);
+    const uint32_t seed_init = le::uint32(seed.half_words[0]);
 
-    hash1024 mix{{fix_endianness32(seed), fix_endianness32(seed)}};
+    hash1024 mix{{le::uint32s(seed), le::uint32s(seed)}};
 
     for (uint32_t i = 0; i < num_dataset_accesses; ++i)
     {
-        const uint32_t p = fnv(i ^ seed_init, mix.hwords[i % mix_hwords]) % index_limit;
-        const hash1024 newdata = fix_endianness32(lookup(context, p));
+        const uint32_t p = fnv1(i ^ seed_init, mix.hwords[i % mix_hwords]) % index_limit;
+        const hash1024 newdata = le::uint32s(lookup(context, p));
 
         for (size_t j = 0; j < mix_hwords; ++j)
-            mix.hwords[j] = fnv(mix.hwords[j], newdata.hwords[j]);
+            mix.hwords[j] = fnv1(mix.hwords[j], newdata.hwords[j]);
     }
 
     hash256 mix_hash;
     for (size_t i = 0; i < mix_hwords; i += 4)
     {
-        const uint32_t h1 = fnv(mix.hwords[i], mix.hwords[i + 1]);
-        const uint32_t h2 = fnv(h1, mix.hwords[i + 2]);
-        const uint32_t h3 = fnv(h2, mix.hwords[i + 3]);
+        const uint32_t h1 = fnv1(mix.hwords[i], mix.hwords[i + 1]);
+        const uint32_t h2 = fnv1(h1, mix.hwords[i + 2]);
+        const uint32_t h3 = fnv1(h2, mix.hwords[i + 3]);
         mix_hash.hwords[i / 4] = h3;
     }
 
-    return fix_endianness32(mix_hash);
+    return le::uint32s(mix_hash);
 }
 
 hash256 progpow_kernel( const epoch_context& context, const uint64_t& seed,
@@ -533,7 +531,7 @@ hash256 progpow_kernel( const epoch_context& context, const uint64_t& seed,
     for (int l = 0; l < PROGPOW_LANES; l++)
         fnv1a(&result.hwords[l % 8], lane_hash[l]);
 
-    return fix_endianness32(result);
+    return le::uint32s(result);
 }
 }  // namespace
 

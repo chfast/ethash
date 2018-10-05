@@ -8,6 +8,8 @@ set(include_dir ${PROJECT_SOURCE_DIR}/include)
 
 add_library(
     ethash
+    bit_manipulation.h
+    builtins.h
     endianness.hpp
     ${include_dir}/ethash/ethash.h
     ${include_dir}/ethash/ethash.hpp
@@ -18,10 +20,14 @@ add_library(
     ${include_dir}/ethash/keccak.h
     ${include_dir}/ethash/keccak.hpp
     keccak.c
+    keccakf800.c
     keccakf1600.c
-	keccakf800.c
+    kiss99.c
+    kiss99.h
     primes.h
     primes.c
+    progpow-internal.hpp
+    progpow.cpp
 )
 
 target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)

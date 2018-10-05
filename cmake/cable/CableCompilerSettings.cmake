@@ -35,7 +35,7 @@ macro(cable_configure_compiler)
         cmake_parse_arguments(cable "NO_CONVERSION_WARNINGS;NO_STACK_PROTECTION" "" "" ${ARGN})
 
         if(cable_UNPARSED_ARGUMENTS)
-            message(FATAL_ERROR "cable_configure_compiler: Uknown options: ${cable_UNPARSED_ARGUMENTS}")
+            message(FATAL_ERROR "cable_configure_compiler: Unknown options: ${cable_UNPARSED_ARGUMENTS}")
         endif()
 
         # Set helper variables recognizing C++ compilers.
@@ -121,9 +121,12 @@ macro(cable_configure_compiler)
             # Set the linker flags first, they are required to properly test the compiler flag.
             set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
             set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
+
+            set(CMAKE_REQUIRED_LIBRARIES "--coverage ${CMAKE_REQUIRED_LIBRARIES}")
             check_cxx_compiler_flag(--coverage have_coverage)
+            string(REPLACE "--coverage " "" CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
             if(NOT have_coverage)
-                message(FATAL_ERROR "Unsupported sanitizer: ${SANITIZE}")
+                message(FATAL_ERROR "Coverage not supported")
             endif()
             add_compile_options(-g --coverage)
         endif()

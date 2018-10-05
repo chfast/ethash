@@ -63,7 +63,7 @@ static void light_cache(benchmark::State& state)
         benchmark::DoNotOptimize(light_cache.get());
     }
 }
-BENCHMARK(light_cache)->Arg(1);
+BENCHMARK(light_cache)->Arg(1)->Unit(benchmark::kMillisecond);
 
 
 static void calculate_dataset_item(benchmark::State& state)

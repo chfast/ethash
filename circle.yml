@@ -196,7 +196,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF
     docker:
-      - image: ethereum/cpp-build-env:experimental
+      - image: ethereum/cpp-build-env
     steps:
       - checkout
       - *configure
