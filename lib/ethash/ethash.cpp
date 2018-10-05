@@ -32,7 +32,14 @@ namespace ethash
 #define PROGPOW_CNT_CACHE               8
 #define PROGPOW_CNT_MATH                8
 #define PROGPOW_CACHE_WORDS  (PROGPOW_CACHE_BYTES / sizeof(uint32_t))
-#define PROGPOW_EPOCH_START (531)
+#define PROGPOW_EPOCH_START (931)
+
+// Helper to get the next value in the per-program random sequence
+#define rnd()    (kiss99(&prog_rnd))
+// Helper to pick a random mix location
+#define mix_src() (rnd() % PROGPOW_REGS)
+// Helper to access the sequence of mix destinations
+#define mix_dst() (mix_seq[(mix_seq_cnt++)%PROGPOW_REGS])
 
 // Internal constants:
 constexpr static int light_cache_init_size = 1 << 24;
@@ -81,6 +88,7 @@ typedef struct {
 // KISS99 is simple, fast, and passes the TestU01 suite
 // https://en.wikipedia.org/wiki/KISS_(algorithm)
 // http://www.cse.yorku.ca/~oz/marsaglia-rng.html
+static
 uint32_t kiss99(kiss99_t * st)
 {
 	uint32_t znew = (st->z = 36969 * (st->z & 65535) + (st->z >> 16));
@@ -91,11 +99,13 @@ uint32_t kiss99(kiss99_t * st)
 	return ((MWC^CONG) + SHR3);
 }
 
+static
 uint32_t fnv1a(uint32_t *h, uint32_t d)
 {
 	return *h = (*h ^ d) * 0x1000193;
 }
 
+static
 void fill_mix(
 	uint64_t seed,
 	uint32_t lane_id,
@@ -114,7 +124,7 @@ void fill_mix(
 		mix[i] = kiss99(&st);
 }
 
-
+static
 void swap(uint32_t *a, uint32_t *b)
 {
 	uint32_t t = *a;
@@ -126,6 +136,7 @@ void swap(uint32_t *a, uint32_t *b)
 // Assuming A has high entropy only do ops that retain entropy
 // even if B is low entropy
 // (IE don't do A&B)
+static
 void merge(uint32_t *a, uint32_t b, uint32_t r)
 {
 	switch (r % 4)
@@ -138,6 +149,7 @@ void merge(uint32_t *a, uint32_t b, uint32_t r)
 }
 
 // Random math between two input values
+static
 uint32_t math(uint32_t a, uint32_t b, uint32_t r)
 {       
 	switch (r % 11)
@@ -157,13 +169,6 @@ uint32_t math(uint32_t a, uint32_t b, uint32_t r)
 	}
 	return 0;
 }
-
-// Helper to get the next value in the per-program random sequence
-#define rnd()    (kiss99(&prog_rnd))
-// Helper to pick a random mix location
-#define mix_src() (rnd() % PROGPOW_REGS)
-// Helper to access the sequence of mix destinations
-#define mix_dst() (mix_seq[(mix_seq_cnt++)%PROGPOW_REGS])
 
 }  // namespace
 
@@ -281,19 +286,6 @@ hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) no
     return hash1024{{n1, n2}};    
 }
 
-/// Calculates a full l1 dataset item
-///
-/// This consist of one 32-bit items produced by calculate_dataset_item_partial().
-hash32 calculate_L1dataset_item(const epoch_context& context, uint32_t index) noexcept
-{
-    uint32_t idx = index/2;
-    const hash2048 dag = calculate_dataset_item_progpow(context, (idx*2+101));
-    uint64_t data = dag.words[0];
-    hash32 ret;
-    ret.hwords[0] = (uint32_t)((index%2)?(data>>32):(data));
-    return ret;
-}
-
 /// Calculates a full dataset item for progpow
 ///
 /// This consist of four 512-bit items produced by calculate_dataset_item_partial().
@@ -306,11 +298,24 @@ hash2048 calculate_dataset_item_progpow(const epoch_context& context, uint32_t i
     return hash2048{{n1.hashes[0], n1.hashes[1], n2.hashes[0], n2.hashes[1]}};
 }
 
+/// Calculates a full l1 dataset item
+///
+/// This consist of one 32-bit items produced by calculate_dataset_item_partial().
+uint32_t calculate_L1dataset_item(const epoch_context& context, uint32_t index) noexcept
+{
+    uint32_t idx = index/2;
+    const hash2048 dag = calculate_dataset_item_progpow(context, (idx*2+101));
+    uint64_t data = dag.words[0];
+    uint32_t ret;
+    ret = (uint32_t)((index%2)?(data>>32):(data));
+    return ret;
+}
+
 namespace
 {
 using lookup_fn = hash1024 (*)(const epoch_context&, uint32_t);
 using lookup_fn2 = hash2048 (*)(const epoch_context&, uint32_t);
-using lookup_fn_l1 = hash32(*)(const epoch_context&, uint32_t);
+using lookup_fn_l1 = uint32_t(*)(const epoch_context&, uint32_t);
 
 inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
 {
@@ -387,25 +392,27 @@ inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
     return keccak256(final_data, sizeof(final_data));
 }
 
-void progPowInit(kiss99_t& prog_rnd, uint64_t prog_seed, uint32_t mix_seq[PROGPOW_REGS])
+static
+void progPowInit(kiss99_t* prog_rnd, uint64_t prog_seed, uint32_t mix_seq[PROGPOW_REGS])
 {
     uint32_t fnv_hash = 0x811c9dc5;
-    prog_rnd.z = fnv1a(&fnv_hash, (uint32_t)prog_seed);
-    prog_rnd.w = fnv1a(&fnv_hash, (uint32_t)(prog_seed >> 32));
-    prog_rnd.jsr = fnv1a(&fnv_hash, (uint32_t)prog_seed);
-    prog_rnd.jcong = fnv1a(&fnv_hash, (uint32_t)(prog_seed >> 32));
+    prog_rnd->z = fnv1a(&fnv_hash, (uint32_t)prog_seed);
+    prog_rnd->w = fnv1a(&fnv_hash, (uint32_t)(prog_seed >> 32));
+    prog_rnd->jsr = fnv1a(&fnv_hash, (uint32_t)prog_seed);
+    prog_rnd->jcong = fnv1a(&fnv_hash, (uint32_t)(prog_seed >> 32));
     // Create a random sequence of mix destinations for merge()
     // guaranteeing every location is touched once
-    // Uses Fisher�CYates shuffle
+    // Uses Fisher Yates shuffle
     for (uint32_t i = 0; i < PROGPOW_REGS; i++)
         mix_seq[i] = i;
     for (uint32_t i = PROGPOW_REGS - 1; i > 0; i--)
     {
-        uint32_t j = kiss99(&prog_rnd) % (i + 1);
+        uint32_t j = kiss99(prog_rnd) % (i + 1);
         swap(&(mix_seq[i]), &(mix_seq[j]));
     }    
 }
 
+static
 void progPowLoop(
     const epoch_context& context,
     const uint64_t prog_seed,
@@ -418,7 +425,7 @@ void progPowLoop(
     // Global offset uses mix[0] to guarantee it depends on the load result
     uint32_t offset_g = mix[loop%PROGPOW_LANES][0] % (uint32_t)(context.full_dataset_num_items/2);
 
-    const hash2048 data256 = fix_endianness32(g_lut(context, offset_g));
+    hash2048 data256 = fix_endianness32(g_lut(context, offset_g));
     
     // Lanes can execute in parallel and will be convergent
     for (uint32_t l = 0; l < PROGPOW_LANES; l++)
@@ -430,7 +437,7 @@ void progPowLoop(
         uint32_t mix_seq[PROGPOW_REGS];
         int mix_seq_cnt = 0;
         kiss99_t prog_rnd;
-        progPowInit(prog_rnd, prog_seed, mix_seq);
+        progPowInit(&prog_rnd, prog_seed, mix_seq);
 
         uint32_t offset, data32;
         //int max_i = max(PROGPOW_CNT_CACHE, PROGPOW_CNT_MATH);
@@ -446,7 +453,7 @@ void progPowLoop(
                 // Cached memory access
                 // lanes access random location
                 offset = mix[l][mix_src()] % (uint32_t)PROGPOW_CACHE_WORDS;
-                data32 = fix_endianness(c_lut(context, offset).hwords[0]);
+                data32 = fix_endianness(c_lut(context, offset));
                 merge(&(mix[l][mix_dst()]), data32, rnd());
             }
             if (i < PROGPOW_CNT_MATH)
@@ -461,7 +468,6 @@ void progPowLoop(
         merge(&(mix[l][0]), (uint32_t)data64, rnd());
         merge(&(mix[l][mix_dst()]), (uint32_t)(data64 >> 32), rnd());
     }
-    return;
 }
 
 inline hash256 hash_kernel(
@@ -494,8 +500,8 @@ inline hash256 hash_kernel(
     return fix_endianness32(mix_hash);
 }
 
-inline hash256 progpow_kernel(
-    const epoch_context& context, const uint64_t& seed, lookup_fn2 g_lut, lookup_fn_l1 c_lut) noexcept
+hash256 progpow_kernel( const epoch_context& context, const uint64_t& seed,
+  lookup_fn2 g_lut, lookup_fn_l1 c_lut) noexcept
 {
     uint32_t mix[PROGPOW_LANES][PROGPOW_REGS];
     for(int i=0;i<PROGPOW_LANES;i++)for(int j=0;j<PROGPOW_REGS;j++)mix[i][j]=0;
@@ -560,9 +566,8 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
 
 result progpow(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
 {
-    uint32_t result[4];
-    for (int i = 0; i < 4; i++)
-        result[i] = 0;
+    uint32_t result[4] = {0};
+
     uint64_t seed = keccak_f800(header_hash, nonce, result);
 
     const hash256 mix_hash = progpow_kernel(context, seed, calculate_dataset_item_progpow, calculate_L1dataset_item);
@@ -588,8 +593,8 @@ result progpow(const epoch_context_full& context, const hash256& header_hash, ui
     static const auto lazy_l1_lookup = [](const epoch_context& context, uint32_t index) noexcept
     {
         auto full_l1_dataset = static_cast<const epoch_context_full&>(context).full_l1_dataset;
-        hash32& item = full_l1_dataset[index];
-        if (item.hwords[0] == 0)
+        uint32_t item = full_l1_dataset[index].hwords[0];
+        if (item == 0)
         {
             // TODO: Copy elision here makes it thread-safe?
             item = calculate_L1dataset_item(context, index);
@@ -671,10 +676,10 @@ uint64_t search(const epoch_context_full& context, const hash256& header_hash,
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r;
-		if (context.epoch_number < PROGPOW_EPOCH_START) {
-		    r = hash(context, header_hash, nonce);
-		} else {
+		if (context.epoch_number > PROGPOW_EPOCH_START) {
 		    r = progpow(context, header_hash, nonce);
+		} else {
+		    r = hash(context, header_hash, nonce);
 		}
         if (is_less_or_equal(r.final_hash, boundary))
             return nonce;
@@ -712,8 +717,7 @@ int ethash_calculate_light_cache_num_items(int epoch_number) noexcept
 
 int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
 {
-    static int item_size = sizeof(hash2048);
-    if (epoch_number < PROGPOW_EPOCH_START) item_size = sizeof(hash1024);
+    static int item_size = sizeof(hash1024);
     static int num_items_init = full_dataset_init_size / item_size;
     static int num_items_growth = full_dataset_growth / item_size;
     assert(full_dataset_init_size % item_size == 0);
@@ -753,11 +757,11 @@ epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
         // TODO: This can be "optimized" by doing single allocation for light and full caches.
         const size_t num_items = static_cast<size_t>(full_dataset_num_items);
         const size_t num_l1_items = static_cast<size_t>(full_l1_dataset_num_items);
-      if (epoch_number < PROGPOW_EPOCH_START) {
-        full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash1024)));
-      } else {
+      if (epoch_number > PROGPOW_EPOCH_START) {
         full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash2048)));
         full_l1_dataset = static_cast<hash32*>(std::calloc(num_l1_items, sizeof(hash32)));
+      } else {
+        full_dataset = static_cast<hash2048*>(std::calloc(num_items, sizeof(hash1024)));
       }
         if (!full_dataset)
         {
@@ -799,6 +803,10 @@ void ethash_destroy_epoch_context(epoch_context* context) noexcept
 {
     context->~epoch_context();
     std::free(context);
+}
+
+void test_progpow_init2(uint8_t out[16], uint64_t seed, uint32_t m[16]) {
+    progPowInit((kiss99_t*)out, seed, m);
 }
 
 }  // extern "C"
