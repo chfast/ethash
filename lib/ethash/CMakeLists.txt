@@ -29,8 +29,8 @@ add_library(
     primes.c
     progpow-internal.hpp
     progpow.cpp
+    ${include_dir}/ethash/ubqhash.hpp
     ubqhash.cpp
-    ubqhash-internal.hpp
 )
 
 target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)

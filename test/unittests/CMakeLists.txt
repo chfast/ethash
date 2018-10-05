@@ -17,6 +17,7 @@ add_executable(
     test_managed.cpp
     test_primes.cpp
     test_progpow.cpp
+    test_ubqhash.cpp
 )
 
 target_link_libraries(ethash-test PRIVATE ethash GTest::gtest GTest::main)
