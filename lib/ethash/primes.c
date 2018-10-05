@@ -5,15 +5,10 @@
 
 #include "primes.h"
 
-static int is_prime(int number)
+/** Checks if the number is prime. Requires the number to be > 2 and odd. */
+static int is_odd_prime(int number)
 {
     int d;
-
-    if (number <= 1)
-        return 0;
-
-    if (number % 2 == 0 && number > 2)
-        return 0;
 
     /* Check factors up to sqrt(number).
        To avoid computing sqrt, compare d*d <= number with 64-bit precision. */
@@ -41,7 +36,7 @@ int ethash_find_largest_prime(int upper_bound)
         --n;
 
     /* Test descending odd numbers. */
-    while (!is_prime(n))
+    while (!is_odd_prime(n))
         n -= 2;
 
     return n;
