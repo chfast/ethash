@@ -36,3 +36,62 @@ TEST(progpow, init)
     std::array<int, 16> expected_sequance{{7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
     EXPECT_EQ(state.index_sequence, expected_sequance);
 }
+
+TEST(progpow, random_math)
+{
+    const std::array<std::pair<uint32_t, uint32_t>, 22> inputs{{
+        {20, 22},
+        {70000, 80000},
+        {70000, 80000},
+        {1, 2},
+        {3, 10000},
+        {3, 0},
+        {3, 6},
+        {3, 6},
+        {3, 6},
+        {0, uint32_t(-1)},
+        {3 << 13, 1 << 5},
+        {22, 20},
+        {80000, 70000},
+        {80000, 70000},
+        {2, 1},
+        {10000, 3},
+        {0, 3},
+        {6, 3},
+        {6, 3},
+        {6, 3},
+        {0, uint32_t(-1)},
+        {3 << 13, 1 << 5},
+
+    }};
+    const std::array<uint32_t, 22> expected_results{{
+        42,
+        1305032704,
+        1,
+        1,
+        196608,
+        3,
+        2,
+        7,
+        5,
+        32,
+        3,
+        42,
+        1305032704,
+        1,
+        1,
+        80000,
+        0,
+        2,
+        7,
+        5,
+        32,
+        3,
+
+    }};
+
+    std::array<uint32_t, 22> results;
+    for (uint32_t i = 0; i < results.size(); ++i)
+        results[i] = progpow::random_math(inputs[i].first, inputs[i].second, i);
+    EXPECT_EQ(results, expected_results);
+}

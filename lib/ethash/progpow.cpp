@@ -12,9 +12,8 @@
 
 namespace progpow
 {
-
 hash256 keccak_progpow_256(
-    const hash256 &header_hash, uint64_t nonce, const uint32_t extra[4]) noexcept
+    const hash256& header_hash, uint64_t nonce, const uint32_t extra[4]) noexcept
 {
     static constexpr size_t num_words = sizeof(header_hash.hwords) / sizeof(header_hash.hwords[0]);
 
@@ -42,7 +41,7 @@ hash256 keccak_progpow_256(
 }
 
 uint64_t keccak_progpow_64(
-    const hash256 &header_hash, uint64_t nonce, const uint32_t *extra) noexcept
+    const hash256& header_hash, uint64_t nonce, const uint32_t* extra) noexcept
 {
     const hash256 h = keccak_progpow_256(header_hash, nonce, extra);
     return (uint64_t(h.hwords[0]) << 32) | h.hwords[1];
@@ -71,6 +70,37 @@ mix_state init(uint64_t seed) noexcept
         std::swap(state.index_sequence[size_t(i)], state.index_sequence[j]);
     }
     return state;
+}
+
+ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
+uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
+{
+    switch (selector % 11)
+    {
+    default:
+    case 0:
+        return a + b;
+    case 1:
+        return a * b;
+    case 2:
+        return mul_hi32(a, b);
+    case 3:
+        return std::min(a, b);
+    case 4:
+        return rotl32(a, b);
+    case 5:
+        return rotr32(a, b);
+    case 6:
+        return a & b;
+    case 7:
+        return a | b;
+    case 8:
+        return a ^ b;
+    case 9:
+        return clz32(a) + clz32(b);
+    case 10:
+        return popcount32(a) + popcount32(b);
+    }
 }
 
 }  // namespace progpow
