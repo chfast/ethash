@@ -25,7 +25,7 @@ IncludeCategories:
     Priority:        1
   - Regex:           '^<boost.*'
     Priority:        98
-  - Regex:           '^<.*\.h>'
+  - Regex:           '^<.*\.(h|hpp)>'
     Priority:        2
   - Regex:           '^<.*'
     Priority:        99

@@ -4,11 +4,15 @@
 
 #pragma once
 
+#include "kiss99.h"
 #include <ethash/hash_types.hpp>
+#include <array>
 
 namespace progpow
 {
 using namespace ethash;
+
+static constexpr int num_regs = 16;
 
 /// A variant of Keccak hash function for ProgPoW.
 ///
@@ -28,5 +32,14 @@ hash256 keccak_progpow_256(
 /// The same as keccak_progpow_256() but returns only 64-bit output.
 uint64_t keccak_progpow_64(
     const hash256& header_hash, uint64_t nonce, const uint32_t* extra) noexcept;
+
+
+struct mix_state
+{
+    kiss99_state rng_state;
+    std::array<int, num_regs> index_sequence;
+};
+
+mix_state init(uint64_t seed) noexcept;
 
 }  // namespace progpow

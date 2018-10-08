@@ -23,3 +23,16 @@ TEST(progpow, keccak_progpow_64)
     const auto h2 = progpow::keccak_progpow_64(header_hash_2, 0x1ffffffff, extra_2);
     EXPECT_EQ(h2, 0x4e7abe6fa3fc5004);
 }
+
+TEST(progpow, init)
+{
+    auto state = progpow::init(0);
+
+    EXPECT_EQ(state.rng_state.w, 59330765);
+    EXPECT_EQ(state.rng_state.z, 1326152587);
+    EXPECT_EQ(state.rng_state.jsr, 370724217);
+    EXPECT_EQ(state.rng_state.jcong, 2204422678);
+
+    std::array<int, 16> expected_sequance{{7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
+    EXPECT_EQ(state.index_sequence, expected_sequance);
+}

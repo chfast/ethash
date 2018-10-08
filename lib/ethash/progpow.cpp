@@ -4,14 +4,17 @@
 
 #include "progpow-internal.hpp"
 
+#include "bit_manipulation.h"
 #include "endianness.hpp"
+#include "kiss99.h"
 
 #include <ethash/keccak.h>
 
 namespace progpow
 {
+
 hash256 keccak_progpow_256(
-    const hash256& header_hash, uint64_t nonce, const uint32_t extra[4]) noexcept
+    const hash256 &header_hash, uint64_t nonce, const uint32_t extra[4]) noexcept
 {
     static constexpr size_t num_words = sizeof(header_hash.hwords) / sizeof(header_hash.hwords[0]);
 
@@ -43,6 +46,31 @@ uint64_t keccak_progpow_64(
 {
     const hash256 h = keccak_progpow_256(header_hash, nonce, extra);
     return (uint64_t(h.hwords[0]) << 32) | h.hwords[1];
+}
+
+mix_state init(uint64_t seed) noexcept
+{
+    const uint32_t seed_lo = static_cast<uint32_t>(seed);
+    const uint32_t seed_hi = static_cast<uint32_t>(seed >> 32);
+
+    const uint32_t z = fnv1a(0x811c9dc5, seed_lo);
+    const uint32_t w = fnv1a(z, seed_hi);
+    const uint32_t jsr = fnv1a(w, seed_lo);
+    const uint32_t jcong = fnv1a(jsr, seed_hi);
+    mix_state state{{z, w, jsr, jcong}, {{}}};
+
+    // Create a random sequence of mix destinations for merge()
+    // guaranteeing every location is touched once.
+    // Uses Fisher–Yates shuffle.
+    for (int i = 0; i < num_regs; ++i)
+        state.index_sequence[size_t(i)] = i;
+
+    for (int i = num_regs - 1; i > 0; --i)
+    {
+        uint32_t j = kiss99_generate(&state.rng_state) % uint32_t(i + 1);
+        std::swap(state.index_sequence[size_t(i)], state.index_sequence[j]);
+    }
+    return state;
 }
 
 }  // namespace progpow
