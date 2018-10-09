@@ -12,6 +12,7 @@ environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 15 2017 Win64"
+      CONFIGURATION: Debug
 
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 15 2017"
@@ -27,12 +28,10 @@ install:
 before_build: |
   if not exist build mkdir build
   cd build
-  cmake -G "%GENERATOR%" ..
+  cmake -G "%GENERATOR%" .. -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
 
-build:
-  project: c:/projects/ethash/build/ethash.sln
-  parallel: true
-  verbosity: minimal
+build_script: |
+  cmake --build . --config %CONFIGURATION%
 
-after_build: |
-  C:\projects\ethash\build\test\unittests\Release\ethash-test.exe
+test_script: |
+  if %CONFIGURATION%==Release C:\projects\ethash\build\test\unittests\%CONFIGURATION%\ethash-test.exe
