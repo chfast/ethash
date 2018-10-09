@@ -8,7 +8,10 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
+#define NOEXCEPT noexcept
 extern "C" {
+#else
+#define NOEXCEPT
 #endif
 
 /**
@@ -46,14 +49,15 @@ struct kiss99_state
  *
  * @return The initialized KISS state.
  */
-struct kiss99_state kiss99_init();
+struct kiss99_state kiss99_init() NOEXCEPT;
 
 /**
+ * Generate new number from KISS generator.
  *
- * @param state
- * @return
+ * @param state  The KISS state.
+ * @return       The generated number.
  */
-uint32_t kiss99_generate(struct kiss99_state* state);
+uint32_t kiss99_generate(struct kiss99_state* state) NOEXCEPT;
 
 /** @} */
 
