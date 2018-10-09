@@ -37,7 +37,7 @@ uint64_t keccak_progpow_64(
 struct mix_state
 {
     kiss99_state rng_state;
-    std::array<int, num_regs> index_sequence;
+    std::array<uint32_t, num_regs> index_sequence;  // TODO: Try size_t and uint8_t.
 };
 
 mix_state init(uint64_t seed) noexcept;

@@ -33,7 +33,8 @@ TEST(progpow, init)
     EXPECT_EQ(state.rng_state.jsr, 370724217);
     EXPECT_EQ(state.rng_state.jcong, 2204422678);
 
-    std::array<int, 16> expected_sequance{{7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
+    const std::array<uint32_t, 16> expected_sequance{
+        {7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
     EXPECT_EQ(state.index_sequence, expected_sequance);
 }
 

@@ -61,13 +61,13 @@ mix_state init(uint64_t seed) noexcept
     // Create a random sequence of mix destinations for merge()
     // guaranteeing every location is touched once.
     // Uses Fisher–Yates shuffle.
-    for (int i = 0; i < num_regs; ++i)
-        state.index_sequence[size_t(i)] = i;
+    for (uint32_t i = 0; i < num_regs; ++i)
+        state.index_sequence[i] = i;
 
-    for (int i = num_regs - 1; i > 0; --i)
+    for (uint32_t i = num_regs; i > 1; --i)
     {
-        uint32_t j = kiss99_generate(&state.rng_state) % uint32_t(i + 1);
-        std::swap(state.index_sequence[size_t(i)], state.index_sequence[j]);
+        uint32_t j = kiss99_generate(&state.rng_state) % i;
+        std::swap(state.index_sequence[i - 1], state.index_sequence[j]);
     }
     return state;
 }
