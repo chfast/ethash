@@ -15,8 +15,11 @@ include(defaults/HunterCacheServers)
 
 cable_configure_toolchain(DEFAULT cxx11)
 
-set(HUNTER_CONFIGURATION_TYPES Release
-    CACHE STRING "Build type of the Hunter packages")
+if(NOT WIN32)
+    # Outside of Windows build only Release packages.
+    set(HUNTER_CONFIGURATION_TYPES Release
+        CACHE STRING "Build type of the Hunter packages")
+endif()
 
 HunterGate(
     URL "https://github.com/ruslo/hunter/archive/v0.20.35.tar.gz"
@@ -26,7 +29,7 @@ HunterGate(
 project(ethash)
 set(PROJECT_VERSION 0.4.0.dev0)
 
-cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug Release RelWithDebInfo)
+cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Release RelWithDebInfo Debug)
 
 cable_configure_compiler(NO_STACK_PROTECTION)
 if(CABLE_COMPILER_GNULIKE)
