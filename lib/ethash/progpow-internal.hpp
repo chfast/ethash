@@ -5,7 +5,7 @@
 #pragma once
 
 #include "kiss99.h"
-#include <ethash/hash_types.hpp>
+#include <ethash/ethash.hpp>
 #include <array>
 
 namespace progpow
@@ -13,6 +13,8 @@ namespace progpow
 using namespace ethash;
 
 static constexpr int num_regs = 16;
+static constexpr size_t l1_cache_size = 16 * 1024;
+static constexpr size_t l1_cache_num_items = l1_cache_size / sizeof(uint32_t);
 
 /// A variant of Keccak hash function for ProgPoW.
 ///
@@ -45,5 +47,7 @@ mix_state init(uint64_t seed) noexcept;
 uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept;
 
 void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept;
+
+void build_l1_cache(const epoch_context& context, uint32_t cache[l1_cache_num_items]) noexcept;
 
 }  // namespace progpow

@@ -110,3 +110,21 @@ TEST(progpow, random_merge)
         {33000101, 66003366, 2999975, 4000104, 33000000, 66000000, 3000000, 4000000}};
     EXPECT_EQ(input_a, expected_result);
 }
+
+TEST(progpow, l1_cache)
+{
+    auto context = ethash::create_epoch_context(0);
+    std::array<uint32_t, progpow::l1_cache_num_items> l1_cache;
+    progpow::build_l1_cache(*context, l1_cache.data());
+
+    constexpr auto test_size = 20;
+    std::array<uint32_t, test_size> cache_slice;
+    for (size_t i = 0; i < cache_slice.size(); ++i)
+        cache_slice[i] = l1_cache[i];
+
+    const std::array<uint32_t, test_size> expected{
+        {690150178, 1181503948, 2248155602, 2118233073, 2193871115, 1791778428, 1067701239,
+            724807309, 530799275, 3480325829, 3899029234, 1998124059, 2541974622, 1100859971,
+            1297211151, 3268320000, 2217813733, 2690422980, 3172863319, 2651064309}};
+    EXPECT_EQ(cache_slice, expected);
+}

@@ -6,6 +6,7 @@
 
 #include "bit_manipulation.h"
 #include "endianness.hpp"
+#include "ethash-internal.hpp"
 #include "kiss99.h"
 
 #include <ethash/keccak.h>
@@ -123,6 +124,18 @@ void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
     case 3:
         a = rotr32(a, ((selector >> 16) % 32)) ^ b;
         break;
+    }
+}
+
+void build_l1_cache(const epoch_context& context, uint32_t cache[l1_cache_num_items]) noexcept
+{
+    static constexpr uint32_t num_items = l1_cache_size / sizeof(hash2048);
+    for (uint32_t i = 0; i < num_items; ++i)
+    {
+        auto data = calculate_dataset_item_2048(context, i);
+        static constexpr size_t num_words = sizeof(data) / sizeof(cache[0]);
+        for (size_t j = 0; j < num_words; ++j)
+            cache[i * num_words + j] = le::uint32(data.word32s[j]);
     }
 }
 
