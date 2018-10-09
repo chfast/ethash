@@ -179,7 +179,7 @@ void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noex
 ///
 /// This consist of two 512-bit items produced by calculate_dataset_item_partial().
 /// Here the computation is done interleaved for better performance.
-hash1024 calculate_dataset_item(const epoch_context& context, uint32_t index) noexcept
+hash1024 calculate_dataset_item_1024(const epoch_context& context, uint32_t index) noexcept
 {
     const hash512* const cache = context.light_cache;
 
@@ -276,7 +276,7 @@ inline hash256 hash_kernel(
 result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
 {
     const hash512 seed = hash_seed(header_hash, nonce);
-    const hash256 mix_hash = hash_kernel(context, seed, calculate_dataset_item);
+    const hash256 mix_hash = hash_kernel(context, seed, calculate_dataset_item_1024);
     return {hash_final(seed, mix_hash), mix_hash};
 }
 
@@ -289,7 +289,7 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
         if (item.words[0] == 0)
         {
             // TODO: Copy elision here makes it thread-safe?
-            item = calculate_dataset_item(context, index);
+            item = calculate_dataset_item_1024(context, index);
         }
 
         return item;
@@ -314,7 +314,7 @@ bool verify(const epoch_context& context, const hash256& header_hash, const hash
     if (!is_less_or_equal(hash_final(seed, mix_hash), boundary))
         return false;
 
-    const hash256 expected_mix_hash = hash_kernel(context, seed, calculate_dataset_item);
+    const hash256 expected_mix_hash = hash_kernel(context, seed, calculate_dataset_item_1024);
     return std::memcmp(expected_mix_hash.bytes, mix_hash.bytes, sizeof(mix_hash)) == 0;
 }
 

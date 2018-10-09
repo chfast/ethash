@@ -363,7 +363,7 @@ TEST(ethash, fake_dataset_partial_items)
         const auto full_index = t.index / 2;
         const auto part_index = t.index % 2;
 
-        const auto full_item = calculate_dataset_item(*context, full_index);
+        const auto full_item = calculate_dataset_item_1024(*context, full_index);
         const auto& part_item = full_item.hashes[part_index];
         EXPECT_EQ(to_hex(part_item), t.hash_hex) << "index: " << t.index;
     }
@@ -427,7 +427,7 @@ TEST(ethash, fake_dataset_items)
 
     for (const auto& t : test_cases)
     {
-        const hash1024 item = calculate_dataset_item(*context, t.index);
+        const hash1024 item = calculate_dataset_item_1024(*context, t.index);
         EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
         EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
     }
@@ -493,7 +493,7 @@ TEST(ethash, dataset_items_epoch13)
 
     for (const auto& t : test_cases)
     {
-        const hash1024 item = calculate_dataset_item(*context, t.index);
+        const hash1024 item = calculate_dataset_item_1024(*context, t.index);
         EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
         EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
     }

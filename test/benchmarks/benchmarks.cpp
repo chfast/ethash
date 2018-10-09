@@ -66,17 +66,17 @@ static void light_cache(benchmark::State& state)
 BENCHMARK(light_cache)->Arg(1)->Unit(benchmark::kMillisecond);
 
 
-static void calculate_dataset_item(benchmark::State& state)
+static void ethash_calculate_dataset_item_1024(benchmark::State& state)
 {
     static auto ctx = ethash::create_epoch_context(0);
 
     for (auto _ : state)
     {
-        auto item = ethash::calculate_dataset_item(*ctx, 1234);
+        auto item = ethash::calculate_dataset_item_1024(*ctx, 1234);
         benchmark::DoNotOptimize(item.bytes);
     }
 }
-BENCHMARK(calculate_dataset_item);
+BENCHMARK(ethash_calculate_dataset_item_1024);
 
 
 static void hash(benchmark::State& state)
