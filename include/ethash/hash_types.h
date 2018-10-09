@@ -33,6 +33,14 @@ union ethash_hash1024
     uint8_t bytes[128];
 };
 
+union ethash_hash2048
+{
+    union ethash_hash512 hash512s[4];
+    uint64_t word64s[32];
+    uint32_t word32s[64];
+    uint8_t bytes[256];
+};
+
 #ifdef __cplusplus
 }
 #endif

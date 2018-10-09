@@ -11,4 +11,5 @@ namespace ethash
 using hash256 = ethash_hash256;
 using hash512 = ethash_hash512;
 using hash1024 = ethash_hash1024;
+using hash2048 = ethash_hash2048;
 }  // namespace ethash
