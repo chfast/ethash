@@ -5,26 +5,8 @@
 
 #include <ethash/keccak.h>
 
+#include "support/attributes.h"
 #include <string.h>
-
-#if _MSC_VER || __STDC_VERSION__
-#define INLINE inline
-#else
-#define INLINE
-#endif
-
-#if _MSC_VER
-#define ALWAYS_INLINE __forceinline
-#elif defined(__has_attribute) && __STDC_VERSION__
-#if __has_attribute(always_inline)
-#define ALWAYS_INLINE __attribute__((always_inline))
-#endif
-#endif
-
-#if !defined(ALWAYS_INLINE)
-#define ALWAYS_INLINE
-#endif
-
 
 #if _WIN32
 /* On Windows assume little endian. */
