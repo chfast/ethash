@@ -103,4 +103,27 @@ uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
     }
 }
 
+/// Merge data from `b` and `a`.
+/// Assuming `a` has high entropy, only do ops that retain entropy even if `b`
+/// has low entropy (i.e. do not do `a & b`).
+ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
+void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
+{
+    switch (selector % 4)
+    {
+    case 0:
+        a = (a * 33) + b;
+        break;
+    case 1:
+        a = (a ^ b) * 33;
+        break;
+    case 2:
+        a = rotl32(a, ((selector >> 16) % 32)) ^ b;
+        break;
+    case 3:
+        a = rotr32(a, ((selector >> 16) % 32)) ^ b;
+        break;
+    }
+}
+
 }  // namespace progpow

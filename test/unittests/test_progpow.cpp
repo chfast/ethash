@@ -96,3 +96,17 @@ TEST(progpow, random_math)
         results[i] = progpow::random_math(inputs[i].first, inputs[i].second, i);
     EXPECT_EQ(results, expected_results);
 }
+
+TEST(progpow, random_merge)
+{
+    std::array<uint32_t, 8> input_a{
+        {1000000, 2000000, 3000000, 4000000, 1000000, 2000000, 3000000, 4000000}};
+    const std::array<uint32_t, 8> input_b{{101, 102, 103, 104, 0, 0, 0, 0}};
+
+    for (uint32_t r = 0; r < input_a.size(); ++r)
+        progpow::random_merge(input_a[r], input_b[r], r);
+
+    const std::array<uint32_t, 8> expected_result{
+        {33000101, 66003366, 2999975, 4000104, 33000000, 66000000, 3000000, 4000000}};
+    EXPECT_EQ(input_a, expected_result);
+}

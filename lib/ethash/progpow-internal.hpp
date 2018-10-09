@@ -44,4 +44,6 @@ mix_state init(uint64_t seed) noexcept;
 
 uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept;
 
+void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept;
+
 }  // namespace progpow
