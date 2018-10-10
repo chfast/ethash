@@ -7,8 +7,8 @@
 #include "bit_manipulation.h"
 #include "endianness.hpp"
 #include "primes.h"
+#include "progpow-internal.hpp"
 #include "support/attributes.h"
-
 #include <ethash/keccak.hpp>
 
 #include <cassert>
@@ -136,7 +136,7 @@ epoch_context_full* create_epoch_context(
 
     const int light_cache_num_items = calculate_light_cache_num_items(epoch_number);
     const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
-    const size_t alloc_size = context_alloc_size + light_cache_size;
+    const size_t alloc_size = context_alloc_size + light_cache_size + progpow::l1_cache_size;
 
     char* const alloc_data = static_cast<char*>(std::malloc(alloc_size));
     if (!alloc_data)
@@ -146,11 +146,20 @@ epoch_context_full* create_epoch_context(
     const hash256 epoch_seed = calculate_epoch_seed(epoch_number);
     build_fn(light_cache, light_cache_num_items, epoch_seed);
 
+    // FIXME: Refactor epoch context creation.
+    //        All memory can be allocated as once and l1_cache can point to beginning of the DAG.
+
     const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
+    epoch_context tmp_context{
+        epoch_number, light_cache_num_items, light_cache, nullptr, full_dataset_num_items};
+
+    uint32_t* const l1_cache =
+        reinterpret_cast<uint32_t*>(alloc_data + context_alloc_size + light_cache_size);
+    progpow::build_l1_cache(l1_cache, tmp_context);
+
     hash1024* full_dataset = nullptr;
     if (full)
     {
-        // TODO: This can be "optimized" by doing single allocation for light and full caches.
         const size_t num_items = static_cast<size_t>(full_dataset_num_items);
         full_dataset = static_cast<hash1024*>(std::calloc(num_items, sizeof(hash1024)));
         if (!full_dataset)
@@ -164,6 +173,7 @@ epoch_context_full* create_epoch_context(
         epoch_number,
         light_cache_num_items,
         light_cache,
+        l1_cache,
         full_dataset_num_items,
         full_dataset,
     };

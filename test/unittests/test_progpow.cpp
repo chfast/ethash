@@ -114,13 +114,11 @@ TEST(progpow, random_merge)
 TEST(progpow, l1_cache)
 {
     auto context = ethash::create_epoch_context(0);
-    std::array<uint32_t, progpow::l1_cache_num_items> l1_cache;
-    progpow::build_l1_cache(l1_cache.data(), *context);
 
     constexpr auto test_size = 20;
     std::array<uint32_t, test_size> cache_slice;
     for (size_t i = 0; i < cache_slice.size(); ++i)
-        cache_slice[i] = l1_cache[i];
+        cache_slice[i] = context->l1_cache[i];
 
     const std::array<uint32_t, test_size> expected{
         {690150178, 1181503948, 2248155602, 2118233073, 2193871115, 1791778428, 1067701239,

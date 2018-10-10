@@ -50,6 +50,7 @@ epoch_context_ptr create_epoch_context_mock(int epoch_number)
         epoch_number,
         light_cache_num_items,
         light_cache,
+        nullptr,
         calculate_full_dataset_num_items(epoch_number),
     };
     return {context, ethash_destroy_epoch_context};

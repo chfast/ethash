@@ -30,6 +30,7 @@ struct ethash_epoch_context
     const int epoch_number;
     const int light_cache_num_items;
     const union ethash_hash512* const light_cache;
+    const uint32_t* const l1_cache;
     const int full_dataset_num_items;
 };
 
