@@ -37,7 +37,7 @@ hash256 keccak_progpow_256(
 
     hash256 output;
     for (i = 0; i < num_words; ++i)
-        output.hwords[i] = state[i];
+        output.hwords[i] = le::uint32(state[i]);
     return output;
 }
 
@@ -45,7 +45,8 @@ uint64_t keccak_progpow_64(
     const hash256& header_hash, uint64_t nonce, const uint32_t extra[num_result_words]) noexcept
 {
     const hash256 h = keccak_progpow_256(header_hash, nonce, extra);
-    return (uint64_t(h.hwords[0]) << 32) | h.hwords[1];
+    // FIXME: BE mess.
+    return (uint64_t(le::uint32(h.hwords[0])) << 32) | le::uint32(h.hwords[1]);
 }
 
 mix_state init(uint64_t seed) noexcept

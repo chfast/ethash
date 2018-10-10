@@ -24,6 +24,12 @@ TEST(progpow, keccak_progpow_64)
     EXPECT_EQ(h2, 0xb5434c8218dd8826);
 }
 
+TEST(progpow, keccak_progpow_256)
+{
+    const auto h = progpow::keccak_progpow_256({}, 0, nullptr);
+    EXPECT_EQ(to_hex(h), "5dd431e5fbc604f499bfa0232f45f8f142d0ff5178f539e5a7800bf0643697af");
+}
+
 TEST(progpow, init)
 {
     auto state = progpow::init(0);
