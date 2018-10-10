@@ -16,6 +16,8 @@ static constexpr int num_regs = 16;
 static constexpr size_t l1_cache_size = 16 * 1024;
 static constexpr size_t l1_cache_num_items = l1_cache_size / sizeof(uint32_t);
 
+static constexpr size_t num_result_words = sizeof(hash256) / sizeof(uint32_t);
+
 /// A variant of Keccak hash function for ProgPoW.
 ///
 /// This Keccak hash function uses 800-bit permutation (Keccak-f[800]) with 448 bitrate what

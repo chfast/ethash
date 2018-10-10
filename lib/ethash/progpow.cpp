@@ -14,7 +14,7 @@
 namespace progpow
 {
 hash256 keccak_progpow_256(
-    const hash256& header_hash, uint64_t nonce, const uint32_t extra[4]) noexcept
+    const hash256& header_hash, uint64_t nonce, const uint32_t extra[num_result_words]) noexcept
 {
     static constexpr size_t num_words = sizeof(header_hash.hwords) / sizeof(header_hash.hwords[0]);
 
@@ -29,7 +29,7 @@ hash256 keccak_progpow_256(
 
     if (extra)
     {
-        for (int j = 0; j < 4; ++j)
+        for (size_t j = 0; j < num_result_words; ++j)
             state[i++] = extra[j];
     }
 
@@ -42,7 +42,7 @@ hash256 keccak_progpow_256(
 }
 
 uint64_t keccak_progpow_64(
-    const hash256& header_hash, uint64_t nonce, const uint32_t* extra) noexcept
+    const hash256& header_hash, uint64_t nonce, const uint32_t extra[num_result_words]) noexcept
 {
     const hash256 h = keccak_progpow_256(header_hash, nonce, extra);
     return (uint64_t(h.hwords[0]) << 32) | h.hwords[1];
