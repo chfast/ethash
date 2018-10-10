@@ -105,7 +105,7 @@ static void ethash_calculate_dataset_item_2048(benchmark::State& state)
 BENCHMARK(ethash_calculate_dataset_item_2048);
 
 
-static void hash(benchmark::State& state)
+static void ethash_hash(benchmark::State& state)
 {
     const int block_number = 5000000;
     const ethash::hash256 header_hash =
@@ -117,7 +117,7 @@ static void hash(benchmark::State& state)
     for (auto _ : state)
         ethash::hash(*ctx, header_hash, nonce);
 }
-BENCHMARK(hash);
+BENCHMARK(ethash_hash)->Unit(benchmark::kMicrosecond);
 
 
 static void verify(benchmark::State& state)
