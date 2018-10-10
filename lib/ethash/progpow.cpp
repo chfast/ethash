@@ -127,7 +127,7 @@ void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
     }
 }
 
-void build_l1_cache(const epoch_context& context, uint32_t cache[l1_cache_num_items]) noexcept
+void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& context) noexcept
 {
     static constexpr uint32_t num_items = l1_cache_size / sizeof(hash2048);
     for (uint32_t i = 0; i < num_items; ++i)

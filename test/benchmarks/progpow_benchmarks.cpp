@@ -13,7 +13,7 @@ static void progpow_build_l1_cache(benchmark::State& state)
 
     for (auto _ : state)
     {
-        progpow::build_l1_cache(*context, l1_cache.data());
+        progpow::build_l1_cache(l1_cache.data(), *context);
         benchmark::DoNotOptimize(l1_cache.data());
     }
 }
