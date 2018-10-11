@@ -16,26 +16,21 @@ static constexpr int num_regs = 16;
 static constexpr size_t l1_cache_size = 16 * 1024;
 static constexpr size_t l1_cache_num_items = l1_cache_size / sizeof(uint32_t);
 
-static constexpr size_t num_result_words = sizeof(hash256) / sizeof(uint32_t);
-
 /// A variant of Keccak hash function for ProgPoW.
 ///
-/// This Keccak hash function uses 800-bit permutation (Keccak-f[800]) with 448 bitrate what
-/// gives 176-bit output size. This function over-extends the output and takes 256 bits
-/// of the Keccak state.
-/// It take exactly 448 bits of input (split across 3 arguments) and adds no padding.
+/// This Keccak hash function uses 800-bit permutation (Keccak-f[800]) with 576 bitrate.
+/// It take exactly 576 bits of input (split across 3 arguments) and adds no padding.
 ///
 /// @param header_hash  The 256-bit header hash.
 /// @param nonce        The 64-bit nonce.
-/// @param extra        Additional 128-bits of optional data. If null pointer null bytes are
-///                     used instead.
+/// @param mix_hash     Additional 256-bits of data.
 /// @return             The 256-bit output of the hash function.
 hash256 keccak_progpow_256(
-    const hash256& header_hash, uint64_t nonce, const uint32_t* extra) noexcept;
+    const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept;
 
 /// The same as keccak_progpow_256() but returns only 64-bit output.
 uint64_t keccak_progpow_64(
-    const hash256& header_hash, uint64_t nonce, const uint32_t* extra) noexcept;
+    const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept;
 
 
 struct mix_state

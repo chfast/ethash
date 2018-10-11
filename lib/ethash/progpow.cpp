@@ -14,7 +14,7 @@
 namespace progpow
 {
 hash256 keccak_progpow_256(
-    const hash256& header_hash, uint64_t nonce, const uint32_t extra[num_result_words]) noexcept
+    const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
 {
     static constexpr size_t num_words = sizeof(header_hash.hwords) / sizeof(header_hash.hwords[0]);
 
@@ -27,11 +27,8 @@ hash256 keccak_progpow_256(
     state[i++] = static_cast<uint32_t>(nonce);
     state[i++] = static_cast<uint32_t>(nonce >> 32);
 
-    if (extra)
-    {
-        for (size_t j = 0; j < num_result_words; ++j)
-            state[i++] = extra[j];
-    }
+    for (uint32_t mix_word : mix_hash.hwords)
+        state[i++] = mix_word;
 
     ethash_keccakf800(state);
 
@@ -42,9 +39,9 @@ hash256 keccak_progpow_256(
 }
 
 uint64_t keccak_progpow_64(
-    const hash256& header_hash, uint64_t nonce, const uint32_t extra[num_result_words]) noexcept
+    const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
 {
-    const hash256 h = keccak_progpow_256(header_hash, nonce, extra);
+    const hash256 h = keccak_progpow_256(header_hash, nonce, mix_hash);
     // FIXME: BE mess.
     return (uint64_t(le::uint32(h.hwords[0])) << 32) | le::uint32(h.hwords[1]);
 }

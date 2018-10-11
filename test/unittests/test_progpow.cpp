@@ -11,22 +11,23 @@
 
 TEST(progpow, keccak_progpow_64)
 {
-    const uint32_t extra_1[progpow::num_result_words] = {};
-    const auto h0 = progpow::keccak_progpow_64({}, 0, nullptr);
-    const auto h1 = progpow::keccak_progpow_64({}, 0, extra_1);
+    ethash::hash256 extra{};
+    const auto h0 = progpow::keccak_progpow_64({}, 0, {});
+    const auto h1 = progpow::keccak_progpow_64({}, 0, extra);
     EXPECT_EQ(h0, h1);
     EXPECT_EQ(h0, 0xe531d45df404c6fb);
 
     const ethash::hash256 header_hash_2 =
         to_hash256("bc544c2baba832600013bd5d1983f592e9557d04b0fb5ef7a100434a5fc8d52a");
-    const uint32_t extra_2[progpow::num_result_words] = {1, 2, 3, 4, 5, 6, 7, 8};
-    const auto h2 = progpow::keccak_progpow_64(header_hash_2, 0x1ffffffff, extra_2);
+    for (uint32_t i = 0; i < 8; ++i)
+        extra.hwords[i] = i + 1;
+    const auto h2 = progpow::keccak_progpow_64(header_hash_2, 0x1ffffffff, extra);
     EXPECT_EQ(h2, 0xb5434c8218dd8826);
 }
 
 TEST(progpow, keccak_progpow_256)
 {
-    const auto h = progpow::keccak_progpow_256({}, 0, nullptr);
+    const auto h = progpow::keccak_progpow_256({}, 0, {});
     EXPECT_EQ(to_hex(h), "5dd431e5fbc604f499bfa0232f45f8f142d0ff5178f539e5a7800bf0643697af");
 }
 
