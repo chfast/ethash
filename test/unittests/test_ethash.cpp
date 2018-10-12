@@ -252,7 +252,14 @@ TEST(ethash, find_epoch_number_sequential_gap)
 
 TEST(ethash, find_epoch_number_descending)
 {
-    for (int i = 2050; i >= 0; --i)
+    for (int i = 2050; i >= 2000; --i)
+    {
+        auto seed = calculate_epoch_seed(i);
+        auto e = find_epoch_number(seed);
+        EXPECT_EQ(e, i);
+    }
+
+    for (int i = 50; i >= 0; --i)
     {
         auto seed = calculate_epoch_seed(i);
         auto e = find_epoch_number(seed);
