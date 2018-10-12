@@ -276,19 +276,14 @@ jobs:
             qemu-ppc64 test/unittests/ethash-test --gtest_filter='-*_multithreaded.*'
 
 
-  macos-xcode93-tsan:
+  macos-xcode-tsan:
     <<: *macos-defaults
     environment:
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
     macos:
-      xcode: "9.3.0"
-
-  macos-xcode90:
-    <<: *macos-defaults
-    macos:
-      xcode: "9.0"
+      xcode: "10.0.0"
 
   macos-xcode83:
     <<: *macos-defaults
@@ -309,6 +304,5 @@ workflows:
       - linux-32bit-ubsan
       - mips64
       - powerpc64
-      - macos-xcode93-tsan
-      - macos-xcode90
+      - macos-xcode-tsan
       - macos-xcode83
