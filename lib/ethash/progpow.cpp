@@ -71,7 +71,7 @@ mix_state init(uint64_t seed) noexcept
     return state;
 }
 
-ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
+NO_SANITIZE("unsigned-integer-overflow")
 uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
 {
     switch (selector % 11)
@@ -105,7 +105,7 @@ uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
 /// Merge data from `b` and `a`.
 /// Assuming `a` has high entropy, only do ops that retain entropy even if `b`
 /// has low entropy (i.e. do not do `a & b`).
-ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
+NO_SANITIZE("unsigned-integer-overflow")
 void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
 {
     switch (selector % 4)

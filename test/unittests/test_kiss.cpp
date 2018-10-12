@@ -17,7 +17,7 @@
 #define KISS ((MWC ^ CONG) + SHR3)
 static unsigned z = 362436069, w = 521288629, jsr = 123456789, jcong = 380116160;
 
-ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
+NO_SANITIZE("unsigned-integer-overflow")
 static unsigned kiss_reference()
 {
     return KISS;

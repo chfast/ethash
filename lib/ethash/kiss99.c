@@ -12,7 +12,7 @@ struct kiss99_state kiss99_init()
     return state;
 }
 
-ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
+NO_SANITIZE("unsigned-integer-overflow")
 uint32_t kiss99_generate(struct kiss99_state* state)
 {
     state->z = 36969 * (state->z & 0xffff) + (state->z >> 16);
