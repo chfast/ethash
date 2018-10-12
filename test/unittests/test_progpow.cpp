@@ -37,8 +37,8 @@ TEST(progpow, init)
     const std::array<uint32_t, 16> expected_sequance{
         {7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
     EXPECT_EQ(state.index_sequence, expected_sequance);
-    EXPECT_EQ(kiss99_generate(&state.rng_state), 2062242187);
-    EXPECT_EQ(kiss99_generate(&state.rng_state), 902361097);
+    EXPECT_EQ(state.rng(), 2062242187);
+    EXPECT_EQ(state.rng(), 902361097);
 }
 
 TEST(progpow, random_math)

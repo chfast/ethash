@@ -65,7 +65,7 @@ mix_state init(uint64_t seed) noexcept
 
     for (uint32_t i = num_regs; i > 1; --i)
     {
-        uint32_t j = kiss99_generate(&state.rng_state) % i;
+        uint32_t j = state.rng() % i;
         std::swap(state.index_sequence[i - 1], state.index_sequence[j]);
     }
     return state;

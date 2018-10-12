@@ -26,24 +26,24 @@ static unsigned kiss_reference()
 
 TEST(kiss99, generate)
 {
-    auto state = kiss99_init();
+    kiss99 rng;
 
-    EXPECT_EQ(kiss99_generate(&state), 769445856);
-    EXPECT_EQ(kiss99_generate(&state), 742012328);
-    EXPECT_EQ(kiss99_generate(&state), 2121196314);
-    EXPECT_EQ(kiss99_generate(&state), 2805620942);
+    EXPECT_EQ(rng(), 769445856);
+    EXPECT_EQ(rng(), 742012328);
+    EXPECT_EQ(rng(), 2121196314);
+    EXPECT_EQ(rng(), 2805620942);
 
     for (int i = 0; i < 100000 - 5; ++i)
-        kiss99_generate(&state);
+        rng();
 
     // The 100000th number.
-    EXPECT_EQ(kiss99_generate(&state), 941074834);
+    EXPECT_EQ(rng(), 941074834);
 }
 
 TEST(kiss99, compare_with_reference)
 {
-    auto state = kiss99_init();
+    kiss99 rng;
 
     for (int i = 0; i < 100000; ++i)
-        EXPECT_EQ(kiss99_generate(&state), kiss_reference());
+        EXPECT_EQ(rng(), kiss_reference());
 }
