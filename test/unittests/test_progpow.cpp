@@ -34,15 +34,11 @@ TEST(progpow, keccak_progpow_256)
 TEST(progpow, init)
 {
     auto state = progpow::init(0);
-
-    EXPECT_EQ(state.rng_state.w, 59330765);
-    EXPECT_EQ(state.rng_state.z, 1326152587);
-    EXPECT_EQ(state.rng_state.jsr, 370724217);
-    EXPECT_EQ(state.rng_state.jcong, 2204422678);
-
     const std::array<uint32_t, 16> expected_sequance{
         {7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
     EXPECT_EQ(state.index_sequence, expected_sequance);
+    EXPECT_EQ(kiss99_generate(&state.rng_state), 2062242187);
+    EXPECT_EQ(kiss99_generate(&state.rng_state), 902361097);
 }
 
 TEST(progpow, random_math)
