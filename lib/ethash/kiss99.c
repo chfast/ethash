@@ -4,13 +4,7 @@
  */
 
 #include "kiss99.h"
-
-#if __clang__
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW \
-    __attribute__((no_sanitize("unsigned-integer-overflow")))
-#else
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
-#endif
+#include "support/attributes.h"
 
 struct kiss99_state kiss99_init()
 {

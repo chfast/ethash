@@ -6,15 +6,9 @@
 #pragma once
 
 #include "builtins.h"
+#include "support/attributes.h"
 
 #include <stdint.h>
-
-#if __clang__
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW \
-    __attribute__((no_sanitize("unsigned-integer-overflow")))
-#else
-#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
-#endif
 
 #ifdef __cplusplus
 extern "C" {

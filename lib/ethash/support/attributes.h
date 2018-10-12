@@ -3,6 +3,8 @@
  * Licensed under the Apache License, Version 2.0. See the LICENSE file.
  */
 
+#pragma once
+
 #if _MSC_VER || __STDC_VERSION__
 #define INLINE inline
 #else
@@ -19,4 +21,11 @@
 
 #if !defined(ALWAYS_INLINE)
 #define ALWAYS_INLINE
+#endif
+
+#if __clang__
+#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW \
+    __attribute__((no_sanitize("unsigned-integer-overflow")))
+#else
+#define ATTRIBUTE_NO_SANITIZE_UNSIGNED_INTEGER_OVERFLOW
 #endif
