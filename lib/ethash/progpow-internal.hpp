@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "kiss99.h"
+#include "kiss99.hpp"
 #include <ethash/ethash.hpp>
 #include <array>
 

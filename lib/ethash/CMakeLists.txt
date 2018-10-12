@@ -22,7 +22,7 @@ add_library(
     keccak.c
     keccakf800.c
     keccakf1600.c
-    kiss99.h
+    kiss99.hpp
     primes.h
     primes.c
     progpow-internal.hpp

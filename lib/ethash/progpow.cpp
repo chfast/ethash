@@ -7,7 +7,7 @@
 #include "bit_manipulation.h"
 #include "endianness.hpp"
 #include "ethash-internal.hpp"
-#include "kiss99.h"
+#include "kiss99.hpp"
 
 #include <ethash/keccak.h>
 

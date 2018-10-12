@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
 #include <ethash/bit_manipulation.h>
-#include <ethash/kiss99.h>
+#include <ethash/kiss99.hpp>
 
 #include <gtest/gtest.h>
 
