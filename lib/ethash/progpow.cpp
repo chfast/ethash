@@ -46,29 +46,26 @@ uint64_t keccak_progpow_64(
     return (uint64_t(le::uint32(h.hwords[0])) << 32) | le::uint32(h.hwords[1]);
 }
 
-mix_state init(uint64_t seed) noexcept
+mix_rng_state::mix_rng_state(uint64_t seed) noexcept
 {
     const uint32_t seed_lo = static_cast<uint32_t>(seed);
     const uint32_t seed_hi = static_cast<uint32_t>(seed >> 32);
 
-    const uint32_t z = fnv1a(0x811c9dc5, seed_lo);
-    const uint32_t w = fnv1a(z, seed_hi);
-    const uint32_t jsr = fnv1a(w, seed_lo);
-    const uint32_t jcong = fnv1a(jsr, seed_hi);
-    mix_state state{{z, w, jsr, jcong}, {{}}};
+    uint32_t z = fnv1a(0x811c9dc5, seed_lo);
+    uint32_t w = fnv1a(z, seed_hi);
+    uint32_t jsr = fnv1a(w, seed_lo);
+    uint32_t jcong = fnv1a(jsr, seed_hi);
+
+    rng = kiss99(z, w, jsr, jcong);
 
     // Create a random sequence of mix destinations for merge()
     // guaranteeing every location is touched once.
     // Uses Fisher–Yates shuffle.
     for (uint32_t i = 0; i < num_regs; ++i)
-        state.index_sequence[i] = i;
+        index_sequence[i] = i;
 
     for (uint32_t i = num_regs; i > 1; --i)
-    {
-        uint32_t j = state.rng() % i;
-        std::swap(state.index_sequence[i - 1], state.index_sequence[j]);
-    }
-    return state;
+        std::swap(index_sequence[i - 1], index_sequence[rng() % i]);
 }
 
 NO_SANITIZE("unsigned-integer-overflow")

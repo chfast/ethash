@@ -31,14 +31,17 @@ TEST(progpow, keccak_progpow_256)
     EXPECT_EQ(to_hex(h), "5dd431e5fbc604f499bfa0232f45f8f142d0ff5178f539e5a7800bf0643697af");
 }
 
-TEST(progpow, init)
+TEST(progpow, mix_rng_state)
 {
-    auto state = progpow::init(0);
-    const std::array<uint32_t, 16> expected_sequance{
-        {7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
-    EXPECT_EQ(state.index_sequence, expected_sequance);
+    progpow::mix_rng_state state{0};
     EXPECT_EQ(state.rng(), 2062242187);
     EXPECT_EQ(state.rng(), 902361097);
+
+
+    const std::array<uint32_t, 16> expected_sequance{
+        {7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
+    for (auto i : expected_sequance)
+        EXPECT_EQ(state.next_index(), i);
 }
 
 TEST(progpow, random_math)

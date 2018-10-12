@@ -32,14 +32,24 @@ hash256 keccak_progpow_256(
 uint64_t keccak_progpow_64(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept;
 
-
-struct mix_state
+/// ProgPoW mix RNG state.
+///
+/// Encapsulates the state of the random number generator used in computing ProgPoW mix.
+/// This includes the state of the KISS99 RNG and the precomputed random permutation of the
+/// sequence of mix item indexes.
+class mix_rng_state
 {
+public:
+    explicit mix_rng_state(uint64_t seed) noexcept;
+
+    uint32_t next_index() noexcept { return index_sequence[(counter++) % num_regs]; }
+
     kiss99 rng;
+
+private:
+    size_t counter = 0;
     std::array<uint32_t, num_regs> index_sequence;  // TODO: Try size_t and uint8_t.
 };
-
-mix_state init(uint64_t seed) noexcept;
 
 uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept;
 
