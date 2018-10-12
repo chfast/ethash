@@ -22,7 +22,6 @@ add_library(
     keccak.c
     keccakf800.c
     keccakf1600.c
-    kiss99.c
     kiss99.h
     primes.h
     primes.c
