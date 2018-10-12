@@ -579,7 +579,7 @@ TEST(ethash, verify_hash)
 
 TEST(ethash, verify_final_hash_only)
 {
-    auto context = create_epoch_context(0);
+    auto& context = get_ethash_epoch_context_0();
     const hash256 header_hash = {};
     const hash256 mix_hash = {};
     uint64_t nonce = 3221208;
@@ -587,16 +587,16 @@ TEST(ethash, verify_final_hash_only)
         to_hash256("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
     EXPECT_TRUE(verify_final_hash(header_hash, mix_hash, nonce, boundary));
-    EXPECT_FALSE(verify(*context, header_hash, mix_hash, nonce, boundary));
+    EXPECT_FALSE(verify(context, header_hash, mix_hash, nonce, boundary));
 }
 
 TEST(ethash, verify_boundary)
 {
-    auto context = create_epoch_context(0);
+    auto& context = get_ethash_epoch_context_0();
     hash256 example_header_hash =
         to_hash256("e74e5e8688d3c6f17885fa5e64eb6718046b57895a2a24c593593070ab71f5fd");
     uint64_t nonce = 6666;
-    auto r = hash(*context, example_header_hash, nonce);
+    auto r = hash(context, example_header_hash, nonce);
     hash256 boundary_eq =
         to_hash256("13c5a668bba6b86ed16098113d9d6a7a5cac1802e9c8f2d57c932d8818375eb7");
 
@@ -613,9 +613,9 @@ TEST(ethash, verify_boundary)
     EXPECT_EQ(r.final_hash, boundary_eq);
     EXPECT_EQ(to_hex(r.final_hash), to_hex(boundary_eq));
 
-    EXPECT_TRUE(verify(*context, example_header_hash, r.mix_hash, nonce, boundary_eq));
-    EXPECT_TRUE(verify(*context, example_header_hash, r.mix_hash, nonce, boundary_gt));
-    EXPECT_FALSE(verify(*context, example_header_hash, r.mix_hash, nonce, boundary_lt));
+    EXPECT_TRUE(verify(context, example_header_hash, r.mix_hash, nonce, boundary_eq));
+    EXPECT_TRUE(verify(context, example_header_hash, r.mix_hash, nonce, boundary_gt));
+    EXPECT_FALSE(verify(context, example_header_hash, r.mix_hash, nonce, boundary_lt));
 }
 
 TEST(ethash_multithreaded, small_dataset)

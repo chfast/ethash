@@ -1,3 +1,4 @@
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
@@ -39,4 +40,10 @@ inline ethash::hash256 to_hash256(const std::string& hex)
 inline bool operator==(const ethash::hash256& a, const ethash::hash256& b) noexcept
 {
     return std::memcmp(a.bytes, b.bytes, sizeof(a)) == 0;
+}
+
+inline const ethash::epoch_context& get_ethash_epoch_context_0() noexcept
+{
+    static ethash::epoch_context_ptr context = ethash::create_epoch_context(0);
+    return *context;
 }
