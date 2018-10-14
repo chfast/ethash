@@ -203,13 +203,14 @@ mix_array init_mix(uint64_t seed)
     return mix;
 }
 
-result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
+result hash(const epoch_context& context, int block_number, const hash256& header_hash,
+    uint64_t nonce) noexcept
 {
     hash256 mix_hash{};
     uint64_t seed = keccak_progpow_64(header_hash, nonce, mix_hash);
 
     auto mix = init_mix(seed);
-    mix_rng_state state{uint64_t(context.epoch_number * epoch_length)};
+    mix_rng_state state{uint64_t(block_number / period_length)};
 
     // execute the randomly generated inner loop
     for (uint32_t i = 0; i < 64; i++)

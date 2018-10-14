@@ -137,7 +137,7 @@ TEST(progpow, hash_null_bytes)
 {
     auto& context = get_ethash_epoch_context_0();
 
-    auto r = progpow::hash(context, {}, 0);
+    auto r = progpow::hash(context, 0, {}, 0);
     auto expected_final_hash = "7d5b1d047bfb2ebeff3f60d6cc935fc1eb882ece1732eb4708425d2f11965535";
     auto expected_mix_hash = "8c091b4eebc51620ca41e2b90a167d378dbfe01c0a255f70ee7004d85a646e17";
     EXPECT_EQ(to_hex(r.final_hash), expected_final_hash);

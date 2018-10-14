@@ -12,6 +12,7 @@ namespace progpow
 {
 using namespace ethash;
 
+static constexpr int period_length = 50;
 static constexpr uint32_t num_regs = 16;
 static constexpr size_t l1_cache_size = 16 * 1024;
 static constexpr size_t l1_cache_num_items = l1_cache_size / sizeof(uint32_t);
@@ -57,6 +58,7 @@ void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept;
 
 void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& context) noexcept;
 
-result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept;
+result hash(const epoch_context& context, int block_number, const hash256& header_hash,
+    uint64_t nonce) noexcept;
 
 }  // namespace progpow
