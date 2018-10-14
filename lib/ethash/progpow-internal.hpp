@@ -48,7 +48,7 @@ public:
 
 private:
     size_t counter = 0;
-    std::array<uint32_t, num_regs> index_sequence;  // TODO: Try size_t and uint8_t.
+    std::array<uint32_t, num_regs> index_sequence;
 };
 
 uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept;

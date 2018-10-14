@@ -20,3 +20,18 @@ static void progpow_build_l1_cache(benchmark::State& state)
     }
 }
 BENCHMARK(progpow_build_l1_cache)->Unit(benchmark::kMillisecond);
+
+static void progpow_mix_rng(benchmark::State& state)
+{
+    progpow::mix_rng_state rng_state{0xff};
+    benchmark::ClobberMemory();
+    for (auto _ : state)
+    {
+        for (size_t x = 0; x < 16; ++x)
+        {
+            auto i = rng_state.next_index();
+            benchmark::DoNotOptimize(i);
+        }
+    }
+}
+BENCHMARK(progpow_mix_rng);
