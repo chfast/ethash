@@ -5,6 +5,7 @@
 #include <ethash/progpow-internal.hpp>
 
 #include "helpers.hpp"
+#include "progpow_test_vectors.hpp"
 
 #include <gtest/gtest.h>
 
@@ -133,13 +134,56 @@ TEST(progpow, l1_cache)
     EXPECT_EQ(cache_slice, expected);
 }
 
-TEST(progpow, hash_null_bytes)
+TEST(progpow, hash)
 {
-    auto& context = get_ethash_epoch_context_0();
+    ethash::epoch_context_ptr context{nullptr, nullptr};
 
-    auto r = progpow::hash(context, 0, {}, 0);
-    auto expected_final_hash = "7d5b1d047bfb2ebeff3f60d6cc935fc1eb882ece1732eb4708425d2f11965535";
-    auto expected_mix_hash = "8c091b4eebc51620ca41e2b90a167d378dbfe01c0a255f70ee7004d85a646e17";
-    EXPECT_EQ(to_hex(r.final_hash), expected_final_hash);
-    EXPECT_EQ(to_hex(r.mix_hash), expected_mix_hash);
+    for (auto& t : progpow_hash_test_cases)
+    {
+        const auto epoch_number = ethash::get_epoch_number(t.block_number);
+        if (!context || context->epoch_number != epoch_number)
+            context = ethash::create_epoch_context(epoch_number);
+
+        const auto header_hash = to_hash256(t.header_hash_hex);
+        const auto nonce = std::stoull(t.nonce_hex, nullptr, 16);
+        const auto result = progpow::hash(*context, t.block_number, header_hash, nonce);
+        EXPECT_EQ(to_hex(result.mix_hash), t.mix_hash_hex);
+        EXPECT_EQ(to_hex(result.final_hash), t.final_hash_hex);
+    }
 }
+
+#if ETHASH_TEST_GENERATION
+TEST(progpow, generate_hash_test_cases)
+{
+    auto context = ethash::create_epoch_context(0);
+
+    auto generate_test_case = [&context](uint64_t i) noexcept
+    {
+        auto n = static_cast<int>(i);
+        auto e = ethash::get_epoch_number(n);
+        if (context->epoch_number != e)
+            context = ethash::create_epoch_context(e);
+
+        uint64_t nonce = i * i * i * 977 + i * i * 997 + i * 1009;
+
+        ethash::hash256 h{};
+        if (i > 0)
+        {
+            size_t s = sizeof(h);
+            size_t num_byte = s - (((i - 1) / 8) % s) - 1;
+            size_t bit = (i - 1) % 8;
+            h.bytes[num_byte] = uint8_t(1 << bit);
+        }
+
+        auto r = progpow::hash(*context, n, h, nonce);
+        std::cout << "{" << i << ", \"" << to_hex(h) << "\", \"" << std::hex << std::setfill('0')
+                  << std::setw(16) << nonce << std::dec << "\", \"" << to_hex(r.mix_hash)
+                  << "\", \"" << to_hex(r.final_hash) << "\"},\n";
+    };
+
+    for (uint64_t i = 0; i < 257; ++i)
+        generate_test_case(i);
+    for (uint64_t i = 100000; i < 100257; ++i)
+        generate_test_case(i);
+}
+#endif
