@@ -141,10 +141,9 @@ void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& con
 
 using mix_array = std::array<std::array<uint32_t, num_regs>, num_lines>;
 
-static void round(const epoch_context& context, uint32_t r, mix_array& mix)
+static void round(
+    const epoch_context& context, uint32_t r, mix_array& mix, const mix_rng_state& state_reference)
 {
-    const uint64_t epoch_block_number = uint64_t(context.epoch_number * epoch_length);
-
     const uint32_t num_items = static_cast<uint32_t>(context.full_dataset_num_items / 2);
     const uint32_t item_index = mix[r % num_lines][0] % num_items;
     const hash2048 item = calculate_dataset_item_2048(context, item_index);
@@ -152,8 +151,7 @@ static void round(const epoch_context& context, uint32_t r, mix_array& mix)
     // Lanes can execute in parallel and will be convergent
     for (size_t l = 0; l < num_lines; l++)
     {
-        // initialize the seed and mix destination sequence
-        mix_rng_state state{epoch_block_number};  // FIXME: Create once.
+        mix_rng_state state{state_reference};
 
         int max_i = std::max(num_cache_accesses, num_math_operations);
         for (int i = 0; i < max_i; i++)
@@ -211,10 +209,11 @@ result hash(const epoch_context& context, const hash256& header_hash, uint64_t n
     uint64_t seed = keccak_progpow_64(header_hash, nonce, mix_hash);
 
     auto mix = init_mix(seed);
+    mix_rng_state state{uint64_t(context.epoch_number * epoch_length)};
 
     // execute the randomly generated inner loop
     for (uint32_t i = 0; i < 64; i++)
-        round(context, i, mix);
+        round(context, i, mix, state);
 
     // Reduce mix data to a single per-lane result
     uint32_t lane_hash[num_lines];
