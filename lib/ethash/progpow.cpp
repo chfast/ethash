@@ -56,7 +56,7 @@ mix_rng_state::mix_rng_state(uint64_t seed) noexcept
     uint32_t jsr = fnv1a(w, seed_lo);
     uint32_t jcong = fnv1a(jsr, seed_hi);
 
-    rng = kiss99(z, w, jsr, jcong);
+    rng = kiss99{z, w, jsr, jcong};
 
     // Create a random sequence of mix destinations for merge()
     // guaranteeing every location is touched once.
