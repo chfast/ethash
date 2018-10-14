@@ -35,3 +35,15 @@ static void progpow_mix_rng(benchmark::State& state)
     }
 }
 BENCHMARK(progpow_mix_rng);
+
+static void progpow_hash(benchmark::State& state)
+{
+    auto context = ethash::create_epoch_context(0);
+
+    for (auto _ : state)
+    {
+        auto h = progpow::hash(*context, {}, 0);
+        benchmark::DoNotOptimize(h);
+    }
+}
+BENCHMARK(progpow_hash)->Unit(benchmark::kMicrosecond);

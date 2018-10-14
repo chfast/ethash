@@ -9,10 +9,14 @@
 #include "ethash-internal.hpp"
 #include "kiss99.hpp"
 
-#include <ethash/keccak.h>
+#include <ethash/keccak.hpp>
 
 namespace progpow
 {
+static constexpr size_t num_lines = 32;
+static constexpr int num_cache_accesses = 8;
+static constexpr int num_math_operations = 8;
+
 hash256 keccak_progpow_256(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
 {
@@ -132,6 +136,104 @@ void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& con
         for (size_t j = 0; j < num_words; ++j)
             cache[i * num_words + j] = le::uint32(data.word32s[j]);
     }
+}
+
+
+using mix_array = std::array<std::array<uint32_t, num_regs>, num_lines>;
+
+static void round(const epoch_context& context, uint32_t r, mix_array& mix)
+{
+    const uint64_t epoch_block_number = uint64_t(context.epoch_number * epoch_length);
+
+    const uint32_t num_items = static_cast<uint32_t>(context.full_dataset_num_items / 2);
+    const uint32_t item_index = mix[r % num_lines][0] % num_items;
+    const hash2048 item = calculate_dataset_item_2048(context, item_index);
+
+    // Lanes can execute in parallel and will be convergent
+    for (size_t l = 0; l < num_lines; l++)
+    {
+        // initialize the seed and mix destination sequence
+        mix_rng_state state{epoch_block_number};  // FIXME: Create once.
+
+        int max_i = std::max(num_cache_accesses, num_math_operations);
+        for (int i = 0; i < max_i; i++)
+        {
+            if (i < num_cache_accesses)
+            {
+                // Cached memory access, lanes access random location.
+                auto src = state.rng() % num_regs;
+                auto dst = state.next_index();
+                auto sel = state.rng();
+                size_t offset = mix[l][src] % l1_cache_num_items;
+                random_merge(mix[l][dst], context.l1_cache[offset], sel);
+            }
+            if (i < num_math_operations)
+            {
+                // Random Math
+                auto src1 = state.rng() % num_regs;
+                auto src2 = state.rng() % num_regs;
+                auto sel1 = state.rng();
+                auto dst = state.next_index();
+                auto sel2 = state.rng();
+                uint32_t data32 = random_math(mix[l][src1], mix[l][src2], sel1);
+                random_merge(mix[l][dst], data32, sel2);
+            }
+        }
+        const uint32_t sel1 = state.rng();
+        const uint32_t dst = state.next_index();
+        const uint32_t sel2 = state.rng();
+        random_merge(mix[l][0], le::uint32(item.word32s[2 * l]), sel1);
+        random_merge(mix[l][dst], le::uint32(item.word32s[2 * l + 1]), sel2);
+    }
+}
+
+mix_array init_mix(uint64_t seed)
+{
+    const uint32_t z = fnv1a(0x811c9dc5, static_cast<uint32_t>(seed));
+    const uint32_t w = fnv1a(z, static_cast<uint32_t>(seed >> 32));
+
+    mix_array mix;
+    for (uint32_t l = 0; l < mix.size(); ++l)
+    {
+        const uint32_t jsr = fnv1a(w, l);
+        const uint32_t jcong = fnv1a(jsr, l);
+        kiss99 rng{z, w, jsr, jcong};
+
+        for (auto& row : mix[l])
+            row = rng();
+    }
+    return mix;
+}
+
+result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
+{
+    hash256 mix_hash{};
+    uint64_t seed = keccak_progpow_64(header_hash, nonce, mix_hash);
+
+    auto mix = init_mix(seed);
+
+    // execute the randomly generated inner loop
+    for (uint32_t i = 0; i < 64; i++)
+        round(context, i, mix);
+
+    // Reduce mix data to a single per-lane result
+    uint32_t lane_hash[num_lines];
+    for (size_t l = 0; l < num_lines; l++)
+    {
+        lane_hash[l] = 0x811c9dc5;
+        for (uint32_t i = 0; i < num_regs; i++)
+            lane_hash[l] = fnv1a(lane_hash[l], mix[l][i]);
+    }
+    // Reduce all lanes to a single 256-bit result
+    static constexpr size_t num_words = sizeof(hash256) / sizeof(uint32_t);
+    for (uint32_t& w : mix_hash.hwords)
+        w = 0x811c9dc5;
+    for (size_t l = 0; l < num_lines; l++)
+        mix_hash.hwords[l % num_words] = fnv1a(mix_hash.hwords[l % num_words], lane_hash[l]);
+
+    const hash256 final_hash = keccak_progpow_256(header_hash, seed, mix_hash);
+    mix_hash = le::uint32s(mix_hash);
+    return {final_hash, mix_hash};
 }
 
 }  // namespace progpow
