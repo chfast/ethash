@@ -9,6 +9,7 @@
 
 - [Install](#install)
 - [Usage](#usage)
+- [Test vectors](#test-vectors)
 - [Optimizations](#optimizations)
 - [Maintainer](#maintainer)
 - [License](#license)
@@ -28,6 +29,11 @@ cmake --build .
 ## Usage
 
 See [ethash.hpp] for list of exported function and documentation.
+
+
+## Test vectors
+
+- [ProgPoW test vectors](test/unittests/progpow_test_vectors.hpp)
 
 
 ## Optimizations
