@@ -38,12 +38,13 @@ BENCHMARK(progpow_mix_rng);
 
 static void progpow_hash(benchmark::State& state)
 {
-    auto context = ethash::create_epoch_context(0);
+    // Get block number in millions.
+    const int block_number = static_cast<int>(state.range(0)) * 1000000;
+    uint64_t nonce = 1;
+
+    const auto& ctx = ethash::get_global_epoch_context(ethash::get_epoch_number(block_number));
 
     for (auto _ : state)
-    {
-        auto h = progpow::hash(*context, {}, 0);
-        benchmark::DoNotOptimize(h);
-    }
+        progpow::hash(ctx, {}, nonce++);
 }
-BENCHMARK(progpow_hash)->Unit(benchmark::kMicrosecond);
+BENCHMARK(progpow_hash)->Unit(benchmark::kMicrosecond)->Arg(0)->Arg(10);

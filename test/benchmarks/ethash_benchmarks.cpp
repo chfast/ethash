@@ -107,17 +107,16 @@ BENCHMARK(ethash_calculate_dataset_item_2048);
 
 static void ethash_hash(benchmark::State& state)
 {
-    const int block_number = 5000000;
-    const ethash::hash256 header_hash =
-        to_hash256("bc544c2baba832600013bd5d1983f592e9557d04b0fb5ef7a100434a5fc8d52a");
-    const uint64_t nonce = 0x4617a20003ba3f25;
+    // Get block number in millions.
+    const int block_number = static_cast<int>(state.range(0)) * 1000000;
+    uint64_t nonce = 1;
 
-    static const auto ctx = ethash::create_epoch_context(ethash::get_epoch_number(block_number));
+    const auto& ctx = ethash::get_global_epoch_context(ethash::get_epoch_number(block_number));
 
     for (auto _ : state)
-        ethash::hash(*ctx, header_hash, nonce);
+        ethash::hash(ctx, {}, nonce++);
 }
-BENCHMARK(ethash_hash)->Unit(benchmark::kMicrosecond);
+BENCHMARK(ethash_hash)->Unit(benchmark::kMicrosecond)->Arg(0)->Arg(10);
 
 
 static void verify(benchmark::State& state)
