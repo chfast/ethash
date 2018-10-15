@@ -6,7 +6,7 @@ hunter_add_package(benchmark)
 find_package(benchmark CONFIG REQUIRED)
 
 add_executable(ethash-bench
-    benchmarks.cpp
+    ethash_benchmarks.cpp
     keccak_benchmarks.cpp
     keccak_utils.hpp
     keccak_utils.cpp
