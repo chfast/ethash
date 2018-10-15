@@ -55,7 +55,7 @@ mix_rng_state::mix_rng_state(uint64_t seed) noexcept
     const uint32_t seed_lo = static_cast<uint32_t>(seed);
     const uint32_t seed_hi = static_cast<uint32_t>(seed >> 32);
 
-    uint32_t z = fnv1a(0x811c9dc5, seed_lo);
+    uint32_t z = fnv1a(fnv_offset_basis, seed_lo);
     uint32_t w = fnv1a(z, seed_hi);
     uint32_t jsr = fnv1a(w, seed_lo);
     uint32_t jcong = fnv1a(jsr, seed_hi);
@@ -187,7 +187,7 @@ static void round(
 
 mix_array init_mix(uint64_t seed)
 {
-    const uint32_t z = fnv1a(0x811c9dc5, static_cast<uint32_t>(seed));
+    const uint32_t z = fnv1a(fnv_offset_basis, static_cast<uint32_t>(seed));
     const uint32_t w = fnv1a(z, static_cast<uint32_t>(seed >> 32));
 
     mix_array mix;
@@ -219,14 +219,14 @@ result hash(const epoch_context& context, const hash256& header_hash, uint64_t n
     uint32_t lane_hash[num_lines];
     for (size_t l = 0; l < num_lines; l++)
     {
-        lane_hash[l] = 0x811c9dc5;
+        lane_hash[l] = fnv_offset_basis;
         for (uint32_t i = 0; i < num_regs; i++)
             lane_hash[l] = fnv1a(lane_hash[l], mix[l][i]);
     }
     // Reduce all lanes to a single 256-bit result
     static constexpr size_t num_words = sizeof(hash256) / sizeof(uint32_t);
     for (uint32_t& w : mix_hash.hwords)
-        w = 0x811c9dc5;
+        w = fnv_offset_basis;
     for (size_t l = 0; l < num_lines; l++)
         mix_hash.hwords[l % num_words] = fnv1a(mix_hash.hwords[l % num_words], lane_hash[l]);
 

@@ -47,6 +47,13 @@ static inline uint32_t mul_hi32(uint32_t x, uint32_t y)
     return (uint32_t)(((uint64_t)x * (uint64_t)y) >> 32);
 }
 
+
+/** FNV 32-bit prime. */
+static const uint32_t fnv_prime = 0x01000193;
+
+/** FNV 32-bit offset basis. */
+static const uint32_t fnv_offset_basis = 0x811c9dc5;
+
 /**
  * The implementation of FNV-1 hash.
  *
@@ -55,7 +62,7 @@ static inline uint32_t mul_hi32(uint32_t x, uint32_t y)
 NO_SANITIZE("unsigned-integer-overflow")
 static inline uint32_t fnv1(uint32_t u, uint32_t v) noexcept
 {
-    return (u * 0x01000193) ^ v;
+    return (u * fnv_prime) ^ v;
 }
 
 /**
@@ -66,7 +73,7 @@ static inline uint32_t fnv1(uint32_t u, uint32_t v) noexcept
 NO_SANITIZE("unsigned-integer-overflow")
 static inline uint32_t fnv1a(uint32_t u, uint32_t v) noexcept
 {
-    return (u ^ v) * 0x01000193;
+    return (u ^ v) * fnv_prime;
 }
 
 #ifdef __cplusplus
