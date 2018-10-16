@@ -357,7 +357,7 @@ bool verify(const epoch_context& context, const hash256& header_hash, const hash
     return std::memcmp(expected_mix_hash.bytes, mix_hash.bytes, sizeof(mix_hash)) == 0;
 }
 
-uint64_t search_light(const epoch_context& context, const hash256& header_hash,
+search_result search_light(const epoch_context& context, const hash256& header_hash,
     const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept
 {
     const uint64_t end_nonce = start_nonce + iterations;
@@ -365,12 +365,12 @@ uint64_t search_light(const epoch_context& context, const hash256& header_hash,
     {
         result r = hash(context, header_hash, nonce);
         if (is_less_or_equal(r.final_hash, boundary))
-            return nonce;
+            return {r, nonce};
     }
-    return 0;
+    return {};
 }
 
-uint64_t search(const epoch_context_full& context, const hash256& header_hash,
+search_result search(const epoch_context_full& context, const hash256& header_hash,
     const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept
 {
     const uint64_t end_nonce = start_nonce + iterations;
@@ -378,9 +378,9 @@ uint64_t search(const epoch_context_full& context, const hash256& header_hash,
     {
         result r = hash(context, header_hash, nonce);
         if (is_less_or_equal(r.final_hash, boundary))
-            return nonce;
+            return {r, nonce};
     }
-    return 0;
+    return {};
 }
 }  // namespace ethash
 

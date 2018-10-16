@@ -48,6 +48,20 @@ struct result
     hash256 mix_hash;
 };
 
+struct search_result
+{
+    bool solution_found = false;
+    uint64_t nonce = 0;
+    hash256 final_hash = {};
+    hash256 mix_hash = {};
+
+    search_result() noexcept = default;
+
+    search_result(result res, uint64_t nonce) noexcept
+      : solution_found(true), nonce(nonce), final_hash(res.final_hash), mix_hash(res.mix_hash)
+    {}
+};
+
 
 /// Alias for ethash_calculate_light_cache_num_items().
 static constexpr auto calculate_light_cache_num_items = ethash_calculate_light_cache_num_items;
@@ -118,10 +132,10 @@ bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
     uint64_t nonce, const hash256& boundary) noexcept;
 
-uint64_t search_light(const epoch_context& context, const hash256& header_hash,
+search_result search_light(const epoch_context& context, const hash256& header_hash,
     const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept;
 
-uint64_t search(const epoch_context_full& context, const hash256& header_hash,
+search_result search(const epoch_context_full& context, const hash256& header_hash,
     const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept;
 
 

@@ -642,7 +642,7 @@ TEST(ethash_multithreaded, small_dataset)
     reinterpret_cast<test_context_full*>(context.get())->full_dataset = full_dataset.get();
     auto context_full = reinterpret_cast<epoch_context_full*>(context.get());
 
-    std::array<std::future<uint64_t>, num_treads> futures;
+    std::array<std::future<search_result>, num_treads> futures;
     for (auto& f : futures)
     {
         f = std::async(
@@ -650,10 +650,10 @@ TEST(ethash_multithreaded, small_dataset)
     }
 
     for (auto& f : futures)
-        EXPECT_EQ(f.get(), 38444);
+        EXPECT_EQ(f.get().nonce, 38444);
 }
 
-TEST(ethash, small_dataset_light)
+TEST(ethash, small_dataset)
 {
     constexpr int num_dataset_items = 501;
     const hash256 boundary =
@@ -662,11 +662,36 @@ TEST(ethash, small_dataset_light)
     auto context = create_epoch_context_mock(0);
     const_cast<int&>(context->full_dataset_num_items) = num_dataset_items;
 
-    uint64_t solution = search_light(*context, {}, boundary, 940, 10);
-    EXPECT_EQ(solution, 948);
+    std::unique_ptr<hash1024[]> full_dataset{new hash1024[num_dataset_items]{}};
+    reinterpret_cast<test_context_full*>(context.get())->full_dataset = full_dataset.get();
+    auto context_full = reinterpret_cast<epoch_context_full*>(context.get());
+
+    auto solution = search_light(*context, {}, boundary, 940, 10);
+    EXPECT_TRUE(solution.solution_found);
+    EXPECT_EQ(solution.nonce, 948);
+    auto final_hash_hex = "004b92ceeb2045f9745917e4d9868a0db16b06d60ee1d8d33b9ff859053f4bb8";
+    EXPECT_EQ(to_hex(solution.final_hash), final_hash_hex);
+    auto mix_hash_hex = "a5a4f053b8424f1c0a4403898d106f0488c8a819334c542ac4fabc0d2cbd7f26";
+    EXPECT_EQ(to_hex(solution.mix_hash), mix_hash_hex);
+
+    solution = search(*context_full, {}, boundary, 940, 10);
+    EXPECT_TRUE(solution.solution_found);
+    EXPECT_EQ(solution.nonce, 948);
+    final_hash_hex = "004b92ceeb2045f9745917e4d9868a0db16b06d60ee1d8d33b9ff859053f4bb8";
+    EXPECT_EQ(to_hex(solution.final_hash), final_hash_hex);
+    mix_hash_hex = "a5a4f053b8424f1c0a4403898d106f0488c8a819334c542ac4fabc0d2cbd7f26";
 
     solution = search_light(*context, {}, boundary, 483, 10);
-    EXPECT_EQ(solution, 0);
+    EXPECT_FALSE(solution.solution_found);
+    EXPECT_EQ(solution.final_hash, hash256{});
+    EXPECT_EQ(solution.mix_hash, hash256{});
+    EXPECT_EQ(solution.nonce, 0);
+
+    solution = search(*context_full, {}, boundary, 483, 10);
+    EXPECT_FALSE(solution.solution_found);
+    EXPECT_EQ(solution.final_hash, hash256{});
+    EXPECT_EQ(solution.mix_hash, hash256{});
+    EXPECT_EQ(solution.nonce, 0);
 }
 
 #if !__APPLE__
