@@ -29,7 +29,8 @@ static constexpr size_t l1_cache_num_items = l1_cache_size / sizeof(uint32_t);
 hash256 keccak_progpow_256(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept;
 
-/// The same as keccak_progpow_256() but returns only 64-bit output.
+/// The same as keccak_progpow_256() but returns 64-bit output being a big-endian
+/// prefix of the 256-bit hash.
 uint64_t keccak_progpow_64(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept;
 
