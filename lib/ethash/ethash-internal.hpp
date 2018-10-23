@@ -32,11 +32,11 @@ namespace ethash
 {
 inline bool is_less_or_equal(const hash256& a, const hash256& b) noexcept
 {
-    for (size_t i = 0; i < (sizeof(a) / sizeof(a.words[0])); ++i)
+    for (size_t i = 0; i < (sizeof(a) / sizeof(a.word64s[0])); ++i)
     {
-        if (be::uint64(a.words[i]) > be::uint64(b.words[i]))
+        if (be::uint64(a.word64s[i]) > be::uint64(b.word64s[i]))
             return false;
-        if (be::uint64(a.words[i]) < be::uint64(b.words[i]))
+        if (be::uint64(a.word64s[i]) < be::uint64(b.word64s[i]))
             return true;
     }
     return true;

@@ -46,7 +46,7 @@ uint64_t keccak_progpow_64(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
 {
     const hash256 h = keccak_progpow_256(header_hash, nonce, mix_hash);
-    return be::uint64(h.words[0]);
+    return be::uint64(h.word64s[0]);
 }
 
 mix_rng_state::mix_rng_state(uint64_t seed) noexcept

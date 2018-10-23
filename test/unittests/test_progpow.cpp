@@ -45,7 +45,7 @@ TEST(progpow, keccak_progpow_64boundary)
     const uint64_t nonce = 254984491;
     const hash256 boundary =
         to_hash256("0000000f00000000000000000000000000000000000000000000000000000000");
-    const uint64_t boundary_prefix = be::uint64(boundary.words[0]);
+    const uint64_t boundary_prefix = be::uint64(boundary.word64s[0]);
 
     hash256 h = keccak_progpow_256(header_hash, nonce, {});
     EXPECT_EQ(to_hex(h), "00000002e29488b39928408765b4645343fd9dd7ed2a4d4ddf42bf1c19ff8bac");
