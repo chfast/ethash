@@ -86,7 +86,7 @@ TEST(hash, hash512_init)
 TEST(hash, hash1024_init)
 {
     hash1024 hash = {};
-    for (auto w : hash.words)
+    for (auto w : hash.word64s)
         EXPECT_EQ(w, 0);
 }
 

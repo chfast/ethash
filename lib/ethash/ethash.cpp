@@ -325,7 +325,7 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
     {
         auto full_dataset = static_cast<const epoch_context_full&>(context).full_dataset;
         hash1024& item = full_dataset[index];
-        if (item.words[0] == 0)
+        if (item.word64s[0] == 0)
         {
             // TODO: Copy elision here makes it thread-safe?
             item = calculate_dataset_item_1024(context, index);
