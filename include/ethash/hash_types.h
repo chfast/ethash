@@ -20,7 +20,7 @@ union ethash_hash256
 
 union ethash_hash512
 {
-    uint64_t words[8];
+    uint64_t word64s[8];
     uint32_t half_words[16];
     uint8_t bytes[64];
 };

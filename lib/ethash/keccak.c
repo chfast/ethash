@@ -111,13 +111,13 @@ union ethash_hash256 ethash_keccak256_32(const uint8_t data[32])
 union ethash_hash512 ethash_keccak512(const uint8_t* data, size_t size)
 {
     union ethash_hash512 hash;
-    keccak(hash.words, 512, data, size);
+    keccak(hash.word64s, 512, data, size);
     return hash;
 }
 
 union ethash_hash512 ethash_keccak512_64(const uint8_t data[64])
 {
     union ethash_hash512 hash;
-    keccak(hash.words, 512, data, 64);
+    keccak(hash.word64s, 512, data, 64);
     return hash;
 }

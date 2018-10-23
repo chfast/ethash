@@ -48,8 +48,8 @@ inline hash512 fnv1(const hash512& u, const hash512& v) noexcept
 inline hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 {
     hash512 z;
-    for (size_t i = 0; i < sizeof(z) / sizeof(z.words[0]); ++i)
-        z.words[i] = x.words[i] ^ y.words[i];
+    for (size_t i = 0; i < sizeof(z) / sizeof(z.word64s[0]); ++i)
+        z.word64s[i] = x.word64s[i] ^ y.word64s[i];
     return z;
 }
 }  // namespace
