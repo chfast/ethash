@@ -284,7 +284,7 @@ inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
 inline hash256 hash_kernel(
     const epoch_context& context, const hash512& seed, lookup_fn lookup) noexcept
 {
-    static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
+    static constexpr size_t num_words = sizeof(hash1024) / sizeof(uint32_t);
     const uint32_t index_limit = static_cast<uint32_t>(context.full_dataset_num_items);
     const uint32_t seed_init = le::uint32(seed.half_words[0]);
 
@@ -292,19 +292,19 @@ inline hash256 hash_kernel(
 
     for (uint32_t i = 0; i < num_dataset_accesses; ++i)
     {
-        const uint32_t p = fnv1(i ^ seed_init, mix.hwords[i % mix_hwords]) % index_limit;
+        const uint32_t p = fnv1(i ^ seed_init, mix.word32s[i % num_words]) % index_limit;
         const hash1024 newdata = le::uint32s(lookup(context, p));
 
-        for (size_t j = 0; j < mix_hwords; ++j)
-            mix.hwords[j] = fnv1(mix.hwords[j], newdata.hwords[j]);
+        for (size_t j = 0; j < num_words; ++j)
+            mix.word32s[j] = fnv1(mix.word32s[j], newdata.word32s[j]);
     }
 
     hash256 mix_hash;
-    for (size_t i = 0; i < mix_hwords; i += 4)
+    for (size_t i = 0; i < num_words; i += 4)
     {
-        const uint32_t h1 = fnv1(mix.hwords[i], mix.hwords[i + 1]);
-        const uint32_t h2 = fnv1(h1, mix.hwords[i + 2]);
-        const uint32_t h3 = fnv1(h2, mix.hwords[i + 3]);
+        const uint32_t h1 = fnv1(mix.word32s[i], mix.word32s[i + 1]);
+        const uint32_t h2 = fnv1(h1, mix.word32s[i + 2]);
+        const uint32_t h3 = fnv1(h2, mix.word32s[i + 3]);
         mix_hash.hwords[i / 4] = h3;
     }
 

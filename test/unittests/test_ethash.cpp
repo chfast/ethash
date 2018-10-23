@@ -1,3 +1,4 @@
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
@@ -372,7 +373,7 @@ TEST(ethash, fake_dataset_partial_items)
         const auto part_index = t.index % 2;
 
         const auto full_item = calculate_dataset_item_1024(*context, full_index);
-        const auto& part_item = full_item.hashes[part_index];
+        const auto& part_item = full_item.hash512s[part_index];
         EXPECT_EQ(to_hex(part_item), t.hash_hex) << "index: " << t.index;
     }
 }
@@ -436,8 +437,8 @@ TEST(ethash, fake_dataset_items)
     for (const auto& t : test_cases)
     {
         const hash1024 item1024 = calculate_dataset_item_1024(*context, t.index);
-        EXPECT_EQ(to_hex(item1024.hashes[0]), t.hash1_hex) << "index: " << t.index;
-        EXPECT_EQ(to_hex(item1024.hashes[1]), t.hash2_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item1024.hash512s[0]), t.hash1_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item1024.hash512s[1]), t.hash2_hex) << "index: " << t.index;
 
         const hash512 item512_0 = calculate_dataset_item_512(*context, int64_t(t.index) * 2);
         EXPECT_EQ(to_hex(item512_0), t.hash1_hex) << "index: " << t.index;
@@ -512,8 +513,8 @@ TEST(ethash, dataset_items_epoch13)
     for (const auto& t : test_cases)
     {
         const hash1024 item = calculate_dataset_item_1024(*context, t.index);
-        EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
-        EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item.hash512s[0]), t.hash1_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item.hash512s[1]), t.hash2_hex) << "index: " << t.index;
     }
 }
 
