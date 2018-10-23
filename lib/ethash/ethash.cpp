@@ -40,8 +40,8 @@ using ::fnv1;
 inline hash512 fnv1(const hash512& u, const hash512& v) noexcept
 {
     hash512 r;
-    for (size_t i = 0; i < sizeof(r) / sizeof(r.half_words[0]); ++i)
-        r.half_words[i] = fnv1(u.half_words[i], v.half_words[i]);
+    for (size_t i = 0; i < sizeof(r) / sizeof(r.word32s[0]); ++i)
+        r.word32s[i] = fnv1(u.word32s[i], v.word32s[i]);
     return r;
 }
 
@@ -116,7 +116,7 @@ void build_light_cache(
             const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
             // Fist index: 4 first bytes of the item as little-endian integer.
-            const uint32_t t = le::uint32(cache[i].half_words[0]);
+            const uint32_t t = le::uint32(cache[i].word32s[0]);
             const uint32_t v = t % index_limit;
 
             // Second index.
@@ -200,14 +200,14 @@ struct item_state
         seed{static_cast<uint32_t>(index)}
     {
         mix = cache[index % num_cache_items];
-        mix.half_words[0] ^= le::uint32(seed);
+        mix.word32s[0] ^= le::uint32(seed);
         mix = le::uint32s(keccak512(mix));
     }
 
     ALWAYS_INLINE void update(uint32_t round) noexcept
     {
         static constexpr size_t num_words = sizeof(mix) / sizeof(uint32_t);
-        const uint32_t t = fnv1(seed ^ round, mix.half_words[round % num_words]);
+        const uint32_t t = fnv1(seed ^ round, mix.word32s[round % num_words]);
         const int64_t parent_index = t % num_cache_items;
         mix = fnv1(mix, le::uint32s(cache[parent_index]));
     }
@@ -286,7 +286,7 @@ inline hash256 hash_kernel(
 {
     static constexpr size_t num_words = sizeof(hash1024) / sizeof(uint32_t);
     const uint32_t index_limit = static_cast<uint32_t>(context.full_dataset_num_items);
-    const uint32_t seed_init = le::uint32(seed.half_words[0]);
+    const uint32_t seed_init = le::uint32(seed.word32s[0]);
 
     hash1024 mix{{le::uint32s(seed), le::uint32s(seed)}};
 

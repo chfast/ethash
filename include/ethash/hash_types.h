@@ -21,7 +21,7 @@ union ethash_hash256
 union ethash_hash512
 {
     uint64_t word64s[8];
-    uint32_t half_words[16];
+    uint32_t word32s[16];
     uint8_t bytes[64];
 };
 
