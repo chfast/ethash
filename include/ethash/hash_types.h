@@ -14,7 +14,7 @@ extern "C" {
 union ethash_hash256
 {
     uint64_t word64s[4];
-    uint32_t hwords[8];
+    uint32_t word32s[8];
     uint8_t bytes[32];
 };
 

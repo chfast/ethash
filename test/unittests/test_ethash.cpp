@@ -271,7 +271,7 @@ TEST(ethash, find_epoch_number_descending)
 TEST(ethash, find_epoch_number_invalid)
 {
     hash256 fake_seed = {};
-    fake_seed.hwords[0] = 1;
+    fake_seed.word32s[0] = 1;
     int epoch = find_epoch_number(fake_seed);
     EXPECT_EQ(epoch, -1);
 }

@@ -20,25 +20,25 @@ static constexpr int num_math_operations = 8;
 hash256 keccak_progpow_256(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
 {
-    static constexpr size_t num_words = sizeof(header_hash.hwords) / sizeof(header_hash.hwords[0]);
+    static constexpr size_t num_words = sizeof(header_hash.word32s) / sizeof(header_hash.word32s[0]);
 
     uint32_t state[25] = {};
 
     size_t i;
     for (i = 0; i < num_words; ++i)
-        state[i] = le::uint32(header_hash.hwords[i]);
+        state[i] = le::uint32(header_hash.word32s[i]);
 
     state[i++] = static_cast<uint32_t>(nonce);
     state[i++] = static_cast<uint32_t>(nonce >> 32);
 
-    for (uint32_t mix_word : mix_hash.hwords)
+    for (uint32_t mix_word : mix_hash.word32s)
         state[i++] = mix_word;
 
     ethash_keccakf800(state);
 
     hash256 output;
     for (i = 0; i < num_words; ++i)
-        output.hwords[i] = le::uint32(state[i]);
+        output.word32s[i] = le::uint32(state[i]);
     return output;
 }
 
@@ -225,10 +225,10 @@ result hash(const epoch_context& context, int block_number, const hash256& heade
     }
     // Reduce all lanes to a single 256-bit result
     static constexpr size_t num_words = sizeof(hash256) / sizeof(uint32_t);
-    for (uint32_t& w : mix_hash.hwords)
+    for (uint32_t& w : mix_hash.word32s)
         w = fnv_offset_basis;
     for (size_t l = 0; l < num_lines; l++)
-        mix_hash.hwords[l % num_words] = fnv1a(mix_hash.hwords[l % num_words], lane_hash[l]);
+        mix_hash.word32s[l % num_words] = fnv1a(mix_hash.word32s[l % num_words], lane_hash[l]);
 
     const hash256 final_hash = keccak_progpow_256(header_hash, seed, mix_hash);
     mix_hash = le::uint32s(mix_hash);
