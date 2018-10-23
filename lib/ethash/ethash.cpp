@@ -207,8 +207,8 @@ struct item_state
     ALWAYS_INLINE void update(uint32_t round) noexcept
     {
         static constexpr size_t num_words = sizeof(mix) / sizeof(uint32_t);
-        uint32_t t = fnv1(seed ^ round, mix.half_words[round % num_words]);
-        int64_t parent_index = t % num_cache_items;
+        const uint32_t t = fnv1(seed ^ round, mix.half_words[round % num_words]);
+        const int64_t parent_index = t % num_cache_items;
         mix = fnv1(mix, le::uint32s(cache[parent_index]));
     }
 
