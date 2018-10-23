@@ -69,21 +69,21 @@ struct le
 
     static hash1024 uint32s(hash1024 h) noexcept
     {
-        for (auto& w : h.hwords)
+        for (auto& w : h.word32s)
             w = uint32(w);
         return h;
     }
 
     static hash512 uint32s(hash512 h) noexcept
     {
-        for (auto& w : h.half_words)
+        for (auto& w : h.word32s)
             w = uint32(w);
         return h;
     }
 
     static hash256 uint32s(hash256 h) noexcept
     {
-        for (auto& w : h.hwords)
+        for (auto& w : h.word32s)
             w = uint32(w);
         return h;
     }
