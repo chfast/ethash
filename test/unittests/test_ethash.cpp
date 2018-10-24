@@ -1,3 +1,4 @@
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
@@ -32,7 +33,7 @@ epoch_context_ptr create_epoch_context_mock(int epoch_number)
     // Prepare a constant endianness-independent cache item.
     hash512 fill;
     static constexpr uint64_t fill_word = 0xe14a54a1b2c3d4e5;
-    std::fill_n(fill.words, sizeof(hash512) / sizeof(uint64_t), le::uint64(fill_word));
+    std::fill_n(fill.word64s, sizeof(hash512) / sizeof(uint64_t), le::uint64(fill_word));
 
     static const size_t context_alloc_size = std::max(sizeof(epoch_context), sizeof(hash512));
 
@@ -74,18 +75,18 @@ TEST(hash, hash256_from_bytes)
 TEST(hash, hash512_init)
 {
     hash512 hash = {};
-    for (auto w : hash.words)
+    for (auto w : hash.word64s)
         EXPECT_EQ(w, 0);
 
     hash512 hash2 = copy({});
-    for (auto w : hash2.words)
+    for (auto w : hash2.word64s)
         EXPECT_EQ(w, 0);
 }
 
 TEST(hash, hash1024_init)
 {
     hash1024 hash = {};
-    for (auto w : hash.words)
+    for (auto w : hash.word64s)
         EXPECT_EQ(w, 0);
 }
 
@@ -270,7 +271,7 @@ TEST(ethash, find_epoch_number_descending)
 TEST(ethash, find_epoch_number_invalid)
 {
     hash256 fake_seed = {};
-    fake_seed.hwords[0] = 1;
+    fake_seed.word32s[0] = 1;
     int epoch = find_epoch_number(fake_seed);
     EXPECT_EQ(epoch, -1);
 }
@@ -372,7 +373,7 @@ TEST(ethash, fake_dataset_partial_items)
         const auto part_index = t.index % 2;
 
         const auto full_item = calculate_dataset_item_1024(*context, full_index);
-        const auto& part_item = full_item.hashes[part_index];
+        const auto& part_item = full_item.hash512s[part_index];
         EXPECT_EQ(to_hex(part_item), t.hash_hex) << "index: " << t.index;
     }
 }
@@ -436,8 +437,8 @@ TEST(ethash, fake_dataset_items)
     for (const auto& t : test_cases)
     {
         const hash1024 item1024 = calculate_dataset_item_1024(*context, t.index);
-        EXPECT_EQ(to_hex(item1024.hashes[0]), t.hash1_hex) << "index: " << t.index;
-        EXPECT_EQ(to_hex(item1024.hashes[1]), t.hash2_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item1024.hash512s[0]), t.hash1_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item1024.hash512s[1]), t.hash2_hex) << "index: " << t.index;
 
         const hash512 item512_0 = calculate_dataset_item_512(*context, int64_t(t.index) * 2);
         EXPECT_EQ(to_hex(item512_0), t.hash1_hex) << "index: " << t.index;
@@ -512,8 +513,8 @@ TEST(ethash, dataset_items_epoch13)
     for (const auto& t : test_cases)
     {
         const hash1024 item = calculate_dataset_item_1024(*context, t.index);
-        EXPECT_EQ(to_hex(item.hashes[0]), t.hash1_hex) << "index: " << t.index;
-        EXPECT_EQ(to_hex(item.hashes[1]), t.hash2_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item.hash512s[0]), t.hash1_hex) << "index: " << t.index;
+        EXPECT_EQ(to_hex(item.hash512s[1]), t.hash2_hex) << "index: " << t.index;
     }
 }
 

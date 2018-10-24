@@ -243,8 +243,8 @@ TEST(keccak, hpp_aliases)
 {
     uint8_t data[64] = {42};
 
-    EXPECT_EQ(keccak256_32(data).words[1], ethash_keccak256_32(data).words[1]);
-    EXPECT_EQ(keccak512_64(data).words[1], ethash_keccak512_64(data).words[1]);
+    EXPECT_EQ(keccak256_32(data).word64s[1], ethash_keccak256_32(data).word64s[1]);
+    EXPECT_EQ(keccak512_64(data).word64s[1], ethash_keccak512_64(data).word64s[1]);
 }
 
 TEST(keccak, f800)

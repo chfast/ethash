@@ -40,16 +40,16 @@ using ::fnv1;
 inline hash512 fnv1(const hash512& u, const hash512& v) noexcept
 {
     hash512 r;
-    for (size_t i = 0; i < sizeof(r) / sizeof(r.half_words[0]); ++i)
-        r.half_words[i] = fnv1(u.half_words[i], v.half_words[i]);
+    for (size_t i = 0; i < sizeof(r) / sizeof(r.word32s[0]); ++i)
+        r.word32s[i] = fnv1(u.word32s[i], v.word32s[i]);
     return r;
 }
 
 inline hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 {
     hash512 z;
-    for (size_t i = 0; i < sizeof(z) / sizeof(z.words[0]); ++i)
-        z.words[i] = x.words[i] ^ y.words[i];
+    for (size_t i = 0; i < sizeof(z) / sizeof(z.word64s[0]); ++i)
+        z.word64s[i] = x.word64s[i] ^ y.word64s[i];
     return z;
 }
 }  // namespace
@@ -63,16 +63,16 @@ int find_epoch_number(const hash256& seed) noexcept
     static thread_local hash256 cached_seed = {};
 
     // Load from memory once (memory will be clobbered by keccak256()).
-    uint32_t seed_part = seed.hwords[0];
+    const uint32_t seed_part = seed.word32s[0];
     const int e = cached_epoch_number;
     hash256 s = cached_seed;
 
-    if (s.hwords[0] == seed_part)
+    if (s.word32s[0] == seed_part)
         return e;
 
     // Try the next seed, will match for sequential epoch access.
     s = keccak256(s);
-    if (s.hwords[0] == seed_part)
+    if (s.word32s[0] == seed_part)
     {
         cached_seed = s;
         cached_epoch_number = e + 1;
@@ -83,7 +83,7 @@ int find_epoch_number(const hash256& seed) noexcept
     s = {};
     for (int i = 0; i < num_tries; ++i)
     {
-        if (s.hwords[0] == seed_part)
+        if (s.word32s[0] == seed_part)
         {
             cached_seed = s;
             cached_epoch_number = i;
@@ -116,7 +116,7 @@ void build_light_cache(
             const uint32_t index_limit = static_cast<uint32_t>(num_items);
 
             // Fist index: 4 first bytes of the item as little-endian integer.
-            const uint32_t t = le::uint32(cache[i].half_words[0]);
+            const uint32_t t = le::uint32(cache[i].word32s[0]);
             const uint32_t v = t % index_limit;
 
             // Second index.
@@ -200,15 +200,15 @@ struct item_state
         seed{static_cast<uint32_t>(index)}
     {
         mix = cache[index % num_cache_items];
-        mix.half_words[0] ^= le::uint32(seed);
+        mix.word32s[0] ^= le::uint32(seed);
         mix = le::uint32s(keccak512(mix));
     }
 
     ALWAYS_INLINE void update(uint32_t round) noexcept
     {
         static constexpr size_t num_words = sizeof(mix) / sizeof(uint32_t);
-        uint32_t t = fnv1(seed ^ round, mix.half_words[round % num_words]);
-        int64_t parent_index = t % num_cache_items;
+        const uint32_t t = fnv1(seed ^ round, mix.word32s[round % num_words]);
+        const int64_t parent_index = t % num_cache_items;
         mix = fnv1(mix, le::uint32s(cache[parent_index]));
     }
 
@@ -284,28 +284,28 @@ inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
 inline hash256 hash_kernel(
     const epoch_context& context, const hash512& seed, lookup_fn lookup) noexcept
 {
-    static constexpr size_t mix_hwords = sizeof(hash1024) / sizeof(uint32_t);
+    static constexpr size_t num_words = sizeof(hash1024) / sizeof(uint32_t);
     const uint32_t index_limit = static_cast<uint32_t>(context.full_dataset_num_items);
-    const uint32_t seed_init = le::uint32(seed.half_words[0]);
+    const uint32_t seed_init = le::uint32(seed.word32s[0]);
 
     hash1024 mix{{le::uint32s(seed), le::uint32s(seed)}};
 
     for (uint32_t i = 0; i < num_dataset_accesses; ++i)
     {
-        const uint32_t p = fnv1(i ^ seed_init, mix.hwords[i % mix_hwords]) % index_limit;
+        const uint32_t p = fnv1(i ^ seed_init, mix.word32s[i % num_words]) % index_limit;
         const hash1024 newdata = le::uint32s(lookup(context, p));
 
-        for (size_t j = 0; j < mix_hwords; ++j)
-            mix.hwords[j] = fnv1(mix.hwords[j], newdata.hwords[j]);
+        for (size_t j = 0; j < num_words; ++j)
+            mix.word32s[j] = fnv1(mix.word32s[j], newdata.word32s[j]);
     }
 
     hash256 mix_hash;
-    for (size_t i = 0; i < mix_hwords; i += 4)
+    for (size_t i = 0; i < num_words; i += 4)
     {
-        const uint32_t h1 = fnv1(mix.hwords[i], mix.hwords[i + 1]);
-        const uint32_t h2 = fnv1(h1, mix.hwords[i + 2]);
-        const uint32_t h3 = fnv1(h2, mix.hwords[i + 3]);
-        mix_hash.hwords[i / 4] = h3;
+        const uint32_t h1 = fnv1(mix.word32s[i], mix.word32s[i + 1]);
+        const uint32_t h2 = fnv1(h1, mix.word32s[i + 2]);
+        const uint32_t h3 = fnv1(h2, mix.word32s[i + 3]);
+        mix_hash.word32s[i / 4] = h3;
     }
 
     return le::uint32s(mix_hash);
@@ -325,7 +325,7 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
     {
         auto full_dataset = static_cast<const epoch_context_full&>(context).full_dataset;
         hash1024& item = full_dataset[index];
-        if (item.words[0] == 0)
+        if (item.word64s[0] == 0)
         {
             // TODO: Copy elision here makes it thread-safe?
             item = calculate_dataset_item_1024(context, index);

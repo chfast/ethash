@@ -13,23 +13,23 @@ extern "C" {
 
 union ethash_hash256
 {
-    uint64_t words[4];
-    uint32_t hwords[8];
+    uint64_t word64s[4];
+    uint32_t word32s[8];
     uint8_t bytes[32];
 };
 
 union ethash_hash512
 {
-    uint64_t words[8];
-    uint32_t half_words[16];
+    uint64_t word64s[8];
+    uint32_t word32s[16];
     uint8_t bytes[64];
 };
 
 union ethash_hash1024
 {
-    union ethash_hash512 hashes[2];
-    uint64_t words[16];
-    uint32_t hwords[32];
+    union ethash_hash512 hash512s[2];
+    uint64_t word64s[16];
+    uint32_t word32s[32];
     uint8_t bytes[128];
 };
 
