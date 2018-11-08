@@ -13,14 +13,15 @@
 
 namespace progpow
 {
-static constexpr size_t num_lines = 32;
+static constexpr size_t num_lines = 16;
 static constexpr int num_cache_accesses = 8;
 static constexpr int num_math_operations = 8;
 
 hash256 keccak_progpow_256(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
 {
-    static constexpr size_t num_words = sizeof(header_hash.word32s) / sizeof(header_hash.word32s[0]);
+    static constexpr size_t num_words =
+        sizeof(header_hash.word32s) / sizeof(header_hash.word32s[0]);
 
     uint32_t state[25] = {};
 
@@ -181,11 +182,14 @@ static void round(
                 random_merge(mix[l][dst], data32, sel2);
             }
         }
-        const uint32_t sel1 = state.rng();
-        const uint32_t dst = state.next_dst();
-        const uint32_t sel2 = state.rng();
-        random_merge(mix[l][0], le::uint32(item.word32s[2 * l]), sel1);
-        random_merge(mix[l][dst], le::uint32(item.word32s[2 * l + 1]), sel2);
+
+        static constexpr size_t num_words = sizeof(item) / (sizeof(uint32_t) * num_lines);
+        for (size_t i = 0; i < num_words; i++)
+        {
+            const auto word = le::uint32(item.word32s[l * num_words + i]);
+            const auto dst = i == 0 ? 0 : state.next_dst();
+            random_merge(mix[l][dst], word, state.rng());
+        }
     }
 }
 

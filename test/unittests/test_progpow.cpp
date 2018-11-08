@@ -167,6 +167,17 @@ TEST(progpow, l1_cache)
     EXPECT_EQ(cache_slice, expected);
 }
 
+TEST(progpow, hash_empty)
+{
+    auto& context = get_ethash_epoch_context_0();
+
+    const auto result = progpow::hash(context, 0, {}, 0);
+    const auto mix_hex = "967aa80989bde3ea213176eff97faf086c7b0f3044a10f4f78605f5ceb34c705";
+    const auto final_hex = "70b48ba2b30621588df5362a251ab8253d6746e6da37e7cd905ad5e1667cc341";
+    EXPECT_EQ(to_hex(result.mix_hash), mix_hex);
+    EXPECT_EQ(to_hex(result.final_hash), final_hex);
+}
+
 TEST(progpow, DISABLED_hash)
 {
     ethash::epoch_context_ptr context{nullptr, nullptr};
