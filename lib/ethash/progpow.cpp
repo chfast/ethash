@@ -61,13 +61,19 @@ mix_rng_state::mix_rng_state(uint64_t seed) noexcept
 
     rng = kiss99{z, w, jsr, jcong};
 
-    // Create a random sequence of mix destinations guaranteeing every location is touched once.
+    // Create random permutations of mix destinations / sources.
     // Uses Fisher–Yates shuffle.
     for (uint32_t i = 0; i < num_regs; ++i)
+    {
         dst_seq[i] = i;
+        src_seq[i] = i;
+    }
 
     for (uint32_t i = num_regs; i > 1; --i)
+    {
         std::swap(dst_seq[i - 1], dst_seq[rng() % i]);
+        std::swap(src_seq[i - 1], src_seq[rng() % i]);
+    }
 }
 
 NO_SANITIZE("unsigned-integer-overflow")

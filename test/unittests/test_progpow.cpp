@@ -62,14 +62,20 @@ TEST(progpow, keccak_progpow_64boundary)
 TEST(progpow, mix_rng_state)
 {
     progpow::mix_rng_state state{0};
-    EXPECT_EQ(state.rng(), 2062242187);
-    EXPECT_EQ(state.rng(), 902361097);
+    EXPECT_EQ(state.rng(), 2821196981);
+    EXPECT_EQ(state.rng(), 3728806798);
 
+    using seq = std::array<uint32_t, progpow::num_regs>;
 
-    const std::array<uint32_t, 16> expected_sequance{
-        {7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
-    for (auto i : expected_sequance)
-        EXPECT_EQ(state.next_dst(), i);
+    const seq expected_dst_seq{{11, 0, 9, 10, 5, 8, 2, 13, 12, 7, 3, 6, 4, 15, 1, 14}};
+    seq dst_seq;
+    std::generate(dst_seq.begin(), dst_seq.end(), [&] { return state.next_dst(); });
+    EXPECT_EQ(dst_seq, expected_dst_seq);
+
+    const seq expected_src_seq{{9, 1, 0, 14, 13, 2, 12, 4, 7, 3, 8, 10, 11, 6, 15, 5}};
+    seq src_seq;
+    std::generate(src_seq.begin(), src_seq.end(), [&] { return state.next_src(); });
+    EXPECT_EQ(src_seq, expected_src_seq);
 }
 
 TEST(progpow, random_math)
@@ -161,7 +167,7 @@ TEST(progpow, l1_cache)
     EXPECT_EQ(cache_slice, expected);
 }
 
-TEST(progpow, hash)
+TEST(progpow, DISABLED_hash)
 {
     ethash::epoch_context_ptr context{nullptr, nullptr};
 
