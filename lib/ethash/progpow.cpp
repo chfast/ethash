@@ -165,24 +165,24 @@ static void round(
             {
                 // Random access to cached memory.
                 const auto src = state.next_src();
-                const auto dst = state.next_dst();
-                const auto sel = state.rng();
                 const size_t offset = mix[l][src] % l1_cache_num_items;
-                random_merge(mix[l][dst], context.l1_cache[offset], sel);
+
+                const auto dst = state.next_dst();
+                random_merge(mix[l][dst], context.l1_cache[offset], state.rng());
             }
             if (i < num_math_operations)
             {
-                // Random Math
-                auto src1 = state.rng() % num_regs;
-                auto src2 = state.rng() % num_regs;
-                auto sel1 = state.rng();
-                auto dst = state.next_dst();
-                auto sel2 = state.rng();
-                uint32_t data32 = random_math(mix[l][src1], mix[l][src2], sel1);
-                random_merge(mix[l][dst], data32, sel2);
+                // Random math.
+                const auto src1 = state.rng() % num_regs;
+                const auto src2 = state.rng() % num_regs;
+                const uint32_t data = random_math(mix[l][src1], mix[l][src2], state.rng());
+
+                const auto dst = state.next_dst();
+                random_merge(mix[l][dst], data, state.rng());
             }
         }
 
+        // DAG access.
         static constexpr size_t num_words = sizeof(item) / (sizeof(uint32_t) * num_lines);
         for (size_t i = 0; i < num_words; i++)
         {
