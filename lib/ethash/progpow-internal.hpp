@@ -44,13 +44,13 @@ class mix_rng_state
 public:
     explicit mix_rng_state(uint64_t seed) noexcept;
 
-    uint32_t next_index() noexcept { return index_sequence[(counter++) % num_regs]; }
+    uint32_t next_dst() noexcept { return dst_seq[(dst_counter++) % num_regs]; }
 
     kiss99 rng;
 
 private:
-    size_t counter = 0;
-    std::array<uint32_t, num_regs> index_sequence;
+    size_t dst_counter = 0;
+    std::array<uint32_t, num_regs> dst_seq;
 };
 
 uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept;

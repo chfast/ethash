@@ -29,7 +29,7 @@ static void progpow_mix_rng(benchmark::State& state)
     {
         for (size_t x = 0; x < 16; ++x)
         {
-            auto i = rng_state.next_index();
+            auto i = rng_state.next_dst();
             benchmark::DoNotOptimize(i);
         }
     }

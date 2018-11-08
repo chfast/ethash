@@ -61,14 +61,13 @@ mix_rng_state::mix_rng_state(uint64_t seed) noexcept
 
     rng = kiss99{z, w, jsr, jcong};
 
-    // Create a random sequence of mix destinations for merge()
-    // guaranteeing every location is touched once.
+    // Create a random sequence of mix destinations guaranteeing every location is touched once.
     // Uses Fisher–Yates shuffle.
     for (uint32_t i = 0; i < num_regs; ++i)
-        index_sequence[i] = i;
+        dst_seq[i] = i;
 
     for (uint32_t i = num_regs; i > 1; --i)
-        std::swap(index_sequence[i - 1], index_sequence[rng() % i]);
+        std::swap(dst_seq[i - 1], dst_seq[rng() % i]);
 }
 
 NO_SANITIZE("unsigned-integer-overflow")
@@ -159,7 +158,7 @@ static void round(
             {
                 // Cached memory access, lanes access random location.
                 auto src = state.rng() % num_regs;
-                auto dst = state.next_index();
+                auto dst = state.next_dst();
                 auto sel = state.rng();
                 size_t offset = mix[l][src] % l1_cache_num_items;
                 random_merge(mix[l][dst], context.l1_cache[offset], sel);
@@ -170,14 +169,14 @@ static void round(
                 auto src1 = state.rng() % num_regs;
                 auto src2 = state.rng() % num_regs;
                 auto sel1 = state.rng();
-                auto dst = state.next_index();
+                auto dst = state.next_dst();
                 auto sel2 = state.rng();
                 uint32_t data32 = random_math(mix[l][src1], mix[l][src2], sel1);
                 random_merge(mix[l][dst], data32, sel2);
             }
         }
         const uint32_t sel1 = state.rng();
-        const uint32_t dst = state.next_index();
+        const uint32_t dst = state.next_dst();
         const uint32_t sel2 = state.rng();
         random_merge(mix[l][0], le::uint32(item.word32s[2 * l]), sel1);
         random_merge(mix[l][dst], le::uint32(item.word32s[2 * l + 1]), sel2);

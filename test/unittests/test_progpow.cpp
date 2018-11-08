@@ -69,7 +69,7 @@ TEST(progpow, mix_rng_state)
     const std::array<uint32_t, 16> expected_sequance{
         {7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
     for (auto i : expected_sequance)
-        EXPECT_EQ(state.next_index(), i);
+        EXPECT_EQ(state.next_dst(), i);
 }
 
 TEST(progpow, random_math)
