@@ -162,11 +162,11 @@ static void round(
         {
             if (i < num_cache_accesses)
             {
-                // Cached memory access, lanes access random location.
-                auto src = state.rng() % num_regs;
-                auto dst = state.next_dst();
-                auto sel = state.rng();
-                size_t offset = mix[l][src] % l1_cache_num_items;
+                // Random access to cached memory.
+                const auto src = state.next_src();
+                const auto dst = state.next_dst();
+                const auto sel = state.rng();
+                const size_t offset = mix[l][src] % l1_cache_num_items;
                 random_merge(mix[l][dst], context.l1_cache[offset], sel);
             }
             if (i < num_math_operations)
