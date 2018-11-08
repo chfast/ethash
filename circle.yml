@@ -65,9 +65,9 @@ defaults:
       working_directory: ~/build
       command: |
         if [ -z "$GTEST_FILTER" ]; then
-          test/unittests/ethash-test
+          test/ethash-test
         else
-          test/unittests/ethash-test --gtest_filter=$GTEST_FILTER
+          test/ethash-test --gtest_filter=$GTEST_FILTER
         fi
 
   test-cmake-config: &test-cmake-config
@@ -84,7 +84,7 @@ defaults:
       name: "Test (mips64)"
       working_directory: ~/build
       command: |
-        qemu-mips64 -L /usr/mips64-linux-gnuabi64 test/unittests/ethash-test
+        qemu-mips64 -L /usr/mips64-linux-gnuabi64 test/ethash-test
 
   benchmark: &benchmark
     run:
@@ -246,13 +246,13 @@ jobs:
       - *configure
       - *build-tests
       - store_artifacts:
-          path: ~/build/test/unittests/ethash-test
+          path: ~/build/test/ethash-test
           destination: ethash-test
       - run:
           name: "Test mips64"
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
-            qemu-mips64 test/unittests/ethash-test --gtest_filter='-*_multithreaded.*'
+            qemu-mips64 test/ethash-test --gtest_filter='-*_multithreaded.*'
 
   powerpc64:
     environment:
@@ -267,13 +267,13 @@ jobs:
       - *configure
       - *build-tests
       - store_artifacts:
-          path: ~/build/test/unittests/ethash-test
+          path: ~/build/test/ethash-test
           destination: ethash-test
       - run:
           name: "Test powerpc64"
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
-            qemu-ppc64 test/unittests/ethash-test --gtest_filter='-*_multithreaded.*'
+            qemu-ppc64 test/ethash-test --gtest_filter='-*_multithreaded.*'
 
 
   macos-xcode-tsan:
