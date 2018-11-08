@@ -172,8 +172,8 @@ TEST(progpow, hash_empty)
     auto& context = get_ethash_epoch_context_0();
 
     const auto result = progpow::hash(context, 0, {}, 0);
-    const auto mix_hex = "967aa80989bde3ea213176eff97faf086c7b0f3044a10f4f78605f5ceb34c705";
-    const auto final_hex = "70b48ba2b30621588df5362a251ab8253d6746e6da37e7cd905ad5e1667cc341";
+    const auto mix_hex = "5c7abcfc66d590c70938227a9d122011691cffcf8cd0558497ca1d487a731cfb";
+    const auto final_hex = "1945b83d450899637bae09ccf054b8cfa7e1bff14d78e1763e961ee9674d592a";
     EXPECT_EQ(to_hex(result.mix_hash), mix_hex);
     EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }

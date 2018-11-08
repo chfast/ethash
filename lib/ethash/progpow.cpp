@@ -14,8 +14,8 @@
 namespace progpow
 {
 static constexpr size_t num_lines = 16;
-static constexpr int num_cache_accesses = 8;
-static constexpr int num_math_operations = 8;
+static constexpr int num_cache_accesses = 12;
+static constexpr int num_math_operations = 20;
 
 hash256 keccak_progpow_256(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
