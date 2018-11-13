@@ -13,7 +13,7 @@ namespace progpow
 using namespace ethash;
 
 static constexpr int period_length = 50;
-static constexpr uint32_t num_regs = 16;
+static constexpr uint32_t num_regs = 32;
 static constexpr size_t l1_cache_size = 16 * 1024;
 static constexpr size_t l1_cache_num_items = l1_cache_size / sizeof(uint32_t);
 
