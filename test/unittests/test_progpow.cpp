@@ -200,7 +200,7 @@ TEST(progpow, hash_30000)
     EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }
 
-TEST(progpow, DISABLED_hash)
+TEST(progpow, hash)
 {
     ethash::epoch_context_ptr context{nullptr, nullptr};
 
