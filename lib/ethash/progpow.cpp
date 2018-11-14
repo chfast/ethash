@@ -13,14 +13,15 @@
 
 namespace progpow
 {
-static constexpr size_t num_lines = 32;
-static constexpr int num_cache_accesses = 8;
-static constexpr int num_math_operations = 8;
+static constexpr size_t num_lines = 16;
+static constexpr int num_cache_accesses = 12;
+static constexpr int num_math_operations = 20;
 
 hash256 keccak_progpow_256(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
 {
-    static constexpr size_t num_words = sizeof(header_hash.word32s) / sizeof(header_hash.word32s[0]);
+    static constexpr size_t num_words =
+        sizeof(header_hash.word32s) / sizeof(header_hash.word32s[0]);
 
     uint32_t state[25] = {};
 
@@ -61,14 +62,19 @@ mix_rng_state::mix_rng_state(uint64_t seed) noexcept
 
     rng = kiss99{z, w, jsr, jcong};
 
-    // Create a random sequence of mix destinations for merge()
-    // guaranteeing every location is touched once.
+    // Create random permutations of mix destinations / sources.
     // Uses Fisher–Yates shuffle.
     for (uint32_t i = 0; i < num_regs; ++i)
-        index_sequence[i] = i;
+    {
+        dst_seq[i] = i;
+        src_seq[i] = i;
+    }
 
     for (uint32_t i = num_regs; i > 1; --i)
-        std::swap(index_sequence[i - 1], index_sequence[rng() % i]);
+    {
+        std::swap(dst_seq[i - 1], dst_seq[rng() % i]);
+        std::swap(src_seq[i - 1], src_seq[rng() % i]);
+    }
 }
 
 NO_SANITIZE("unsigned-integer-overflow")
@@ -157,30 +163,33 @@ static void round(
         {
             if (i < num_cache_accesses)
             {
-                // Cached memory access, lanes access random location.
-                auto src = state.rng() % num_regs;
-                auto dst = state.next_index();
-                auto sel = state.rng();
-                size_t offset = mix[l][src] % l1_cache_num_items;
-                random_merge(mix[l][dst], context.l1_cache[offset], sel);
+                // Random access to cached memory.
+                const auto src = state.next_src();
+                const size_t offset = mix[l][src] % l1_cache_num_items;
+
+                const auto dst = state.next_dst();
+                random_merge(mix[l][dst], context.l1_cache[offset], state.rng());
             }
             if (i < num_math_operations)
             {
-                // Random Math
-                auto src1 = state.rng() % num_regs;
-                auto src2 = state.rng() % num_regs;
-                auto sel1 = state.rng();
-                auto dst = state.next_index();
-                auto sel2 = state.rng();
-                uint32_t data32 = random_math(mix[l][src1], mix[l][src2], sel1);
-                random_merge(mix[l][dst], data32, sel2);
+                // Random math.
+                const auto src1 = state.rng() % num_regs;
+                const auto src2 = state.rng() % num_regs;
+                const uint32_t data = random_math(mix[l][src1], mix[l][src2], state.rng());
+
+                const auto dst = state.next_dst();
+                random_merge(mix[l][dst], data, state.rng());
             }
         }
-        const uint32_t sel1 = state.rng();
-        const uint32_t dst = state.next_index();
-        const uint32_t sel2 = state.rng();
-        random_merge(mix[l][0], le::uint32(item.word32s[2 * l]), sel1);
-        random_merge(mix[l][dst], le::uint32(item.word32s[2 * l + 1]), sel2);
+
+        // DAG access.
+        static constexpr size_t num_words = sizeof(item) / (sizeof(uint32_t) * num_lines);
+        for (size_t i = 0; i < num_words; i++)
+        {
+            const auto word = le::uint32(item.word32s[l * num_words + i]);
+            const auto dst = i == 0 ? 0 : state.next_dst();
+            random_merge(mix[l][dst], word, state.rng());
+        }
     }
 }
 

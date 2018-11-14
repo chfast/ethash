@@ -61,15 +61,27 @@ TEST(progpow, keccak_progpow_64boundary)
 
 TEST(progpow, mix_rng_state)
 {
-    progpow::mix_rng_state state{0};
-    EXPECT_EQ(state.rng(), 2062242187);
-    EXPECT_EQ(state.rng(), 902361097);
+    const int block_number = 30000;
+    const uint64_t period_seed = block_number / progpow::period_length;
 
+    progpow::mix_rng_state state{period_seed};
 
-    const std::array<uint32_t, 16> expected_sequance{
-        {7, 12, 10, 5, 11, 4, 13, 6, 9, 1, 2, 15, 0, 8, 3, 14}};
-    for (auto i : expected_sequance)
-        EXPECT_EQ(state.next_index(), i);
+    EXPECT_EQ(state.rng(), 3572782357);
+    EXPECT_EQ(state.rng(), 1081751690);
+
+    using seq = std::array<uint32_t, progpow::num_regs>;
+
+    const seq expected_dst_seq{{0, 4, 27, 26, 13, 15, 17, 7, 14, 8, 9, 12, 3, 10, 1, 11, 6, 16, 28,
+        31, 2, 19, 30, 22, 29, 5, 24, 18, 25, 23, 21, 20}};
+    seq dst_seq;
+    std::generate(dst_seq.begin(), dst_seq.end(), [&] { return state.next_dst(); });
+    EXPECT_EQ(dst_seq, expected_dst_seq);
+
+    const seq expected_src_seq{{26, 30, 1, 19, 11, 21, 15, 18, 3, 17, 31, 16, 28, 4, 22, 23, 2, 13,
+        29, 24, 10, 12, 5, 20, 7, 8, 14, 27, 6, 25, 9, 0}};
+    seq src_seq;
+    std::generate(src_seq.begin(), src_seq.end(), [&] { return state.next_src(); });
+    EXPECT_EQ(src_seq, expected_src_seq);
 }
 
 TEST(progpow, random_math)
@@ -159,6 +171,33 @@ TEST(progpow, l1_cache)
             724807309, 530799275, 3480325829, 3899029234, 1998124059, 2541974622, 1100859971,
             1297211151, 3268320000, 2217813733, 2690422980, 3172863319, 2651064309}};
     EXPECT_EQ(cache_slice, expected);
+}
+
+TEST(progpow, hash_empty)
+{
+    auto& context = get_ethash_epoch_context_0();
+
+    const auto result = progpow::hash(context, 0, {}, 0);
+    const auto mix_hex = "efc5c1fe4726469763ceb5fdcf3022b2915f9f36080b096da7c6e71fa34b6c26";
+    const auto final_hex = "752b1d57497c9f66686acfa9a8251d4e2ad30dd9d09c536aed7085ee1ad69132";
+    EXPECT_EQ(to_hex(result.mix_hash), mix_hex);
+    EXPECT_EQ(to_hex(result.final_hash), final_hex);
+}
+
+TEST(progpow, hash_30000)
+{
+    const int block_number = 30000;
+    const auto header =
+        to_hash256("ffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff");
+    const uint64_t nonce = 0x123456789abcdef0;
+
+    auto context = ethash::create_epoch_context(ethash::get_epoch_number(block_number));
+
+    const auto result = progpow::hash(*context, block_number, header, nonce);
+    const auto mix_hex = "5f8238ed1e31fd81411fa87fecd237fa5327ea8c805d7d92ec8ceef7f6d3c853";
+    const auto final_hex = "d07296b3a63d8992dd2beeeb0b6bc28657ace93712ed3b6f6fc4442f693ece27";
+    EXPECT_EQ(to_hex(result.mix_hash), mix_hex);
+    EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }
 
 TEST(progpow, hash)
