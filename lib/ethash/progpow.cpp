@@ -183,10 +183,11 @@ static void round(
         }
 
         // DAG access.
-        static constexpr size_t num_words = sizeof(item) / (sizeof(uint32_t) * num_lines);
-        for (size_t i = 0; i < num_words; i++)
+        static constexpr size_t num_words_per_line = sizeof(item) / (sizeof(uint32_t) * num_lines);
+        const auto offset = l * num_words_per_line;
+        for (size_t i = 0; i < num_words_per_line; i++)
         {
-            const auto word = le::uint32(item.word32s[l * num_words + i]);
+            const auto word = le::uint32(item.word32s[offset + i]);
             const auto dst = i == 0 ? 0 : state.next_dst();
             random_merge(mix[l][dst], word, state.rng());
         }
