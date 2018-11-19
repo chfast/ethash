@@ -200,7 +200,7 @@ TEST(progpow, hash_30000)
     EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }
 
-TEST(progpow, DISABLED_hash)
+TEST(progpow, hash)
 {
     ethash::epoch_context_ptr context{nullptr, nullptr};
 
@@ -221,35 +221,33 @@ TEST(progpow, DISABLED_hash)
 #if ETHASH_TEST_GENERATION
 TEST(progpow, generate_hash_test_cases)
 {
-    auto context = ethash::create_epoch_context(0);
+    constexpr auto num_epochs = 2;
 
-    auto generate_test_case = [&context](uint64_t i) noexcept
+    using namespace progpow;
+    hash256 h{};
+    for (int e = 0; e < num_epochs; ++e)
     {
-        auto n = static_cast<int>(i);
-        auto e = ethash::get_epoch_number(n);
-        if (context->epoch_number != e)
-            context = ethash::create_epoch_context(e);
-
-        uint64_t nonce = i * i * i * 977 + i * i * 997 + i * 1009;
-
-        ethash::hash256 h{};
-        if (i > 0)
+        auto context = ethash::create_epoch_context(e);
+        auto block_numbers = {
+            e * epoch_length,
+            e * epoch_length + period_length - 1,
+            e * epoch_length + period_length,
+            e * epoch_length + 2 * period_length - 1,
+            (e + 1) * epoch_length - period_length,
+            (e + 1) * epoch_length - 1,
+        };
+        for (auto b : block_numbers)
         {
-            size_t s = sizeof(h);
-            size_t num_byte = s - (((i - 1) / 8) % s) - 1;
-            size_t bit = (i - 1) % 8;
-            h.bytes[num_byte] = uint8_t(1 << bit);
+            auto i = uint64_t(b);
+            auto nonce = i * i * i * 977 + i * i * 997 + i * 1009;
+            auto r = hash(*context, b, h, nonce);
+
+            std::cout << "{" << b << ", \"" << to_hex(h) << "\", \"" << std::hex
+                      << std::setfill('0') << std::setw(16) << nonce << std::dec << "\", \""
+                      << to_hex(r.mix_hash) << "\", \"" << to_hex(r.final_hash) << "\"},\n";
+
+            h = r.final_hash;
         }
-
-        auto r = progpow::hash(*context, n, h, nonce);
-        std::cout << "{" << i << ", \"" << to_hex(h) << "\", \"" << std::hex << std::setfill('0')
-                  << std::setw(16) << nonce << std::dec << "\", \"" << to_hex(r.mix_hash)
-                  << "\", \"" << to_hex(r.final_hash) << "\"},\n";
-    };
-
-    for (uint64_t i = 0; i < 257; ++i)
-        generate_test_case(i);
-    for (uint64_t i = 100000; i < 100257; ++i)
-        generate_test_case(i);
+    }
 }
 #endif
