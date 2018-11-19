@@ -184,7 +184,7 @@ static void round(
 
         // DAG access.
         static constexpr size_t num_words_per_line = sizeof(item) / (sizeof(uint32_t) * num_lines);
-        const auto offset = l * num_words_per_line;
+        const auto offset = ((l ^ r) % num_lines) * num_words_per_line;
         for (size_t i = 0; i < num_words_per_line; i++)
         {
             const auto word = le::uint32(item.word32s[offset + i]);

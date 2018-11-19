@@ -178,8 +178,8 @@ TEST(progpow, hash_empty)
     auto& context = get_ethash_epoch_context_0();
 
     const auto result = progpow::hash(context, 0, {}, 0);
-    const auto mix_hex = "efc5c1fe4726469763ceb5fdcf3022b2915f9f36080b096da7c6e71fa34b6c26";
-    const auto final_hex = "752b1d57497c9f66686acfa9a8251d4e2ad30dd9d09c536aed7085ee1ad69132";
+    const auto mix_hex = "a09ffaa0f2b5d47a98c2d4fbc0e90936710dd2b2a220fce04e8d55a6c6a093d6";
+    const auto final_hex = "7ea12cfc33f64616ab7dbbddf3362ee7dd3e1e20d60d860a85c51d6559c912c4";
     EXPECT_EQ(to_hex(result.mix_hash), mix_hex);
     EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }
@@ -194,13 +194,13 @@ TEST(progpow, hash_30000)
     auto context = ethash::create_epoch_context(ethash::get_epoch_number(block_number));
 
     const auto result = progpow::hash(*context, block_number, header, nonce);
-    const auto mix_hex = "5f8238ed1e31fd81411fa87fecd237fa5327ea8c805d7d92ec8ceef7f6d3c853";
-    const auto final_hex = "d07296b3a63d8992dd2beeeb0b6bc28657ace93712ed3b6f6fc4442f693ece27";
+    const auto mix_hex = "44fa88669c864aa30ba7da46e557593289c4d1fb143a1c43813d512b14fb4636";
+    const auto final_hex = "b946ea7d74e3c619733ad73ac64a3c7671459b5d5d84d4f5c5cc09feb06ba2c3";
     EXPECT_EQ(to_hex(result.mix_hash), mix_hex);
     EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }
 
-TEST(progpow, hash)
+TEST(progpow, DISABLED_hash)
 {
     ethash::epoch_context_ptr context{nullptr, nullptr};
 
