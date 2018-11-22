@@ -36,7 +36,10 @@ if(CABLE_COMPILER_GNULIKE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
 
-    if(NOT CMAKE_CROSSCOMPILING)
+    option(ETHASH_NATIVE "Build for native CPU" OFF)
+    if(ETHASH_NATIVE)
+        add_compile_options(-march=native)
+    elseif(NOT CMAKE_CROSSCOMPILING)
         # Tune for currently most common CPUs (flag not supported in cross compilation).
         add_compile_options(-mtune=generic)
     endif()
