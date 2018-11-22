@@ -4,6 +4,10 @@
 
 cmake_minimum_required(VERSION 3.5)
 
+if(POLICY CMP0069)
+    cmake_policy(SET CMP0069 NEW)  # Allow LTO.
+endif()
+
 include(cmake/cable/bootstrap.cmake)
 
 include(CableBuildType)
