@@ -13,7 +13,7 @@
 
 namespace progpow
 {
-static constexpr size_t num_lines = 16;
+static constexpr size_t num_lanes = 16;
 static constexpr int num_cache_accesses = 12;
 static constexpr int num_math_operations = 20;
 
@@ -144,17 +144,17 @@ void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& con
 }
 
 
-using mix_array = std::array<std::array<uint32_t, num_regs>, num_lines>;
+using mix_array = std::array<std::array<uint32_t, num_regs>, num_lanes>;
 
 static void round(
     const epoch_context& context, uint32_t r, mix_array& mix, const mix_rng_state& state_reference)
 {
     const uint32_t num_items = static_cast<uint32_t>(context.full_dataset_num_items / 2);
-    const uint32_t item_index = mix[r % num_lines][0] % num_items;
+    const uint32_t item_index = mix[r % num_lanes][0] % num_items;
     const hash2048 item = calculate_dataset_item_2048(context, item_index);
 
     // Lanes can execute in parallel and will be convergent
-    for (size_t l = 0; l < num_lines; l++)
+    for (size_t l = 0; l < num_lanes; l++)
     {
         mix_rng_state state{state_reference};
 
@@ -183,9 +183,9 @@ static void round(
         }
 
         // DAG access.
-        static constexpr size_t num_words_per_line = sizeof(item) / (sizeof(uint32_t) * num_lines);
-        const auto offset = ((l ^ r) % num_lines) * num_words_per_line;
-        for (size_t i = 0; i < num_words_per_line; i++)
+        static constexpr size_t num_words_per_lane = sizeof(item) / (sizeof(uint32_t) * num_lanes);
+        const auto offset = ((l ^ r) % num_lanes) * num_words_per_lane;
+        for (size_t i = 0; i < num_words_per_lane; i++)
         {
             const auto word = le::uint32(item.word32s[offset + i]);
             const auto dst = i == 0 ? 0 : state.next_dst();
@@ -226,8 +226,8 @@ result hash(const epoch_context& context, int block_number, const hash256& heade
         round(context, i, mix, state);
 
     // Reduce mix data to a single per-lane result
-    uint32_t lane_hash[num_lines];
-    for (size_t l = 0; l < num_lines; l++)
+    uint32_t lane_hash[num_lanes];
+    for (size_t l = 0; l < num_lanes; l++)
     {
         lane_hash[l] = fnv_offset_basis;
         for (uint32_t i = 0; i < num_regs; i++)
@@ -237,7 +237,7 @@ result hash(const epoch_context& context, int block_number, const hash256& heade
     static constexpr size_t num_words = sizeof(hash256) / sizeof(uint32_t);
     for (uint32_t& w : mix_hash.word32s)
         w = fnv_offset_basis;
-    for (size_t l = 0; l < num_lines; l++)
+    for (size_t l = 0; l < num_lanes; l++)
         mix_hash.word32s[l % num_words] = fnv1a(mix_hash.word32s[l % num_words], lane_hash[l]);
 
     const hash256 final_hash = keccak_progpow_256(header_hash, seed, mix_hash);
