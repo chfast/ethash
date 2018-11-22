@@ -153,37 +153,42 @@ static void round(
     const uint32_t item_index = mix[r % num_lanes][0] % num_items;
     const hash2048 item = calculate_dataset_item_2048(context, item_index);
 
-    // Lanes can execute in parallel and will be convergent
+    constexpr size_t num_words_per_lane = sizeof(item) / (sizeof(uint32_t) * num_lanes);
+    constexpr int max_operations =
+        num_cache_accesses > num_math_operations ? num_cache_accesses : num_math_operations;
+
+    // Process lanes.
     for (size_t l = 0; l < num_lanes; l++)
     {
         mix_rng_state state{state_reference};
 
-        int max_i = std::max(num_cache_accesses, num_math_operations);
-        for (int i = 0; i < max_i; i++)
+        for (int i = 0; i < max_operations; i++)
         {
             if (i < num_cache_accesses)
             {
                 // Random access to cached memory.
                 const auto src = state.next_src();
-                const size_t offset = mix[l][src] % l1_cache_num_items;
-
                 const auto dst = state.next_dst();
-                random_merge(mix[l][dst], context.l1_cache[offset], state.rng());
+                const auto sel = state.rng();
+
+                const size_t offset = mix[l][src] % l1_cache_num_items;
+                random_merge(mix[l][dst], context.l1_cache[offset], sel);
             }
             if (i < num_math_operations)
             {
                 // Random math.
                 const auto src1 = state.rng() % num_regs;
                 const auto src2 = state.rng() % num_regs;
-                const uint32_t data = random_math(mix[l][src1], mix[l][src2], state.rng());
-
+                const auto sel1 = state.rng();
                 const auto dst = state.next_dst();
-                random_merge(mix[l][dst], data, state.rng());
+                const auto sel2 = state.rng();
+
+                const uint32_t data = random_math(mix[l][src1], mix[l][src2], sel1);
+                random_merge(mix[l][dst], data, sel2);
             }
         }
 
         // DAG access.
-        static constexpr size_t num_words_per_lane = sizeof(item) / (sizeof(uint32_t) * num_lanes);
         const auto offset = ((l ^ r) % num_lanes) * num_words_per_lane;
         for (size_t i = 0; i < num_words_per_lane; i++)
         {
