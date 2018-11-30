@@ -21,3 +21,18 @@ add_executable(
 target_link_libraries(ethash-test PRIVATE ethash GTest::gtest GTest::main)
 target_include_directories(ethash-test PRIVATE ${ETHASH_PRIVATE_INCLUDE_DIR})
 set_target_properties(ethash-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
+
+if(ETHASH_PGO)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-generate=${profdata_dir}")
+    get_target_property(sources ethash-test SOURCES)
+    add_executable(ethash-test-profgen ${sources})
+    get_target_property(include_directories ethash-test INCLUDE_DIRECTORIES)
+    target_link_libraries(ethash-test-profgen PRIVATE ethash-profgen GTest::gtest GTest::main)
+    target_include_directories(ethash-test-profgen PUBLIC ${include_directories})
+    set_target_properties(ethash-test-profgen PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
+
+    add_custom_target(profdata-generate ethash-test-profgen --gtest_filter=ethash.verify_hash:progpow.hash_and_verify)
+
+    add_custom_target(profdata-merge llvm-profdata-7 merge -output=${profdata_dir}/ethash.profdata ${profdata_dir})
+    add_dependencies(profdata-merge profdata-generate)
+endif()

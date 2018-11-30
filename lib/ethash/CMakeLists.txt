@@ -33,6 +33,19 @@ add_library(
 
 target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
 
+
+if(ETHASH_PGO)
+    get_target_property(sources ethash SOURCES)
+    add_library(ethash-profgen ${sources})
+    get_target_property(include_directories ethash INCLUDE_DIRECTORIES)
+    target_include_directories(ethash-profgen PUBLIC ${include_directories})
+    target_compile_options(ethash-profgen PRIVATE -fprofile-generate=${profdata_dir})
+
+    target_compile_options(ethash PRIVATE -fprofile-use=${profdata_dir}/ethash.profdata)
+    add_dependencies(ethash profdata-merge)
+endif()
+
+
 write_basic_package_version_file(ethashConfigVersion.cmake COMPATIBILITY SameMajorVersion)
 
 configure_package_config_file(

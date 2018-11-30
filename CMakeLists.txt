@@ -60,6 +60,9 @@ if(ETHASH_FUZZING)
     add_compile_options(-fno-omit-frame-pointer -fsanitize=fuzzer,undefined,integer -fno-sanitize-recover=all)
 endif()
 
+option(ETHASH_PGO "Build with PGO" OFF)
+set(profdata_dir ${CMAKE_BINARY_DIR}/profdata)
+
 add_subdirectory(lib/ethash)
 
 option(ETHASH_BUILD_TESTS "Build unit tests" ON)
