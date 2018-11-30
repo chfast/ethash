@@ -196,7 +196,7 @@ TEST(progpow, hash_30000)
     EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }
 
-TEST(progpow, hash)
+TEST(progpow, hash_and_verify)
 {
     ethash::epoch_context_ptr context{nullptr, nullptr};
 
@@ -211,6 +211,22 @@ TEST(progpow, hash)
         const auto result = progpow::hash(*context, t.block_number, header_hash, nonce);
         EXPECT_EQ(to_hex(result.mix_hash), t.mix_hash_hex);
         EXPECT_EQ(to_hex(result.final_hash), t.final_hash_hex);
+
+        auto success = progpow::verify(
+            *context, t.block_number, header_hash, result.mix_hash, nonce, result.final_hash);
+        EXPECT_TRUE(success);
+
+        auto lower_boundary = result.final_hash;
+        --lower_boundary.bytes[31];
+        auto final_failure = progpow::verify(
+            *context, t.block_number, header_hash, result.mix_hash, nonce, lower_boundary);
+        EXPECT_FALSE(final_failure);
+
+        auto different_mix = result.mix_hash;
+        ++different_mix.bytes[7];
+        auto mix_failure = progpow::verify(
+            *context, t.block_number, header_hash, different_mix, nonce, result.final_hash);
+        EXPECT_FALSE(mix_failure);
     }
 }
 

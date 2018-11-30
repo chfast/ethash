@@ -145,8 +145,7 @@ void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& con
 
 using mix_array = std::array<std::array<uint32_t, num_regs>, num_lanes>;
 
-static void round(
-    const epoch_context& context, uint32_t r, mix_array& mix, mix_rng_state state)
+static void round(const epoch_context& context, uint32_t r, mix_array& mix, mix_rng_state state)
 {
     const uint32_t num_items = static_cast<uint32_t>(context.full_dataset_num_items / 2);
     const uint32_t item_index = mix[r % num_lanes][0] % num_items;
@@ -228,37 +227,58 @@ mix_array init_mix(uint64_t seed)
     return mix;
 }
 
+namespace
+{
+hash256 hash_mix(const epoch_context& context, int block_number, uint64_t seed) noexcept
+{
+    auto mix = init_mix(seed);
+    mix_rng_state state{uint64_t(block_number / period_length)};
+
+    for (uint32_t i = 0; i < 64; ++i)
+        round(context, i, mix, state);
+
+    // Reduce mix data to a single per-lane result.
+    uint32_t lane_hash[num_lanes];
+    for (size_t l = 0; l < num_lanes; ++l)
+    {
+        lane_hash[l] = fnv_offset_basis;
+        for (uint32_t i = 0; i < num_regs; ++i)
+            lane_hash[l] = fnv1a(lane_hash[l], mix[l][i]);
+    }
+
+    // Reduce all lanes to a single 256-bit result.
+    static constexpr size_t num_words = sizeof(hash256) / sizeof(uint32_t);
+    hash256 mix_hash;
+    for (uint32_t& w : mix_hash.word32s)
+        w = fnv_offset_basis;
+    for (size_t l = 0; l < num_lanes; ++l)
+        mix_hash.word32s[l % num_words] = fnv1a(mix_hash.word32s[l % num_words], lane_hash[l]);
+    return le::uint32s(mix_hash);
+}
+}  // namespace
+
 result hash(const epoch_context& context, int block_number, const hash256& header_hash,
     uint64_t nonce) noexcept
 {
     uint64_t seed = keccak_progpow_64(header_hash, nonce);
 
-    auto mix = init_mix(seed);
-    mix_rng_state state{uint64_t(block_number / period_length)};
-
-    // execute the randomly generated inner loop
-    for (uint32_t i = 0; i < 64; i++)
-        round(context, i, mix, state);
-
-    // Reduce mix data to a single per-lane result
-    uint32_t lane_hash[num_lanes];
-    for (size_t l = 0; l < num_lanes; l++)
-    {
-        lane_hash[l] = fnv_offset_basis;
-        for (uint32_t i = 0; i < num_regs; i++)
-            lane_hash[l] = fnv1a(lane_hash[l], mix[l][i]);
-    }
-    // Reduce all lanes to a single 256-bit result
-    static constexpr size_t num_words = sizeof(hash256) / sizeof(uint32_t);
-    hash256 mix_hash;
-    for (uint32_t& w : mix_hash.word32s)
-        w = fnv_offset_basis;
-    for (size_t l = 0; l < num_lanes; l++)
-        mix_hash.word32s[l % num_words] = fnv1a(mix_hash.word32s[l % num_words], lane_hash[l]);
-    mix_hash = le::uint32s(mix_hash);
+    const hash256 mix_hash = hash_mix(context, block_number, seed);
 
     const hash256 final_hash = keccak_progpow_256(header_hash, seed, mix_hash);
     return {final_hash, mix_hash};
+}
+
+bool verify(const epoch_context& context, int block_number, const hash256& header_hash,
+    const hash256& mix_hash, uint64_t nonce, const hash256& boundary) noexcept
+{
+    const uint64_t seed = keccak_progpow_64(header_hash, nonce);
+    const hash256 final_hash = keccak_progpow_256(header_hash, seed, mix_hash);
+    if (!is_less_or_equal(final_hash, boundary))
+        return false;
+
+    const hash256 expected_mix_hash = hash_mix(context, block_number, seed);
+    // TODO: Add equal helper.
+    return std::memcmp(expected_mix_hash.bytes, mix_hash.bytes, sizeof(mix_hash)) == 0;
 }
 
 }  // namespace progpow

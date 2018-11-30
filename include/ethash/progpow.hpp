@@ -16,4 +16,8 @@ using namespace ethash;  // Include ethash namespace.
 
 result hash(const epoch_context& context, int block_number, const hash256& header_hash,
     uint64_t nonce) noexcept;
-}
+
+bool verify(const epoch_context& context, int block_number, const hash256& header_hash,
+    const hash256& mix_hash, uint64_t nonce, const hash256& boundary) noexcept;
+
+}  // namespace progpow
