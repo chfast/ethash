@@ -62,7 +62,4 @@ void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept;
 
 void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& context) noexcept;
 
-result hash(const epoch_context& context, int block_number, const hash256& header_hash,
-    uint64_t nonce) noexcept;
-
 }  // namespace progpow

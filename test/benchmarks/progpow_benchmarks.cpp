@@ -4,6 +4,7 @@
 
 #include "../unittests/helpers.hpp"
 
+#include <ethash/progpow.hpp>
 #include <ethash/progpow-internal.hpp>
 
 #include <benchmark/benchmark.h>
