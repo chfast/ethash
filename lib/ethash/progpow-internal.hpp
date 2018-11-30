@@ -29,10 +29,9 @@ static constexpr size_t l1_cache_num_items = l1_cache_size / sizeof(uint32_t);
 hash256 keccak_progpow_256(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept;
 
-/// The same as keccak_progpow_256() but returns 64-bit output being a big-endian
-/// prefix of the 256-bit hash.
-uint64_t keccak_progpow_64(
-    const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept;
+/// The same as keccak_progpow_256() but uses null mix
+/// and returns top 64 bits of the output being a big-endian prefix of the 256-bit hash.
+uint64_t keccak_progpow_64(const hash256& header_hash, uint64_t nonce) noexcept;
 
 /// ProgPoW mix RNG state.
 ///
@@ -61,8 +60,5 @@ uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept;
 void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept;
 
 void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& context) noexcept;
-
-result hash(const epoch_context& context, int block_number, const hash256& header_hash,
-    uint64_t nonce) noexcept;
 
 }  // namespace progpow

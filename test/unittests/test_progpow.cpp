@@ -4,6 +4,7 @@
 
 #include <ethash/endianness.hpp>
 #include <ethash/progpow-internal.hpp>
+#include <ethash/progpow.hpp>
 
 #include "helpers.hpp"
 #include "progpow_test_vectors.hpp"
@@ -19,22 +20,17 @@ TEST(progpow, keccak_progpow_256)
 
 TEST(progpow, keccak_progpow_64)
 {
-    ethash::hash256 extra{};
-    const auto h0 = progpow::keccak_progpow_64({}, 0, {});
-    const auto h1 = progpow::keccak_progpow_64({}, 0, extra);
+    const auto h0 = progpow::keccak_progpow_64({}, 0);
     const auto fh = progpow::keccak_progpow_256({}, 0, {});
-    EXPECT_EQ(h0, h1);
     EXPECT_EQ(h0, 0x5dd431e5fbc604f4);
     EXPECT_EQ(to_hex(fh), "5dd431e5fbc604f499bfa0232f45f8f142d0ff5178f539e5a7800bf0643697af");
 
     const ethash::hash256 header_hash_2 =
         to_hash256("bc544c2baba832600013bd5d1983f592e9557d04b0fb5ef7a100434a5fc8d52a");
-    for (uint32_t i = 0; i < 8; ++i)
-        extra.word32s[i] = i + 1;
-    const auto h2 = progpow::keccak_progpow_64(header_hash_2, 0x1ffffffff, extra);
-    const auto fh2 = progpow::keccak_progpow_256(header_hash_2, 0x1ffffffff, extra);
-    EXPECT_EQ(to_hex(fh2), "824c43b52688dd1857fc271d677e6f3a21906d8f8eb4bf68bb5b84d58e8e3433");
-    EXPECT_EQ(h2, 0x824c43b52688dd18);
+    const auto h2 = progpow::keccak_progpow_64(header_hash_2, 0x1ffffffff);
+    const auto fh2 = progpow::keccak_progpow_256(header_hash_2, 0x1ffffffff, {});
+    EXPECT_EQ(to_hex(fh2), "7be8a749a11cbc8eaacb7bd5b20ef17cac6545af701c91b8ee96b05226981ff4");
+    EXPECT_EQ(h2, 0x7be8a749a11cbc8e);
 }
 
 TEST(progpow, keccak_progpow_64boundary)
@@ -54,7 +50,7 @@ TEST(progpow, keccak_progpow_64boundary)
     EXPECT_LT(std::memcmp(h.bytes, boundary.bytes, sizeof(h)), 0);
 
     // The approximated comparison can be done against 64-bit prefix.
-    uint64_t s = keccak_progpow_64(header_hash, nonce, {});
+    uint64_t s = keccak_progpow_64(header_hash, nonce);
     EXPECT_EQ(s, 0x00000002e29488b3);
     EXPECT_LT(s, boundary_prefix);
 }
@@ -200,7 +196,7 @@ TEST(progpow, hash_30000)
     EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }
 
-TEST(progpow, hash)
+TEST(progpow, hash_and_verify)
 {
     ethash::epoch_context_ptr context{nullptr, nullptr};
 
@@ -215,6 +211,22 @@ TEST(progpow, hash)
         const auto result = progpow::hash(*context, t.block_number, header_hash, nonce);
         EXPECT_EQ(to_hex(result.mix_hash), t.mix_hash_hex);
         EXPECT_EQ(to_hex(result.final_hash), t.final_hash_hex);
+
+        auto success = progpow::verify(
+            *context, t.block_number, header_hash, result.mix_hash, nonce, result.final_hash);
+        EXPECT_TRUE(success);
+
+        auto lower_boundary = result.final_hash;
+        --lower_boundary.bytes[31];
+        auto final_failure = progpow::verify(
+            *context, t.block_number, header_hash, result.mix_hash, nonce, lower_boundary);
+        EXPECT_FALSE(final_failure);
+
+        auto different_mix = result.mix_hash;
+        ++different_mix.bytes[7];
+        auto mix_failure = progpow::verify(
+            *context, t.block_number, header_hash, different_mix, nonce, result.final_hash);
+        EXPECT_FALSE(mix_failure);
     }
 }
 
