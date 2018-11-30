@@ -43,10 +43,9 @@ hash256 keccak_progpow_256(
     return output;
 }
 
-uint64_t keccak_progpow_64(
-    const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
+uint64_t keccak_progpow_64(const hash256& header_hash, uint64_t nonce) noexcept
 {
-    const hash256 h = keccak_progpow_256(header_hash, nonce, mix_hash);
+    const hash256 h = keccak_progpow_256(header_hash, nonce, {});
     return be::uint64(h.word64s[0]);
 }
 
@@ -232,8 +231,7 @@ mix_array init_mix(uint64_t seed)
 result hash(const epoch_context& context, int block_number, const hash256& header_hash,
     uint64_t nonce) noexcept
 {
-    hash256 mix_hash{};
-    uint64_t seed = keccak_progpow_64(header_hash, nonce, mix_hash);
+    uint64_t seed = keccak_progpow_64(header_hash, nonce);
 
     auto mix = init_mix(seed);
     mix_rng_state state{uint64_t(block_number / period_length)};
@@ -252,6 +250,7 @@ result hash(const epoch_context& context, int block_number, const hash256& heade
     }
     // Reduce all lanes to a single 256-bit result
     static constexpr size_t num_words = sizeof(hash256) / sizeof(uint32_t);
+    hash256 mix_hash;
     for (uint32_t& w : mix_hash.word32s)
         w = fnv_offset_basis;
     for (size_t l = 0; l < num_lanes; l++)
