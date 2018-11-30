@@ -33,7 +33,7 @@ hash256 keccak_progpow_256(
     state[i++] = static_cast<uint32_t>(nonce >> 32);
 
     for (uint32_t mix_word : mix_hash.word32s)
-        state[i++] = mix_word;
+        state[i++] = le::uint32(mix_word);
 
     ethash_keccakf800(state);
 
@@ -255,9 +255,9 @@ result hash(const epoch_context& context, int block_number, const hash256& heade
         w = fnv_offset_basis;
     for (size_t l = 0; l < num_lanes; l++)
         mix_hash.word32s[l % num_words] = fnv1a(mix_hash.word32s[l % num_words], lane_hash[l]);
+    mix_hash = le::uint32s(mix_hash);
 
     const hash256 final_hash = keccak_progpow_256(header_hash, seed, mix_hash);
-    mix_hash = le::uint32s(mix_hash);
     return {final_hash, mix_hash};
 }
 
