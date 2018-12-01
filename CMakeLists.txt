@@ -33,7 +33,7 @@ HunterGate(
 project(ethash)
 set(PROJECT_VERSION 0.4.0.dev0)
 
-cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Release RelWithDebInfo Debug)
+cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo Debug)
 
 cable_configure_compiler(NO_STACK_PROTECTION)
 if(CABLE_COMPILER_GNULIKE)
