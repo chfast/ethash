@@ -281,8 +281,7 @@ bool verify(const epoch_context& context, int block_number, const hash256& heade
 
     const hash256 expected_mix_hash =
         hash_mix(context, block_number, seed, calculate_dataset_item_2048);
-    // TODO: Add equal helper.
-    return std::memcmp(expected_mix_hash.bytes, mix_hash.bytes, sizeof(mix_hash)) == 0;
+    return is_equal(expected_mix_hash, mix_hash);
 }
 
 }  // namespace progpow
