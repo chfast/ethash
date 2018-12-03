@@ -8,13 +8,13 @@
 
 #include <string>
 
-template<typename Hash>
+template <typename Hash>
 inline std::string to_hex(const Hash& h)
 {
     static const auto hex_chars = "0123456789abcdef";
     std::string str;
     str.reserve(sizeof(h) * 2);
-    for (auto b: h.bytes)
+    for (auto b : h.bytes)
     {
         str.push_back(hex_chars[uint8_t(b) >> 4]);
         str.push_back(hex_chars[uint8_t(b) & 0xf]);
@@ -40,6 +40,11 @@ inline ethash::hash256 to_hash256(const std::string& hex)
 inline bool operator==(const ethash::hash256& a, const ethash::hash256& b) noexcept
 {
     return std::memcmp(a.bytes, b.bytes, sizeof(a)) == 0;
+}
+
+inline bool operator!=(const ethash::hash256& a, const ethash::hash256& b) noexcept
+{
+    return !(a == b);
 }
 
 inline const ethash::epoch_context& get_ethash_epoch_context_0() noexcept

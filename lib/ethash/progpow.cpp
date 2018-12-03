@@ -305,4 +305,32 @@ bool verify(const epoch_context& context, int block_number, const hash256& heade
     return is_equal(expected_mix_hash, mix_hash);
 }
 
+search_result search_light(const epoch_context& context, int block_number,
+    const hash256& header_hash, const hash256& boundary, uint64_t start_nonce,
+    size_t iterations) noexcept
+{
+    const uint64_t end_nonce = start_nonce + iterations;
+    for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
+    {
+        result r = hash(context, block_number, header_hash, nonce);
+        if (is_less_or_equal(r.final_hash, boundary))
+            return {r, nonce};
+    }
+    return {};
+}
+
+search_result search(const epoch_context_full& context, int block_number,
+    const hash256& header_hash, const hash256& boundary, uint64_t start_nonce,
+    size_t iterations) noexcept
+{
+    const uint64_t end_nonce = start_nonce + iterations;
+    for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
+    {
+        result r = hash(context, block_number, header_hash, nonce);
+        if (is_less_or_equal(r.final_hash, boundary))
+            return {r, nonce};
+    }
+    return {};
+}
+
 }  // namespace progpow
