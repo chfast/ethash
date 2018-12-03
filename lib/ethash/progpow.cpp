@@ -142,14 +142,18 @@ void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& con
     }
 }
 
+namespace
+{
+using lookup_fn = hash2048 (*)(const epoch_context&, uint32_t);
 
 using mix_array = std::array<std::array<uint32_t, num_regs>, num_lanes>;
 
-static void round(const epoch_context& context, uint32_t r, mix_array& mix, mix_rng_state state)
+void round(
+    const epoch_context& context, uint32_t r, mix_array& mix, mix_rng_state state, lookup_fn lookup)
 {
     const uint32_t num_items = static_cast<uint32_t>(context.full_dataset_num_items / 2);
     const uint32_t item_index = mix[r % num_lanes][0] % num_items;
-    const hash2048 item = calculate_dataset_item_2048(context, item_index);
+    const hash2048 item = lookup(context, item_index);
 
     constexpr size_t num_words_per_lane = sizeof(item) / (sizeof(uint32_t) * num_lanes);
     constexpr int max_operations =
@@ -227,15 +231,14 @@ mix_array init_mix(uint64_t seed)
     return mix;
 }
 
-namespace
-{
-hash256 hash_mix(const epoch_context& context, int block_number, uint64_t seed) noexcept
+hash256 hash_mix(
+    const epoch_context& context, int block_number, uint64_t seed, lookup_fn lookup) noexcept
 {
     auto mix = init_mix(seed);
     mix_rng_state state{uint64_t(block_number / period_length)};
 
     for (uint32_t i = 0; i < 64; ++i)
-        round(context, i, mix, state);
+        round(context, i, mix, state, lookup);
 
     // Reduce mix data to a single per-lane result.
     uint32_t lane_hash[num_lanes];
@@ -260,10 +263,31 @@ hash256 hash_mix(const epoch_context& context, int block_number, uint64_t seed) 
 result hash(const epoch_context& context, int block_number, const hash256& header_hash,
     uint64_t nonce) noexcept
 {
-    uint64_t seed = keccak_progpow_64(header_hash, nonce);
+    const uint64_t seed = keccak_progpow_64(header_hash, nonce);
+    const hash256 mix_hash = hash_mix(context, block_number, seed, calculate_dataset_item_2048);
+    const hash256 final_hash = keccak_progpow_256(header_hash, seed, mix_hash);
+    return {final_hash, mix_hash};
+}
 
-    const hash256 mix_hash = hash_mix(context, block_number, seed);
+result hash(const epoch_context_full& context, int block_number, const hash256& header_hash,
+    uint64_t nonce) noexcept
+{
+    static const auto lazy_lookup = [](const epoch_context& context, uint32_t index) noexcept
+    {
+        auto* full_dataset_1024 = static_cast<const epoch_context_full&>(context).full_dataset;
+        auto* full_dataset_2048 = reinterpret_cast<hash2048*>(full_dataset_1024);
+        hash2048& item = full_dataset_2048[index];
+        if (item.word64s[0] == 0)
+        {
+            // TODO: Copy elision here makes it thread-safe?
+            item = calculate_dataset_item_2048(context, index);
+        }
 
+        return item;
+    };
+
+    const uint64_t seed = keccak_progpow_64(header_hash, nonce);
+    const hash256 mix_hash = hash_mix(context, block_number, seed, lazy_lookup);
     const hash256 final_hash = keccak_progpow_256(header_hash, seed, mix_hash);
     return {final_hash, mix_hash};
 }
@@ -276,9 +300,37 @@ bool verify(const epoch_context& context, int block_number, const hash256& heade
     if (!is_less_or_equal(final_hash, boundary))
         return false;
 
-    const hash256 expected_mix_hash = hash_mix(context, block_number, seed);
-    // TODO: Add equal helper.
-    return std::memcmp(expected_mix_hash.bytes, mix_hash.bytes, sizeof(mix_hash)) == 0;
+    const hash256 expected_mix_hash =
+        hash_mix(context, block_number, seed, calculate_dataset_item_2048);
+    return is_equal(expected_mix_hash, mix_hash);
+}
+
+search_result search_light(const epoch_context& context, int block_number,
+    const hash256& header_hash, const hash256& boundary, uint64_t start_nonce,
+    size_t iterations) noexcept
+{
+    const uint64_t end_nonce = start_nonce + iterations;
+    for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
+    {
+        result r = hash(context, block_number, header_hash, nonce);
+        if (is_less_or_equal(r.final_hash, boundary))
+            return {r, nonce};
+    }
+    return {};
+}
+
+search_result search(const epoch_context_full& context, int block_number,
+    const hash256& header_hash, const hash256& boundary, uint64_t start_nonce,
+    size_t iterations) noexcept
+{
+    const uint64_t end_nonce = start_nonce + iterations;
+    for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
+    {
+        result r = hash(context, block_number, header_hash, nonce);
+        if (is_less_or_equal(r.final_hash, boundary))
+            return {r, nonce};
+    }
+    return {};
 }
 
 }  // namespace progpow

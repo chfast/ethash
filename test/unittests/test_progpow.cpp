@@ -230,6 +230,38 @@ TEST(progpow, hash_and_verify)
     }
 }
 
+TEST(progpow, search)
+{
+    auto ctxp = ethash::create_epoch_context_full(0);
+    auto& ctx = *ctxp;
+    auto& ctxl = reinterpret_cast<const ethash::epoch_context&>(ctx);
+
+    auto boundary = to_hash256("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    auto sr = progpow::search(ctx, 0, {}, boundary, 0, 100);
+    auto srl = progpow::search_light(ctxl, 0, {}, boundary, 0, 100);
+
+    EXPECT_EQ(sr.mix_hash, ethash::hash256{});
+    EXPECT_EQ(sr.final_hash, ethash::hash256{});
+    EXPECT_EQ(sr.nonce, 0x0);
+    EXPECT_EQ(sr.mix_hash, srl.mix_hash);
+    EXPECT_EQ(sr.final_hash, srl.final_hash);
+    EXPECT_EQ(sr.nonce, srl.nonce);
+
+    sr = progpow::search(ctx, 0, {}, boundary, 100, 100);
+    srl = progpow::search_light(ctxl, 0, {}, boundary, 100, 100);
+
+    EXPECT_NE(sr.mix_hash, ethash::hash256{});
+    EXPECT_NE(sr.final_hash, ethash::hash256{});
+    EXPECT_EQ(sr.nonce, 103);
+    EXPECT_EQ(sr.mix_hash, srl.mix_hash);
+    EXPECT_EQ(sr.final_hash, srl.final_hash);
+    EXPECT_EQ(sr.nonce, srl.nonce);
+
+    auto r = progpow::hash(ctx, 0, {}, 103);
+    EXPECT_EQ(sr.final_hash, r.final_hash);
+    EXPECT_EQ(sr.mix_hash, r.mix_hash);
+}
+
 #if ETHASH_TEST_GENERATION
 TEST(progpow, generate_hash_test_cases)
 {

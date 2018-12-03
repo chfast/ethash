@@ -354,7 +354,7 @@ bool verify(const epoch_context& context, const hash256& header_hash, const hash
         return false;
 
     const hash256 expected_mix_hash = hash_kernel(context, seed, calculate_dataset_item_1024);
-    return std::memcmp(expected_mix_hash.bytes, mix_hash.bytes, sizeof(mix_hash)) == 0;
+    return is_equal(expected_mix_hash, mix_hash);
 }
 
 search_result search_light(const epoch_context& context, const hash256& header_hash,

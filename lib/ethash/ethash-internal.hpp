@@ -42,6 +42,11 @@ inline bool is_less_or_equal(const hash256& a, const hash256& b) noexcept
     return true;
 }
 
+inline bool is_equal(const hash256& a, const hash256& b) noexcept
+{
+    return std::memcmp(a.bytes, b.bytes, sizeof(a)) == 0;
+}
+
 void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept;
 
 hash512 calculate_dataset_item_512(const epoch_context& context, int64_t index) noexcept;
