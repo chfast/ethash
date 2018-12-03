@@ -165,7 +165,9 @@ epoch_context_full* create_epoch_context(
         full_dataset,
     };
 
-    progpow::build_l1_cache(l1_cache, *context);
+    auto* full_dataset_2048 = reinterpret_cast<hash2048*>(l1_cache);
+    for (uint32_t i = 0; i < progpow::l1_cache_size / sizeof(full_dataset_2048[0]); ++i)
+        full_dataset_2048[i] = calculate_dataset_item_2048(*context, i);
     return context;
 }
 }  // namespace generic

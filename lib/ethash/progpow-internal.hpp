@@ -59,6 +59,4 @@ uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept;
 
 void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept;
 
-void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& context) noexcept;
-
 }  // namespace progpow

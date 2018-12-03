@@ -9,19 +9,6 @@
 
 #include <benchmark/benchmark.h>
 
-static void progpow_build_l1_cache(benchmark::State& state)
-{
-    auto& context = get_ethash_epoch_context_0();
-    std::array<uint32_t, progpow::l1_cache_num_items> l1_cache;
-
-    for (auto _ : state)
-    {
-        progpow::build_l1_cache(l1_cache.data(), context);
-        benchmark::DoNotOptimize(l1_cache.data());
-    }
-}
-BENCHMARK(progpow_build_l1_cache)->Unit(benchmark::kMillisecond);
-
 static void progpow_mix_rng(benchmark::State& state)
 {
     progpow::mix_rng_state rng_state{0xff};
