@@ -160,7 +160,7 @@ void round(
             for (size_t l = 0; l < num_lanes; ++l)
             {
                 const size_t offset = mix[l][src] % l1_cache_num_items;
-                random_merge(mix[l][dst], context.l1_cache[offset], sel);
+                random_merge(mix[l][dst], le::uint32(context.l1_cache[offset]), sel);
             }
         }
         if (i < num_math_operations)
