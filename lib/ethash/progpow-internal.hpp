@@ -55,8 +55,4 @@ private:
     std::array<uint32_t, num_regs> src_seq;
 };
 
-uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept;
-
-void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept;
-
 }  // namespace progpow

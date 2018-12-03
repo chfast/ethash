@@ -76,8 +76,11 @@ mix_rng_state::mix_rng_state(uint64_t seed) noexcept
     }
 }
 
+
+namespace
+{
 NO_SANITIZE("unsigned-integer-overflow")
-uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
+inline uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
 {
     switch (selector % 11)
     {
@@ -111,7 +114,7 @@ uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
 /// Assuming `a` has high entropy, only do ops that retain entropy even if `b`
 /// has low entropy (i.e. do not do `a & b`).
 NO_SANITIZE("unsigned-integer-overflow")
-void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
+inline void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
 {
     switch (selector % 4)
     {
@@ -130,8 +133,6 @@ void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
     }
 }
 
-namespace
-{
 using lookup_fn = hash2048 (*)(const epoch_context&, uint32_t);
 
 using mix_array = std::array<std::array<uint32_t, num_regs>, num_lanes>;
