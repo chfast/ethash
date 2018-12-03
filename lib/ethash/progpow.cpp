@@ -130,18 +130,6 @@ void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
     }
 }
 
-void build_l1_cache(uint32_t cache[l1_cache_num_items], const epoch_context& context) noexcept
-{
-    static constexpr uint32_t num_items = l1_cache_size / sizeof(hash2048);
-    for (uint32_t i = 0; i < num_items; ++i)
-    {
-        auto data = calculate_dataset_item_2048(context, i);
-        static constexpr size_t num_words = sizeof(data) / sizeof(cache[0]);
-        for (size_t j = 0; j < num_words; ++j)
-            cache[i * num_words + j] = le::uint32(data.word32s[j]);
-    }
-}
-
 namespace
 {
 using lookup_fn = hash2048 (*)(const epoch_context&, uint32_t);
@@ -172,7 +160,7 @@ void round(
             for (size_t l = 0; l < num_lanes; ++l)
             {
                 const size_t offset = mix[l][src] % l1_cache_num_items;
-                random_merge(mix[l][dst], context.l1_cache[offset], sel);
+                random_merge(mix[l][dst], le::uint32(context.l1_cache[offset]), sel);
             }
         }
         if (i < num_math_operations)

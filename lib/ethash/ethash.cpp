@@ -135,10 +135,15 @@ epoch_context_full* create_epoch_context(
     static constexpr size_t context_alloc_size = sizeof(hash512);
 
     const int light_cache_num_items = calculate_light_cache_num_items(epoch_number);
+    const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
     const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
-    const size_t alloc_size = context_alloc_size + light_cache_size + progpow::l1_cache_size;
+    const size_t full_dataset_size =
+        full ? static_cast<size_t>(full_dataset_num_items) * sizeof(hash1024) :
+               progpow::l1_cache_size;
 
-    char* const alloc_data = static_cast<char*>(std::malloc(alloc_size));
+    const size_t alloc_size = context_alloc_size + light_cache_size + full_dataset_size;
+
+    char* const alloc_data = static_cast<char*>(std::calloc(1, alloc_size));
     if (!alloc_data)
         return nullptr;  // Signal out-of-memory by returning null pointer.
 
@@ -146,28 +151,10 @@ epoch_context_full* create_epoch_context(
     const hash256 epoch_seed = calculate_epoch_seed(epoch_number);
     build_fn(light_cache, light_cache_num_items, epoch_seed);
 
-    // FIXME: Refactor epoch context creation.
-    //        All memory can be allocated as once and l1_cache can point to beginning of the DAG.
-
-    const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
-    epoch_context tmp_context{
-        epoch_number, light_cache_num_items, light_cache, nullptr, full_dataset_num_items};
-
     uint32_t* const l1_cache =
         reinterpret_cast<uint32_t*>(alloc_data + context_alloc_size + light_cache_size);
-    progpow::build_l1_cache(l1_cache, tmp_context);
 
-    hash1024* full_dataset = nullptr;
-    if (full)
-    {
-        const size_t num_items = static_cast<size_t>(full_dataset_num_items);
-        full_dataset = static_cast<hash1024*>(std::calloc(num_items, sizeof(hash1024)));
-        if (!full_dataset)
-        {
-            std::free(alloc_data);
-            return nullptr;
-        }
-    }
+    hash1024* full_dataset = full ? reinterpret_cast<hash1024*>(l1_cache) : nullptr;
 
     epoch_context_full* const context = new (alloc_data) epoch_context_full{
         epoch_number,
@@ -177,6 +164,10 @@ epoch_context_full* create_epoch_context(
         full_dataset_num_items,
         full_dataset,
     };
+
+    auto* full_dataset_2048 = reinterpret_cast<hash2048*>(l1_cache);
+    for (uint32_t i = 0; i < progpow::l1_cache_size / sizeof(full_dataset_2048[0]); ++i)
+        full_dataset_2048[i] = calculate_dataset_item_2048(*context, i);
     return context;
 }
 }  // namespace generic
@@ -438,7 +429,6 @@ epoch_context_full* ethash_create_epoch_context_full(int epoch_number) noexcept
 
 void ethash_destroy_epoch_context_full(epoch_context_full* context) noexcept
 {
-    std::free(context->full_dataset);
     ethash_destroy_epoch_context(context);
 }
 

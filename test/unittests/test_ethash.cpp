@@ -744,10 +744,10 @@ bool restore_memory_limit()
 
 static constexpr bool arch64bit = sizeof(void*) == 8;
 
-TEST(ethash, init_full_dataset_oom)
+TEST(ethash, create_context_oom)
 {
-    static constexpr int epoch = arch64bit ? 3000 : 384;
-    static constexpr size_t expected_size = arch64bit ? 26239565696 : 4294962304;
+    static constexpr int epoch = arch64bit ? 3000 : 300;
+    static constexpr size_t expected_size = arch64bit ? 26239565696 : 3590324096;
     const int num_items = calculate_full_dataset_num_items(epoch);
     const uint64_t full_dataset_size = get_full_dataset_size(num_items);
     const size_t size = static_cast<size_t>(full_dataset_size);
@@ -757,18 +757,6 @@ TEST(ethash, init_full_dataset_oom)
     ASSERT_TRUE(set_memory_limit(1024 * 1024 * 1024));
     auto* context = ethash_create_epoch_context_full(epoch);
     ASSERT_TRUE(restore_memory_limit());
-    EXPECT_EQ(context, nullptr);
-}
-
-TEST(ethash, init_light_cache_oom)
-{
-    static constexpr int epoch = arch64bit ? 1000000 : 30000;
-    static constexpr size_t expected_size = arch64bit ? 131088776768 : 3948936512;
-    const int num_items = calculate_light_cache_num_items(epoch);
-    const size_t size = get_light_cache_size(num_items);
-    ASSERT_EQ(size, expected_size);
-
-    auto* context = ethash_create_epoch_context(epoch);
     EXPECT_EQ(context, nullptr);
 }
 #endif
