@@ -49,15 +49,39 @@ uint64_t keccak_progpow_64(const hash256& header_hash, uint64_t nonce) noexcept
     return be::uint64(h.word64s[0]);
 }
 
+namespace
+{
+/// ProgPoW mix RNG state.
+///
+/// Encapsulates the state of the random number generator used in computing ProgPoW mix.
+/// This includes the state of the KISS99 RNG and the precomputed random permutation of the
+/// sequence of mix item indexes.
+class mix_rng_state
+{
+public:
+    inline explicit mix_rng_state(uint64_t seed) noexcept;
+
+    uint32_t next_dst() noexcept { return dst_seq[(dst_counter++) % num_regs]; }
+    uint32_t next_src() noexcept { return src_seq[(src_counter++) % num_regs]; }
+
+    kiss99 rng;
+
+private:
+    size_t dst_counter = 0;
+    std::array<uint32_t, num_regs> dst_seq;
+    size_t src_counter = 0;
+    std::array<uint32_t, num_regs> src_seq;
+};
+
 mix_rng_state::mix_rng_state(uint64_t seed) noexcept
 {
-    const uint32_t seed_lo = static_cast<uint32_t>(seed);
-    const uint32_t seed_hi = static_cast<uint32_t>(seed >> 32);
+    const auto seed_lo = static_cast<uint32_t>(seed);
+    const auto seed_hi = static_cast<uint32_t>(seed >> 32);
 
-    uint32_t z = fnv1a(fnv_offset_basis, seed_lo);
-    uint32_t w = fnv1a(z, seed_hi);
-    uint32_t jsr = fnv1a(w, seed_lo);
-    uint32_t jcong = fnv1a(jsr, seed_hi);
+    const auto z = fnv1a(fnv_offset_basis, seed_lo);
+    const auto w = fnv1a(z, seed_hi);
+    const auto jsr = fnv1a(w, seed_lo);
+    const auto jcong = fnv1a(jsr, seed_hi);
 
     rng = kiss99{z, w, jsr, jcong};
 
@@ -77,8 +101,6 @@ mix_rng_state::mix_rng_state(uint64_t seed) noexcept
 }
 
 
-namespace
-{
 NO_SANITIZE("unsigned-integer-overflow")
 inline uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
 {

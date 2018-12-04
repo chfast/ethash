@@ -55,31 +55,6 @@ TEST(progpow, keccak_progpow_64boundary)
     EXPECT_LT(s, boundary_prefix);
 }
 
-TEST(progpow, mix_rng_state)
-{
-    const int block_number = 30000;
-    const uint64_t period_seed = block_number / progpow::period_length;
-
-    progpow::mix_rng_state state{period_seed};
-
-    EXPECT_EQ(state.rng(), 3572782357);
-    EXPECT_EQ(state.rng(), 1081751690);
-
-    using seq = std::array<uint32_t, progpow::num_regs>;
-
-    const seq expected_dst_seq{{0, 4, 27, 26, 13, 15, 17, 7, 14, 8, 9, 12, 3, 10, 1, 11, 6, 16, 28,
-        31, 2, 19, 30, 22, 29, 5, 24, 18, 25, 23, 21, 20}};
-    seq dst_seq;
-    std::generate(dst_seq.begin(), dst_seq.end(), [&] { return state.next_dst(); });
-    EXPECT_EQ(dst_seq, expected_dst_seq);
-
-    const seq expected_src_seq{{26, 30, 1, 19, 11, 21, 15, 18, 3, 17, 31, 16, 28, 4, 22, 23, 2, 13,
-        29, 24, 10, 12, 5, 20, 7, 8, 14, 27, 6, 25, 9, 0}};
-    seq src_seq;
-    std::generate(src_seq.begin(), src_seq.end(), [&] { return state.next_src(); });
-    EXPECT_EQ(src_seq, expected_src_seq);
-}
-
 TEST(progpow, l1_cache)
 {
     auto& context = get_ethash_epoch_context_0();

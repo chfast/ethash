@@ -33,26 +33,5 @@ hash256 keccak_progpow_256(
 /// and returns top 64 bits of the output being a big-endian prefix of the 256-bit hash.
 uint64_t keccak_progpow_64(const hash256& header_hash, uint64_t nonce) noexcept;
 
-/// ProgPoW mix RNG state.
-///
-/// Encapsulates the state of the random number generator used in computing ProgPoW mix.
-/// This includes the state of the KISS99 RNG and the precomputed random permutation of the
-/// sequence of mix item indexes.
-class mix_rng_state
-{
-public:
-    explicit mix_rng_state(uint64_t seed) noexcept;
-
-    uint32_t next_dst() noexcept { return dst_seq[(dst_counter++) % num_regs]; }
-    uint32_t next_src() noexcept { return src_seq[(src_counter++) % num_regs]; }
-
-    kiss99 rng;
-
-private:
-    size_t dst_counter = 0;
-    std::array<uint32_t, num_regs> dst_seq;
-    size_t src_counter = 0;
-    std::array<uint32_t, num_regs> src_seq;
-};
 
 }  // namespace progpow
