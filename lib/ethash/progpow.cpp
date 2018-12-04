@@ -2,24 +2,20 @@
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
-#include "progpow-internal.hpp"
+#include <ethash/progpow.hpp>
 
 #include "bit_manipulation.h"
 #include "endianness.hpp"
 #include "ethash-internal.hpp"
 #include "kiss99.hpp"
-
 #include <ethash/keccak.hpp>
+
+#include <array>
 
 namespace progpow
 {
 namespace
 {
-constexpr size_t num_lanes = 16;
-constexpr int num_cache_accesses = 12;
-constexpr int num_math_operations = 20;
-
-
 /// A variant of Keccak hash function for ProgPoW.
 ///
 /// This Keccak hash function uses 800-bit permutation (Keccak-f[800]) with 576 bitrate.
