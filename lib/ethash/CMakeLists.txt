@@ -27,7 +27,6 @@ add_library(
     primes.h
     primes.c
     ${include_dir}/ethash/progpow.hpp
-    progpow-internal.hpp
     progpow.cpp
 )
 

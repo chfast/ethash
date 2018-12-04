@@ -2,21 +2,29 @@
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0. See the LICENSE file.
 
-#include "progpow-internal.hpp"
+#include <ethash/progpow.hpp>
 
 #include "bit_manipulation.h"
 #include "endianness.hpp"
 #include "ethash-internal.hpp"
 #include "kiss99.hpp"
-
 #include <ethash/keccak.hpp>
+
+#include <array>
 
 namespace progpow
 {
-static constexpr size_t num_lanes = 16;
-static constexpr int num_cache_accesses = 12;
-static constexpr int num_math_operations = 20;
-
+namespace
+{
+/// A variant of Keccak hash function for ProgPoW.
+///
+/// This Keccak hash function uses 800-bit permutation (Keccak-f[800]) with 576 bitrate.
+/// It take exactly 576 bits of input (split across 3 arguments) and adds no padding.
+///
+/// @param header_hash  The 256-bit header hash.
+/// @param nonce        The 64-bit nonce.
+/// @param mix_hash     Additional 256-bits of data.
+/// @return             The 256-bit output of the hash function.
 hash256 keccak_progpow_256(
     const hash256& header_hash, uint64_t nonce, const hash256& mix_hash) noexcept
 {
@@ -43,21 +51,46 @@ hash256 keccak_progpow_256(
     return output;
 }
 
-uint64_t keccak_progpow_64(const hash256& header_hash, uint64_t nonce) noexcept
+/// The same as keccak_progpow_256() but uses null mix
+/// and returns top 64 bits of the output being a big-endian prefix of the 256-bit hash.
+inline uint64_t keccak_progpow_64(const hash256& header_hash, uint64_t nonce) noexcept
 {
     const hash256 h = keccak_progpow_256(header_hash, nonce, {});
     return be::uint64(h.word64s[0]);
 }
 
+
+/// ProgPoW mix RNG state.
+///
+/// Encapsulates the state of the random number generator used in computing ProgPoW mix.
+/// This includes the state of the KISS99 RNG and the precomputed random permutation of the
+/// sequence of mix item indexes.
+class mix_rng_state
+{
+public:
+    inline explicit mix_rng_state(uint64_t seed) noexcept;
+
+    uint32_t next_dst() noexcept { return dst_seq[(dst_counter++) % num_regs]; }
+    uint32_t next_src() noexcept { return src_seq[(src_counter++) % num_regs]; }
+
+    kiss99 rng;
+
+private:
+    size_t dst_counter = 0;
+    std::array<uint32_t, num_regs> dst_seq;
+    size_t src_counter = 0;
+    std::array<uint32_t, num_regs> src_seq;
+};
+
 mix_rng_state::mix_rng_state(uint64_t seed) noexcept
 {
-    const uint32_t seed_lo = static_cast<uint32_t>(seed);
-    const uint32_t seed_hi = static_cast<uint32_t>(seed >> 32);
+    const auto seed_lo = static_cast<uint32_t>(seed);
+    const auto seed_hi = static_cast<uint32_t>(seed >> 32);
 
-    uint32_t z = fnv1a(fnv_offset_basis, seed_lo);
-    uint32_t w = fnv1a(z, seed_hi);
-    uint32_t jsr = fnv1a(w, seed_lo);
-    uint32_t jcong = fnv1a(jsr, seed_hi);
+    const auto z = fnv1a(fnv_offset_basis, seed_lo);
+    const auto w = fnv1a(z, seed_hi);
+    const auto jsr = fnv1a(w, seed_lo);
+    const auto jcong = fnv1a(jsr, seed_hi);
 
     rng = kiss99{z, w, jsr, jcong};
 
@@ -76,8 +109,9 @@ mix_rng_state::mix_rng_state(uint64_t seed) noexcept
     }
 }
 
+
 NO_SANITIZE("unsigned-integer-overflow")
-uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
+inline uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
 {
     switch (selector % 11)
     {
@@ -111,7 +145,7 @@ uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
 /// Assuming `a` has high entropy, only do ops that retain entropy even if `b`
 /// has low entropy (i.e. do not do `a & b`).
 NO_SANITIZE("unsigned-integer-overflow")
-void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
+inline void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
 {
     switch (selector % 4)
     {
@@ -130,8 +164,6 @@ void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
     }
 }
 
-namespace
-{
 using lookup_fn = hash2048 (*)(const epoch_context&, uint32_t);
 
 using mix_array = std::array<std::array<uint32_t, num_regs>, num_lanes>;

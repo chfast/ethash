@@ -7,9 +7,9 @@
 #include "bit_manipulation.h"
 #include "endianness.hpp"
 #include "primes.h"
-#include "progpow-internal.hpp"
 #include "support/attributes.h"
 #include <ethash/keccak.hpp>
+#include <ethash/progpow.hpp>
 
 #include <cassert>
 #include <cstdlib>
