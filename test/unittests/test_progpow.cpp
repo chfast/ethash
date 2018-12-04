@@ -12,49 +12,6 @@
 #include <gtest/gtest.h>
 
 
-TEST(progpow, keccak_progpow_256)
-{
-    const auto h = progpow::keccak_progpow_256({}, 0, {});
-    EXPECT_EQ(to_hex(h), "5dd431e5fbc604f499bfa0232f45f8f142d0ff5178f539e5a7800bf0643697af");
-}
-
-TEST(progpow, keccak_progpow_64)
-{
-    const auto h0 = progpow::keccak_progpow_64({}, 0);
-    const auto fh = progpow::keccak_progpow_256({}, 0, {});
-    EXPECT_EQ(h0, 0x5dd431e5fbc604f4);
-    EXPECT_EQ(to_hex(fh), "5dd431e5fbc604f499bfa0232f45f8f142d0ff5178f539e5a7800bf0643697af");
-
-    const ethash::hash256 header_hash_2 =
-        to_hash256("bc544c2baba832600013bd5d1983f592e9557d04b0fb5ef7a100434a5fc8d52a");
-    const auto h2 = progpow::keccak_progpow_64(header_hash_2, 0x1ffffffff);
-    const auto fh2 = progpow::keccak_progpow_256(header_hash_2, 0x1ffffffff, {});
-    EXPECT_EQ(to_hex(fh2), "7be8a749a11cbc8eaacb7bd5b20ef17cac6545af701c91b8ee96b05226981ff4");
-    EXPECT_EQ(h2, 0x7be8a749a11cbc8e);
-}
-
-TEST(progpow, keccak_progpow_64boundary)
-{
-    using namespace progpow;
-
-    const hash256 header_hash{};
-    const uint64_t nonce = 254984491;
-    const hash256 boundary =
-        to_hash256("0000000f00000000000000000000000000000000000000000000000000000000");
-    const uint64_t boundary_prefix = be::uint64(boundary.word64s[0]);
-
-    hash256 h = keccak_progpow_256(header_hash, nonce, {});
-    EXPECT_EQ(to_hex(h), "00000002e29488b39928408765b4645343fd9dd7ed2a4d4ddf42bf1c19ff8bac");
-
-    // The full hash is smaller than the boundary hash:
-    EXPECT_LT(std::memcmp(h.bytes, boundary.bytes, sizeof(h)), 0);
-
-    // The approximated comparison can be done against 64-bit prefix.
-    uint64_t s = keccak_progpow_64(header_hash, nonce);
-    EXPECT_EQ(s, 0x00000002e29488b3);
-    EXPECT_LT(s, boundary_prefix);
-}
-
 TEST(progpow, l1_cache)
 {
     auto& context = get_ethash_epoch_context_0();
