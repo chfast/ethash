@@ -44,6 +44,9 @@ union ethash_hash256 ethash_keccak256_32(const uint8_t data[32]) NOEXCEPT;
 union ethash_hash512 ethash_keccak512(const uint8_t* data, size_t size) NOEXCEPT;
 union ethash_hash512 ethash_keccak512_64(const uint8_t data[64]) NOEXCEPT;
 
+
+void ethash_keccakf1600_x4(uint64_t state[4][25]) NOEXCEPT;
+
 #ifdef __cplusplus
 }
 #endif

@@ -30,6 +30,19 @@ static void keccakf1600(benchmark::State& state)
 BENCHMARK(keccakf1600);
 
 
+static void keccakf1600_x4(benchmark::State& state)
+{
+    uint64_t keccak_state[4][25] = {};
+
+    for (auto _ : state)
+    {
+        ethash_keccakf1600_x4(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_x4);
+
+
 static void keccakf800(benchmark::State& state)
 {
     uint32_t keccak_state[25] = {};

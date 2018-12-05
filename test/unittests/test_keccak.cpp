@@ -226,10 +226,10 @@ TEST(keccak, unaligned)
 
     for (size_t offset = 1; offset < sizeof(uint64_t); ++offset)
     {
-        uint8_t *data = &buffer[offset];
+        uint8_t* data = &buffer[offset];
         std::memcpy(data, test_text, text_length);
 
-        for (auto &t : test_cases)
+        for (auto& t : test_cases)
         {
             const auto h256 = keccak256(data, t.input_size);
             ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
@@ -271,6 +271,24 @@ TEST(keccak, f800)
     ethash_keccakf800(state);
     for (size_t i = 0; i < 25; ++i)
         EXPECT_EQ(state[i], expected_state_1[i]);
+}
+
+TEST(keccak, f1600_x4)
+{
+    uint64_t state_x1[25] = {};
+    uint64_t state_x4[4][25] = {};
+
+    ethash_keccakf1600(state_x1);
+    ethash_keccakf1600_x4(state_x4);
+
+    for (int i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 25; ++j)
+        {
+            EXPECT_NE(state_x1[j], 0);
+            EXPECT_EQ(state_x1[j], state_x4[i][j]);
+        }
+    }
 }
 
 TEST(helpers, to_hex)

@@ -23,11 +23,13 @@ add_library(
     keccak.c
     keccakf800.c
     keccakf1600.c
+    keccakf1600_x4.cpp
     kiss99.hpp
     primes.h
     primes.c
     ${include_dir}/ethash/progpow.hpp
     progpow.cpp
+    vec.hpp
 )
 
 target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
