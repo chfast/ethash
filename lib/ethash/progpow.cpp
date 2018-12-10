@@ -147,6 +147,7 @@ inline uint32_t random_math(uint32_t a, uint32_t b, uint32_t selector) noexcept
 NO_SANITIZE("unsigned-integer-overflow")
 inline void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
 {
+    const auto x = (selector >> 16) % 31 + 1;  // Additional non-zero selector from higher bits.
     switch (selector % 4)
     {
     case 0:
@@ -156,10 +157,10 @@ inline void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
         a = (a ^ b) * 33;
         break;
     case 2:
-        a = rotl32(a, ((selector >> 16) % 31) + 1) ^ b;
+        a = rotl32(a, x) ^ b;
         break;
     case 3:
-        a = rotr32(a, ((selector >> 16) % 31) + 1) ^ b;
+        a = rotr32(a, x) ^ b;
         break;
     }
 }
