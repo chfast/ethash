@@ -5,6 +5,7 @@
 add_subdirectory(benchmarks)
 add_subdirectory(fakeminer)
 add_subdirectory(integration)
+add_subdirectory(tools)
 add_subdirectory(unittests)
 
 if(ETHASH_FUZZING)
