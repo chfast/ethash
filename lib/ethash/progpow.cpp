@@ -156,10 +156,10 @@ inline void random_merge(uint32_t& a, uint32_t b, uint32_t selector) noexcept
         a = (a ^ b) * 33;
         break;
     case 2:
-        a = rotl32(a, ((selector >> 16) % 32)) ^ b;
+        a = rotl32(a, ((selector >> 16) % 31) + 1) ^ b;
         break;
     case 3:
-        a = rotr32(a, ((selector >> 16) % 32)) ^ b;
+        a = rotr32(a, ((selector >> 16) % 31) + 1) ^ b;
         break;
     }
 }
@@ -182,9 +182,8 @@ void round(
     // Process lanes.
     for (int i = 0; i < max_operations; ++i)
     {
-        if (i < num_cache_accesses)
+        if (i < num_cache_accesses)  // Random access to cached memory.
         {
-            // Random access to cached memory.
             const auto src = state.next_src();
             const auto dst = state.next_dst();
             const auto sel = state.rng();
@@ -195,11 +194,15 @@ void round(
                 random_merge(mix[l][dst], le::uint32(context.l1_cache[offset]), sel);
             }
         }
-        if (i < num_math_operations)
+        if (i < num_math_operations)  // Random math.
         {
-            // Random math.
-            const auto src1 = state.rng() % num_regs;
-            const auto src2 = state.rng() % num_regs;
+            // Generate 2 unique source indexes.
+            const auto src_rnd = state.rng() % (num_regs * (num_regs - 1));
+            const auto src1 = src_rnd % num_regs;  // O <= src1 < num_regs
+            auto src2 = src_rnd / num_regs;        // 0 <= src2 < num_regs - 1
+            if (src2 >= src1)
+                ++src2;
+
             const auto sel1 = state.rng();
             const auto dst = state.next_dst();
             const auto sel2 = state.rng();
