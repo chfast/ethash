@@ -11,6 +11,16 @@
 #include <gtest/gtest.h>
 #include <array>
 
+TEST(progpow, revision)
+{
+    static_assert(progpow::revision[0] == '0', "");
+    static_assert(progpow::revision[1] == '.', "");
+    static_assert(progpow::revision[2] == '9', "");
+    static_assert(progpow::revision[3] == '.', "");
+    static_assert(progpow::revision[4] == '2', "");
+    EXPECT_EQ(progpow::revision, "0.9.2");
+    EXPECT_EQ(progpow::revision, (std::string{"0.9.2"}));
+}
 
 TEST(progpow, l1_cache)
 {

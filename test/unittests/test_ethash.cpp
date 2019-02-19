@@ -63,6 +63,13 @@ hash512 copy(const hash512& h) noexcept
 }
 }
 
+TEST(ethash, revision)
+{
+    static_assert(ethash::revision[0] == '2', "");
+    static_assert(ethash::revision[1] == '3', "");
+    EXPECT_EQ(ethash::revision, "23");
+    EXPECT_EQ(ethash::revision, (std::string{"23"}));
+}
 
 TEST(hash, hash256_from_bytes)
 {
