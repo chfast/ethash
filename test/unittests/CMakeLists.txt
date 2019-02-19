@@ -16,7 +16,10 @@ add_executable(
     test_managed.cpp
     test_primes.cpp
     test_progpow.cpp
+    test_version.cpp
 )
+
+set_source_files_properties(test_version.cpp PROPERTIES COMPILE_DEFINITIONS TEST_PROJECT_VERSION="${PROJECT_VERSION}")
 
 target_link_libraries(ethash-test PRIVATE ethash GTest::gtest GTest::main)
 target_include_directories(ethash-test PRIVATE ${ETHASH_PRIVATE_INCLUDE_DIR})
