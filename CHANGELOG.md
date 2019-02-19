@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.3] - unreleased
+## [0.4.3] - 2019-02-19
 
  - Added: [[#121](https://github.com/chfast/ethash/pull/121)]
    The public `version.h` header with information about the ethash library version.
@@ -22,7 +22,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
-[0.4.3]: https://github.com/chfast/ethash/compare/v0.4.2...master
+[0.4.3]: https://github.com/chfast/ethash/releases/tag/v0.4.3
 [0.4.2]: https://github.com/chfast/ethash/releases/tag/v0.4.2
 [0.4.1]: https://github.com/chfast/ethash/releases/tag/v0.4.1
 [0.4.0]: https://github.com/chfast/ethash/releases/tag/v0.4.0

@@ -6,7 +6,7 @@
 #pragma once
 
 /** The ethash library version. */
-#define ETHASH_VERSION "0.4.2"
+#define ETHASH_VERSION "0.4.3"
 
 #ifdef __cplusplus
 namespace ethash
