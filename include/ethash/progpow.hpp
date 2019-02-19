@@ -14,6 +14,11 @@ namespace progpow
 {
 using namespace ethash;  // Include ethash namespace.
 
+
+/// The ProgPoW algorithm revision implemented as specified in the spec
+/// https://github.com/ifdefelse/ProgPOW#change-history.
+constexpr auto revision = "0.9.2";
+
 constexpr int period_length = 50;
 constexpr uint32_t num_regs = 32;
 constexpr size_t num_lanes = 16;
