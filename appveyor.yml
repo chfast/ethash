@@ -11,6 +11,9 @@ environment:
     secure: agYfiC1OKfHnGOJQolOBorIRovVTgDW3TJ8JOb2+0XZiAnNwbrtPegxaaFM8/VWu
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      GENERATOR: "Ninja"
+
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 15 2017 Win64"
       CONFIGURATION: Debug
 
@@ -26,6 +29,7 @@ install:
   - pip install requests
 
 before_build: |
+  if %GENERATOR%==Ninja "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x64
   cmake -S . -B build -G "%GENERATOR%" .. -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
 
 build_script: |
