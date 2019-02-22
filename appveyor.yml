@@ -26,12 +26,10 @@ install:
   - pip install requests
 
 before_build: |
-  if not exist build mkdir build
-  cd build
-  cmake -G "%GENERATOR%" .. -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
+  cmake -S . -B build -G "%GENERATOR%" .. -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
 
 build_script: |
-  cmake --build . --config %CONFIGURATION%
+  cmake --build build --config %CONFIGURATION%
 
 test_script: |
   if %CONFIGURATION%==Release C:\projects\ethash\build\test\%CONFIGURATION%\ethash-test.exe
