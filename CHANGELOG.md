@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.4] - unreleased
+## [0.4.4] - 2019-02-26
 
  - Fixed: [[#125](https://github.com/chfast/ethash/pull/125)]
    Fix compilation on PowerPC architectures (-mtune=generic not supported there).
@@ -27,7 +27,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
-[0.4.4]: https://github.com/chfast/ethash/compare/v0.4.3...release/0.4
+[0.4.4]: https://github.com/chfast/ethash/releases/tag/v0.4.4
 [0.4.3]: https://github.com/chfast/ethash/releases/tag/v0.4.3
 [0.4.2]: https://github.com/chfast/ethash/releases/tag/v0.4.2
 [0.4.1]: https://github.com/chfast/ethash/releases/tag/v0.4.1
