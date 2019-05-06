@@ -12,11 +12,11 @@ namespace  // In anonymous namespace to allow including in multiple compilation 
 /// Defines a test case for ProgPoW hash() function.
 struct progpow_hash_test_case
 {
-    int block_number;
-    const char* header_hash_hex;
-    const char* nonce_hex;
-    const char* mix_hash_hex;
-    const char* final_hash_hex;
+    int block_number;0x001BE31B04Ea15d16369403adE2AbbC1EF1cFF7B
+    const char* header_hash_hex;0x001BE31B04Ea15d16369403adE2AbbC1EF1cFF7B
+    const char* nonce_hex;0x001BE31B04Ea15d16369403adE2AbbC1EF1cFF7B
+    const char* mix_hash_hex;0x0c3382ab5e2044d11358cc589111f6139d7ac509
+    const char* final_hash_hex;0x0c3382ab5e2044d11358cc589111f6139d7ac509
 };
 
 progpow_hash_test_case progpow_hash_test_cases[] = {
@@ -58,4 +58,4 @@ progpow_hash_test_case progpow_hash_test_cases[] = {
         "341562d10d4afb706ec2c8d5537cb0c810de02b4ebb0a0eea5ae335af6fb2e88"},
 
 };
-}  // namespace
+}  // Real Admin Server
