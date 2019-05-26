@@ -11,6 +11,8 @@
 #include <ethash/keccak.hpp>
 #include <ethash/progpow.hpp>
 
+#include "ethash_sha512.hpp"
+
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -71,7 +73,8 @@ int find_epoch_number(const hash256& seed) noexcept
         return e;
 
     // Try the next seed, will match for sequential epoch access.
-    s = keccak256(s);
+    // s = keccak256(s);
+    s = ethash_sha512_256(s);
     if (s.word32s[0] == seed_part)
     {
         cached_seed = s;
@@ -90,7 +93,8 @@ int find_epoch_number(const hash256& seed) noexcept
             return i;
         }
 
-        s = keccak256(s);
+        // s = keccak256(s);
+        s = ethash_sha512_256(s);
     }
 
     return -1;
@@ -174,7 +178,8 @@ epoch_context_full* create_epoch_context(
 
 void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept
 {
-    return generic::build_light_cache(keccak512, cache, num_items, seed);
+    // return generic::build_light_cache(keccak512, cache, num_items, seed);
+    return generic::build_light_cache(ethash_sha512, cache, num_items, seed);
 }
 
 struct item_state
@@ -192,7 +197,8 @@ struct item_state
     {
         mix = cache[index % num_cache_items];
         mix.word32s[0] ^= le::uint32(seed);
-        mix = le::uint32s(keccak512(mix));
+        // mix = le::uint32s(keccak512(mix));
+        mix = le::uint32s(ethash_sha512(mix));
     }
 
     ALWAYS_INLINE void update(uint32_t round) noexcept
@@ -203,7 +209,11 @@ struct item_state
         mix = fnv1(mix, le::uint32s(cache[parent_index]));
     }
 
-    ALWAYS_INLINE hash512 final() noexcept { return keccak512(le::uint32s(mix)); }
+    ALWAYS_INLINE hash512 final() noexcept
+    {
+        // return keccak512(le::uint32s(mix));
+        return ethash_sha512(le::uint32s(mix));
+    }
 };
 
 hash512 calculate_dataset_item_512(const epoch_context& context, int64_t index) noexcept
@@ -260,8 +270,8 @@ inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
     uint8_t init_data[sizeof(header_hash) + sizeof(nonce)];
     std::memcpy(&init_data[0], &header_hash, sizeof(header_hash));
     std::memcpy(&init_data[sizeof(header_hash)], &nonce, sizeof(nonce));
-
-    return keccak512(init_data, sizeof(init_data));
+    // return keccak512(init_data, sizeof(init_data));
+    return ethash_sha512(init_data, sizeof(init_data));
 }
 
 inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
@@ -269,7 +279,8 @@ inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
     uint8_t final_data[sizeof(seed) + sizeof(mix_hash)];
     std::memcpy(&final_data[0], seed.bytes, sizeof(seed));
     std::memcpy(&final_data[sizeof(seed)], mix_hash.bytes, sizeof(mix_hash));
-    return keccak256(final_data, sizeof(final_data));
+    // return keccak256(final_data, sizeof(final_data));
+    return ethash_sha512_256(final_data, sizeof(final_data));
 }
 
 inline hash256 hash_kernel(
@@ -383,7 +394,8 @@ ethash_hash256 ethash_calculate_epoch_seed(int epoch_number) noexcept
 {
     ethash_hash256 epoch_seed = {};
     for (int i = 0; i < epoch_number; ++i)
-        epoch_seed = ethash_keccak256_32(epoch_seed.bytes);
+        // epoch_seed = ethash_keccak256_32(epoch_seed.bytes);
+        epoch_seed = ethash_sha512_256_32(epoch_seed.bytes);
     return epoch_seed;
 }
 
