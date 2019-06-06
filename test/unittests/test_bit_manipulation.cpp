@@ -1,6 +1,6 @@
 // ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018 Pawel Bylica.
-// Licensed under the Apache License, Version 2.0. See the LICENSE file.
+// Copyright 2018-2019 Pawel Bylica.
+// Licensed under the Apache License, Version 2.0.
 
 #include <ethash/bit_manipulation.h>
 
@@ -14,14 +14,14 @@ TEST(bit_manipulation, rotl32)
     EXPECT_EQ(rotl32(1, 0), 1);
     EXPECT_EQ(rotl32(1, 1), 2);
     EXPECT_EQ(rotl32(1, 2), 4);
-    EXPECT_EQ(rotl32(1, 31), 1 << 31);
+    EXPECT_EQ(rotl32(1, 31), 1u << 31);
     EXPECT_EQ(rotl32(1, 32), 1);
     EXPECT_EQ(rotl32(1, 33), 2);
 
     EXPECT_EQ(rotl32(3, 0), 3);
     EXPECT_EQ(rotl32(3, 1), 6);
-    EXPECT_EQ(rotl32(3, 30), 3 << 30);
-    EXPECT_EQ(rotl32(3, 31), (1 << 31) | 1);
+    EXPECT_EQ(rotl32(3, 30), 3u << 30);
+    EXPECT_EQ(rotl32(3, 31), (1u << 31) | 1);
     EXPECT_EQ(rotl32(3, 32), 3);
     EXPECT_EQ(rotl32(3, 33), 6);
 }
@@ -32,20 +32,20 @@ TEST(bit_manipulation, rotr32)
     EXPECT_EQ(rotr32(0, 4321), 0);
 
     EXPECT_EQ(rotr32(1, 0), 1);
-    EXPECT_EQ(rotr32(1, 1), 1 << 31);
-    EXPECT_EQ(rotr32(1, 2), 1 << 30);
-    EXPECT_EQ(rotr32(1, 30), 1 << 2);
-    EXPECT_EQ(rotr32(1, 31), 1 << 1);
+    EXPECT_EQ(rotr32(1, 1), 1u << 31);
+    EXPECT_EQ(rotr32(1, 2), 1u << 30);
+    EXPECT_EQ(rotr32(1, 30), 1u << 2);
+    EXPECT_EQ(rotr32(1, 31), 1u << 1);
     EXPECT_EQ(rotr32(1, 32), 1);
-    EXPECT_EQ(rotr32(1, 33), 1 << 31);
+    EXPECT_EQ(rotr32(1, 33), 1u << 31);
 
     EXPECT_EQ(rotr32(3, 0), 3);
-    EXPECT_EQ(rotr32(3, 1), (1 << 31) | 1);
-    EXPECT_EQ(rotr32(3, 2), (3 << 30));
+    EXPECT_EQ(rotr32(3, 1), (1u << 31) | 1);
+    EXPECT_EQ(rotr32(3, 2), (3u << 30));
     EXPECT_EQ(rotr32(3, 30), 12);
     EXPECT_EQ(rotr32(3, 31), 6);
     EXPECT_EQ(rotr32(3, 32), 3);
-    EXPECT_EQ(rotr32(3, 33), (1 << 31) | 1);
+    EXPECT_EQ(rotr32(3, 33), (1u << 31) | 1);
 }
 
 TEST(bit_manipulation, clz32)
