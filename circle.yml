@@ -33,14 +33,14 @@ defaults:
       name: "Install mips64 toolchain"
       command: |
         sudo apt -q update
-        sudo apt -qy install g++-mips64-linux-gnuabi64 qemu
+        sudo apt -qy install g++-mips64-linux-gnuabi64 qemu-user-static
 
   install-powerpc64: &install-powerpc64
     run:
       name: "Install powerpc64 toolchain"
       command: |
         sudo apt -q update
-        sudo apt -qy install g++-powerpc64-linux-gnu qemu
+        sudo apt -qy install g++-powerpc64-linux-gnu qemu-user-static
 
   configure: &configure
     run:
@@ -132,11 +132,11 @@ defaults:
 
 jobs:
 
-  linux-gcc6-coverage:
+  linux-gcc-coverage:
     environment:
-      - CXX: g++-6
-      - CC:  gcc-6
-      - GCOV: gcov-6
+      - CXX: g++-8
+      - CC:  gcc-8
+      - GCOV: gcov-8
       - BUILD_PARALLEL_JOBS: 2
       - BUILD_TYPE: Debug
       - CMAKE_OPTIONS: -DCOVERAGE=ON
@@ -148,10 +148,10 @@ jobs:
       - *test
       - *upload-coverage-data
 
-  linux-clang6-ubsan:
+  linux-clang-ubsan:
     environment:
-      - CXX: clang++-6.0
-      - CC:  clang-6.0
+      - CXX: clang++-8
+      - CC:  clang-8
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=undefined,integer,nullability
       - UBSAN_OPTIONS: halt_on_error=1
@@ -163,10 +163,10 @@ jobs:
       - *test
       - *benchmark
 
-  linux-clang6-asan:
+  linux-clang-asan:
     environment:
-      - CXX: clang++-6.0
-      - CC:  clang-6.0
+      - CXX: clang++-8
+      - CC:  clang-8
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=address
       - ASAN_OPTIONS: allocator_may_return_null=1
@@ -224,7 +224,7 @@ jobs:
           name: "Test mips64"
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
-            qemu-mips64 test/ethash-test --gtest_filter='-*_multithreaded.*'
+            qemu-mips64-static test/ethash-test --gtest_filter='-*_multithreaded.*'
 
   powerpc64:
     environment:
@@ -244,7 +244,7 @@ jobs:
           name: "Test powerpc64"
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
-            qemu-ppc64 test/ethash-test --gtest_filter='-*_multithreaded.*'
+            qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*'
 
 
   macos-xcode-tsan:
@@ -266,9 +266,9 @@ workflows:
   version: 2
   ethash:
     jobs:
-      - linux-gcc6-coverage
-      - linux-clang6-ubsan
-      - linux-clang6-asan
+      - linux-gcc-coverage
+      - linux-clang-ubsan
+      - linux-clang-asan
       - linux-32bit-asan
       - linux-32bit-ubsan
       - mips64
