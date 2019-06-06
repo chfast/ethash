@@ -5,7 +5,7 @@
 
 #include <ethash/keccak.h>
 
-#include "support/attributes.h"
+#include "../support/attributes.h"
 #include <string.h>
 
 #if _WIN32

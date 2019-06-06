@@ -1,13 +1,13 @@
 // ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018 Pawel Bylica.
-// Licensed under the Apache License, Version 2.0. See the LICENSE file.
+// Copyright 2018-2019 Pawel Bylica.
+// Licensed under the Apache License, Version 2.0.
 
 #include "ethash-internal.hpp"
 
+#include "../support/attributes.h"
 #include "bit_manipulation.h"
 #include "endianness.hpp"
 #include "primes.h"
-#include "support/attributes.h"
 #include <ethash/keccak.hpp>
 #include <ethash/progpow.hpp>
 
