@@ -1,3 +1,10 @@
+version: 2.1
+
+executors:
+  linux:
+    docker:
+      - image: ethereum/cpp-build-env:11
+
 defaults:
 
   environment-info: &environment-info
@@ -123,7 +130,6 @@ defaults:
       - *test
 
 
-version: 2
 jobs:
 
   linux-gcc6-coverage:
@@ -134,8 +140,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 2
       - BUILD_TYPE: Debug
       - CMAKE_OPTIONS: -DCOVERAGE=ON
-    docker:
-      - image: ethereum/cpp-build-env
+    executor: linux
     steps:
       - checkout
       - *configure
@@ -150,8 +155,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=undefined,integer,nullability
       - UBSAN_OPTIONS: halt_on_error=1
-    docker:
-      - image: ethereum/cpp-build-env
+    executor: linux
     steps:
       - checkout
       - *configure
@@ -166,8 +170,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=address
       - ASAN_OPTIONS: allocator_may_return_null=1
-    docker:
-      - image: ethereum/cpp-build-env
+    executor: linux
     steps:
       - checkout
       - *configure
@@ -180,8 +183,7 @@ jobs:
       - CXX: g++-4.8
       - CC:  gcc-4.8
       - BUILD_PARALLEL_JOBS: 2
-    docker:
-      - image: ethereum/cpp-build-env
+    executor: linux
     steps:
       - checkout
       - *configure
@@ -195,8 +197,7 @@ jobs:
       - CC:  clang-3.8
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF
-    docker:
-      - image: ethereum/cpp-build-env
+    executor: linux
     steps:
       - checkout
       - *configure
@@ -209,8 +210,7 @@ jobs:
       - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit
       - CMAKE_OPTIONS: -DSANITIZE=address
       - GTEST_FILTER: -*_oom
-    docker:
-      - image: ethereum/cpp-build-env
+    executor: linux
     steps:
       - checkout
       - *install-m32
@@ -224,8 +224,7 @@ jobs:
       - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit
       - CMAKE_OPTIONS: -DSANITIZE=undefined
       - UBSAN_OPTIONS: halt_on_error=1
-    docker:
-      - image: ethereum/cpp-build-env
+    executor: linux
     steps:
       - checkout
       - *install-m32
@@ -238,8 +237,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 2
       - TEST_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=mips64 -DCMAKE_EXE_LINKER_FLAGS=-static
-    docker:
-      - image: ethereum/cpp-build-env
+    executor: linux
     steps:
       - checkout
       - *install-mips64
@@ -259,8 +257,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 2
       - TEST_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
-    docker:
-      - image: ethereum/cpp-build-env
+    executor: linux
     steps:
       - checkout
       - *install-powerpc64
