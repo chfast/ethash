@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.0] - unreleased
+## [0.5.0] - 2019-06-07
 
  - Changed: [#[131](https://github.com/chfast/ethash/pull/131)]
    The Keccak implementation has been moved to separate library "keccak", 
@@ -33,7 +33,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
-[0.5.0]: https://github.com/chfast/ethash/compare/release/0.4...master
+[0.5.0]: https://github.com/chfast/ethash/releases/tag/v0.5.0
 [0.4.4]: https://github.com/chfast/ethash/releases/tag/v0.4.4
 [0.4.3]: https://github.com/chfast/ethash/releases/tag/v0.4.3
 [0.4.2]: https://github.com/chfast/ethash/releases/tag/v0.4.2
