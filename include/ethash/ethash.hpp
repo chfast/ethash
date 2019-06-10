@@ -59,8 +59,8 @@ struct search_result
 
     search_result() noexcept = default;
 
-    search_result(result res, uint64_t nonce) noexcept
-      : solution_found(true), nonce(nonce), final_hash(res.final_hash), mix_hash(res.mix_hash)
+    search_result(result res, uint64_t n) noexcept
+      : solution_found(true), nonce(n), final_hash(res.final_hash), mix_hash(res.mix_hash)
     {}
 };
 

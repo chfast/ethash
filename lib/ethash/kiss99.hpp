@@ -40,8 +40,8 @@ public:
     kiss99() noexcept = default;
 
     /** Creates KISS generator state with provided init values.*/
-    kiss99(uint32_t z, uint32_t w, uint32_t jsr, uint32_t jcong) noexcept
-      : z{z}, w{w}, jsr{jsr}, jcong{jcong}
+    kiss99(uint32_t _z, uint32_t _w, uint32_t _jsr, uint32_t _jcong) noexcept
+      : z{_z}, w{_w}, jsr{_jsr}, jcong{_jcong}
     {}
 
     /** Generates next number from the KISS generator. */
