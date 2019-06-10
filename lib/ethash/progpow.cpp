@@ -296,15 +296,15 @@ result hash(const epoch_context& context, int block_number, const hash256& heade
 result hash(const epoch_context_full& context, int block_number, const hash256& header_hash,
     uint64_t nonce) noexcept
 {
-    static const auto lazy_lookup = [](const epoch_context& context, uint32_t index) noexcept
+    static const auto lazy_lookup = [](const epoch_context& ctx, uint32_t index) noexcept
     {
-        auto* full_dataset_1024 = static_cast<const epoch_context_full&>(context).full_dataset;
+        auto* full_dataset_1024 = static_cast<const epoch_context_full&>(ctx).full_dataset;
         auto* full_dataset_2048 = reinterpret_cast<hash2048*>(full_dataset_1024);
         hash2048& item = full_dataset_2048[index];
         if (item.word64s[0] == 0)
         {
             // TODO: Copy elision here makes it thread-safe?
-            item = calculate_dataset_item_2048(context, index);
+            item = calculate_dataset_item_2048(ctx, index);
         }
 
         return item;

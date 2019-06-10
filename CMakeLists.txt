@@ -19,6 +19,7 @@ include(HunterGate)
 include(defaults/HunterCacheServers)
 
 cable_configure_toolchain(DEFAULT cxx11)
+cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo Debug)
 
 if(NOT WIN32)
     # Outside of Windows build only Release packages.
@@ -33,8 +34,6 @@ HunterGate(
 
 project(ethash)
 set(PROJECT_VERSION 0.5.1-alpha.0)
-
-cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo Debug)
 
 cable_configure_compiler(NO_STACK_PROTECTION)
 if(CABLE_COMPILER_GNULIKE)
