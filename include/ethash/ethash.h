@@ -122,6 +122,9 @@ bool ethash_verify(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
     const union ethash_hash256* boundary) NOEXCEPT;
 
+bool ethash_verify_final_hash(const union ethash_hash256* header_hash,
+    const union ethash_hash256* mix_hash, uint64_t nonce,
+    const union ethash_hash256* boundary) NOEXCEPT;
 
 #ifdef __cplusplus
 }
