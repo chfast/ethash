@@ -246,6 +246,61 @@ jobs:
           command: |  # Software emulation in qemu will not handle threads.
             qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*'
 
+  linux-release:
+    environment:
+      - CXX: clang++-8
+      - CC:  clang-8
+      - BUILD_PARALLEL_JOBS: 4
+      - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DHUNTER_ENABLED=OFF
+    docker:
+      - image: ethereum/cpp-build-env:9
+    steps:
+      - checkout
+      - *configure
+      - *build
+      - persist_to_workspace:
+          root: /tmp/local
+          paths:
+            - "*"
+
+  linux-release-python:
+    docker:
+      - image: quay.io/pypa/manylinux1_x86_64
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/project/dist
+      - run:
+          name: "Build wheels"
+          command: sh scripts/ci/python_build_wheels.sh
+      - run:
+          name: "Tag wheels"
+          working_directory: ~/project/dist
+          command: |
+            find -name '*linux_x86_64.whl' -exec auditwheel repair {} \;
+      - store_artifacts:
+          path: ~/project/dist
+          destination: dist
+      - run:
+          name: "Install CMake"
+          command: |
+            export PATH=/opt/python/cp37-cp37m/bin:$PATH
+            pip install cmake
+      - run:
+          name: "Build source dist"
+          command: |
+            export PATH=/opt/python/cp37-cp37m/bin:$PATH
+            ./setup.py sdist
+      - run:
+          name: "Build wheel with CMake build"
+          command: |
+            export PATH=/opt/python/cp37-cp37m/bin:$PATH
+            ./setup.py bdist_wheel
+      - run:
+          name: "Test"
+          command: |
+            export PATH=/opt/python/cp37-cp37m/bin:$PATH
+            ./setup.py test
 
   macos-xcode-tsan:
     <<: *macos-defaults
@@ -261,6 +316,34 @@ jobs:
     macos:
       xcode: "8.3.3"
 
+  macos-release:
+    environment:
+      - BUILD_PARALLEL_JOBS: 4
+      - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=~/project/dist
+    macos:
+      xcode: "10.2.1"
+    steps:
+      - run:
+          name: "Install CMake"
+          command: |
+            which python3
+            ls -l /usr/local/lib
+            ls -l /usr/local/bin
+            pip3 install cmake
+      - checkout
+      - *configure
+      - *build
+      - run:
+          name: "Test"
+          command: |
+            ./setup.py test
+      - run:
+          name: "Build wheels"
+          command: sh scripts/ci/python_build_wheels.sh
+      - store_artifacts:
+          path: ~/project/dist
+          destination: dist
+
 
 workflows:
   version: 2
@@ -275,3 +358,8 @@ workflows:
       - powerpc64
       - macos-xcode-tsan
       - macos-xcode83
+      - linux-release
+      - linux-release-python:
+          requires:
+            - linux-release
+      - macos-release
