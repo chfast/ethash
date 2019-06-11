@@ -153,8 +153,8 @@ int find_epoch_number(const hash256& seed) noexcept;
 
 
 /// Get global shared epoch context.
-const epoch_context& get_global_epoch_context(int epoch_number);
+const epoch_context& get_global_epoch_context(int epoch_number) noexcept;
 
 /// Get global shared epoch context with full dataset initialized.
-const epoch_context_full& get_global_epoch_context_full(int epoch_number);
+const epoch_context_full& get_global_epoch_context_full(int epoch_number) noexcept;
 }  // namespace ethash
