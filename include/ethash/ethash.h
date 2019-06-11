@@ -44,6 +44,13 @@ struct ethash_epoch_context
 struct ethash_epoch_context_full;
 
 
+struct ethash_result
+{
+    union ethash_hash256 final_hash;
+    union ethash_hash256 mix_hash;
+};
+
+
 /**
  * Calculates the number of items in the light cache for given epoch.
  *

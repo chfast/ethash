@@ -33,6 +33,8 @@ static constexpr int num_dataset_accesses = ETHASH_NUM_DATASET_ACCESSES;
 using epoch_context = ethash_epoch_context;
 using epoch_context_full = ethash_epoch_context_full;
 
+using result = ethash_result;
+
 /// Constructs a 256-bit hash from an array of bytes.
 ///
 /// @param bytes  A pointer to array of at least 32 bytes.
@@ -43,12 +45,6 @@ inline hash256 hash256_from_bytes(const uint8_t bytes[32]) noexcept
     std::memcpy(&h, bytes, sizeof(h));
     return h;
 }
-
-struct result
-{
-    hash256 final_hash;
-    hash256 mix_hash;
-};
 
 struct search_result
 {
