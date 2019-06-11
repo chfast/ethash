@@ -1,6 +1,6 @@
 // ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018 Pawel Bylica.
-// Licensed under the Apache License, Version 2.0. See the LICENSE file.
+// Copyright 2018-2019 Pawel Bylica.
+// Licensed under the Apache License, Version 2.0.
 
 /// @file
 ///
@@ -153,8 +153,14 @@ int find_epoch_number(const hash256& seed) noexcept;
 
 
 /// Get global shared epoch context.
-const epoch_context& get_global_epoch_context(int epoch_number) noexcept;
+inline const epoch_context& get_global_epoch_context(int epoch_number) noexcept
+{
+    return *ethash_get_global_epoch_context(epoch_number);
+}
 
 /// Get global shared epoch context with full dataset initialized.
-const epoch_context_full& get_global_epoch_context_full(int epoch_number) noexcept;
+inline const epoch_context_full& get_global_epoch_context_full(int epoch_number) noexcept
+{
+    return *ethash_get_global_epoch_context_full(epoch_number);
+}
 }  // namespace ethash
