@@ -1,6 +1,6 @@
 // ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018 Pawel Bylica.
-// Licensed under the Apache License, Version 2.0. See the LICENSE file.
+// Copyright 2018-2019 Pawel Bylica.
+// Licensed under the Apache License, Version 2.0.
 
 /// @file
 ///
@@ -33,6 +33,8 @@ static constexpr int num_dataset_accesses = ETHASH_NUM_DATASET_ACCESSES;
 using epoch_context = ethash_epoch_context;
 using epoch_context_full = ethash_epoch_context_full;
 
+using result = ethash_result;
+
 /// Constructs a 256-bit hash from an array of bytes.
 ///
 /// @param bytes  A pointer to array of at least 32 bytes.
@@ -43,12 +45,6 @@ inline hash256 hash256_from_bytes(const uint8_t bytes[32]) noexcept
     std::memcpy(&h, bytes, sizeof(h));
     return h;
 }
-
-struct result
-{
-    hash256 final_hash;
-    hash256 mix_hash;
-};
 
 struct search_result
 {
@@ -124,15 +120,25 @@ inline epoch_context_full_ptr create_epoch_context_full(int epoch_number) noexce
 }
 
 
-result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept;
+inline result hash(
+    const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
+{
+    return ethash_hash(&context, &header_hash, nonce);
+}
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept;
 
-bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
-    const hash256& boundary) noexcept;
+inline bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
+    const hash256& boundary) noexcept
+{
+    return ethash_verify_final_hash(&header_hash, &mix_hash, nonce, &boundary);
+}
 
-bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
-    uint64_t nonce, const hash256& boundary) noexcept;
+inline bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
+    uint64_t nonce, const hash256& boundary) noexcept
+{
+    return ethash_verify(&context, &header_hash, &mix_hash, nonce, &boundary);
+}
 
 search_result search_light(const epoch_context& context, const hash256& header_hash,
     const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept;
@@ -153,8 +159,14 @@ int find_epoch_number(const hash256& seed) noexcept;
 
 
 /// Get global shared epoch context.
-const epoch_context& get_global_epoch_context(int epoch_number);
+inline const epoch_context& get_global_epoch_context(int epoch_number) noexcept
+{
+    return *ethash_get_global_epoch_context(epoch_number);
+}
 
 /// Get global shared epoch context with full dataset initialized.
-const epoch_context_full& get_global_epoch_context_full(int epoch_number);
+inline const epoch_context_full& get_global_epoch_context_full(int epoch_number) noexcept
+{
+    return *ethash_get_global_epoch_context_full(epoch_number);
+}
 }  // namespace ethash
