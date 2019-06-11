@@ -120,7 +120,11 @@ inline epoch_context_full_ptr create_epoch_context_full(int epoch_number) noexce
 }
 
 
-result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept;
+inline result hash(
+    const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
+{
+    return ethash_hash(&context, &header_hash, nonce);
+}
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept;
 

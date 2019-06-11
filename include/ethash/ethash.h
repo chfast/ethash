@@ -113,6 +113,10 @@ const struct ethash_epoch_context* ethash_get_global_epoch_context(int epoch_num
 const struct ethash_epoch_context_full* ethash_get_global_epoch_context_full(
     int epoch_number) NOEXCEPT;
 
+
+struct ethash_result ethash_hash(const struct ethash_epoch_context* context,
+    const union ethash_hash256* header_hash, uint64_t nonce) NOEXCEPT;
+
 #ifdef __cplusplus
 }
 #endif

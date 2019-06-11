@@ -303,13 +303,6 @@ inline hash256 hash_kernel(
 }
 }  // namespace
 
-result hash(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
-{
-    const hash512 seed = hash_seed(header_hash, nonce);
-    const hash256 mix_hash = hash_kernel(context, seed, calculate_dataset_item_1024);
-    return {hash_final(seed, mix_hash), mix_hash};
-}
-
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept
 {
     static const auto lazy_lookup = [](const epoch_context& ctx, uint32_t index) noexcept
@@ -436,6 +429,14 @@ void ethash_destroy_epoch_context(epoch_context* context) noexcept
 {
     context->~epoch_context();
     std::free(context);
+}
+
+ethash_result ethash_hash(
+    const epoch_context* context, const hash256* header_hash, uint64_t nonce) noexcept
+{
+    const hash512 seed = hash_seed(*header_hash, nonce);
+    const hash256 mix_hash = hash_kernel(*context, seed, calculate_dataset_item_1024);
+    return {hash_final(seed, mix_hash), mix_hash};
 }
 
 }  // extern "C"
