@@ -7,6 +7,7 @@
 
 #include <ethash/hash_types.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -116,6 +117,11 @@ const struct ethash_epoch_context_full* ethash_get_global_epoch_context_full(
 
 struct ethash_result ethash_hash(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, uint64_t nonce) NOEXCEPT;
+
+bool ethash_verify(const struct ethash_epoch_context* context,
+    const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
+    const union ethash_hash256* boundary) NOEXCEPT;
+
 
 #ifdef __cplusplus
 }

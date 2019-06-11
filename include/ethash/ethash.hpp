@@ -131,8 +131,11 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
 bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
     const hash256& boundary) noexcept;
 
-bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
-    uint64_t nonce, const hash256& boundary) noexcept;
+inline bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
+    uint64_t nonce, const hash256& boundary) noexcept
+{
+    return ethash_verify(&context, &header_hash, &mix_hash, nonce, &boundary);
+}
 
 search_result search_light(const epoch_context& context, const hash256& header_hash,
     const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept;

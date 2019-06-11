@@ -330,17 +330,6 @@ bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint
     return is_less_or_equal(hash_final(seed, mix_hash), boundary);
 }
 
-bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
-    uint64_t nonce, const hash256& boundary) noexcept
-{
-    const hash512 seed = hash_seed(header_hash, nonce);
-    if (!is_less_or_equal(hash_final(seed, mix_hash), boundary))
-        return false;
-
-    const hash256 expected_mix_hash = hash_kernel(context, seed, calculate_dataset_item_1024);
-    return is_equal(expected_mix_hash, mix_hash);
-}
-
 search_result search_light(const epoch_context& context, const hash256& header_hash,
     const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept
 {
@@ -437,6 +426,17 @@ ethash_result ethash_hash(
     const hash512 seed = hash_seed(*header_hash, nonce);
     const hash256 mix_hash = hash_kernel(*context, seed, calculate_dataset_item_1024);
     return {hash_final(seed, mix_hash), mix_hash};
+}
+
+bool ethash_verify(const epoch_context* context, const hash256* header_hash,
+    const hash256* mix_hash, uint64_t nonce, const hash256* boundary) noexcept
+{
+    const hash512 seed = hash_seed(*header_hash, nonce);
+    if (!is_less_or_equal(hash_final(seed, *mix_hash), *boundary))
+        return false;
+
+    const hash256 expected_mix_hash = hash_kernel(*context, seed, calculate_dataset_item_1024);
+    return is_equal(expected_mix_hash, *mix_hash);
 }
 
 }  // extern "C"
