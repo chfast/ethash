@@ -68,7 +68,6 @@ class build_ext(setuptools_build_ext):
 
 setup(
     name='ethash',
-    # FIXME: Sync version with bumpversion.
     version='0.5.1-alpha.0',
     url='https://github.com/chfast/ethash',
     author='Paweł Bylica',
@@ -78,6 +77,7 @@ setup(
     packages=['ethash'],
     cffi_modules=['bindings/python/ethash/_build.py:ffibuilder'],
 
+    python_requires='>=3.5',
     setup_requires=['cffi>=1.12'],
     install_requires=['cffi>=1.12'],
 
