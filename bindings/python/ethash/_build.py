@@ -11,16 +11,22 @@
 #     make install
 
 from cffi import FFI
+import sys
 
 ffibuilder = FFI()
+
+stdlib = []
+if sys.platform == 'linux':
+    stdlib.append('stdc++')
 
 ffibuilder.set_source(
     "_ethash",
     r"""
     #include <ethash/keccak.h>
+    #include <ethash/ethash.h>
      """,
     include_dirs=['include'],
-    libraries=['ethash', 'keccak'],
+    libraries=['ethash', 'keccak'] + stdlib,
 )
 
 ffibuilder.cdef("""
@@ -37,9 +43,25 @@ union ethash_hash512
     char str[64];
 };
 
+struct ethash_result
+{
+    union ethash_hash256 final_hash;
+    union ethash_hash256 mix_hash;
+};
+
+
 union ethash_hash256 ethash_keccak256(const uint8_t* data, size_t size);
 
 union ethash_hash512 ethash_keccak512(const uint8_t* data, size_t size);
+
+const struct ethash_epoch_context* ethash_get_global_epoch_context(int epoch_number);
+
+struct ethash_result ethash_hash(const struct ethash_epoch_context* context,
+    const union ethash_hash256* header_hash, uint64_t nonce);
+    
+bool ethash_verify(const struct ethash_epoch_context* context,
+    const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
+    const union ethash_hash256* boundary);
 
 """)
 
