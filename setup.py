@@ -69,9 +69,12 @@ class build_ext(setuptools_build_ext):
 setup(
     name='ethash',
     version='0.5.1-alpha.0',
+    description=
+    "C/C++ implementation of Ethash – the Ethereum Proof of Work algorithm",
     url='https://github.com/chfast/ethash',
     author='Paweł Bylica',
     author_email='pawel@ethereum.org',
+    license='Apache License, Version 2.0',
 
     package_dir={'': 'bindings/python'},
     packages=['ethash'],
@@ -84,4 +87,14 @@ setup(
     test_suite='tests.test_ethash',
 
     cmdclass={'build_ext': build_ext},
+
+    classifiers=[
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: C',
+        'Programming Language :: C++',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+    ],
 )
