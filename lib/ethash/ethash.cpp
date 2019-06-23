@@ -73,7 +73,48 @@ int find_epoch_number(const hash256& seed) noexcept
         return e;
 
     // Try the next seed, will match for sequential epoch access.
-    // s = keccak256(s);
+    s = keccak256(s);
+    if (s.word32s[0] == seed_part)
+    {
+        cached_seed = s;
+        cached_epoch_number = e + 1;
+        return e + 1;
+    }
+
+    // Search for matching seed starting from epoch 0.
+    s = {};
+    for (int i = 0; i < num_tries; ++i)
+    {
+        if (s.word32s[0] == seed_part)
+        {
+            cached_seed = s;
+            cached_epoch_number = i;
+            return i;
+        }
+
+        s = keccak256(s);
+    }
+
+    return -1;
+}
+
+int find_epoch_number_sha512(const hash256& seed) noexcept
+{
+    static constexpr int num_tries = 30000;  // Divisible by 16.
+
+    // Thread-local cache of the last search.
+    static thread_local int cached_epoch_number = 0;
+    static thread_local hash256 cached_seed = {};
+
+    // Load from memory once (memory will be clobbered by keccak256()).
+    const uint32_t seed_part = seed.word32s[0];
+    const int e = cached_epoch_number;
+    hash256 s = cached_seed;
+
+    if (s.word32s[0] == seed_part)
+        return e;
+
+    // Try the next seed, will match for sequential epoch access.
     s = ethash_sha512_256(s);
     if (s.word32s[0] == seed_part)
     {
@@ -93,7 +134,6 @@ int find_epoch_number(const hash256& seed) noexcept
             return i;
         }
 
-        // s = keccak256(s);
         s = ethash_sha512_256(s);
     }
 
@@ -174,11 +214,59 @@ epoch_context_full* create_epoch_context(
         full_dataset_2048[i] = calculate_dataset_item_2048(*context, i);
     return context;
 }
+
+epoch_context_full* create_epoch_context_sha512(
+    build_light_cache_fn build_fn, int epoch_number, bool full) noexcept
+{
+    static_assert(sizeof(epoch_context_full) < sizeof(hash512), "epoch_context too big");
+    static constexpr size_t context_alloc_size = sizeof(hash512);
+
+    const int light_cache_num_items = calculate_light_cache_num_items(epoch_number);
+    const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
+    const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
+    const size_t full_dataset_size =
+        full ? static_cast<size_t>(full_dataset_num_items) * sizeof(hash1024) :
+               progpow::l1_cache_size;
+
+    const size_t alloc_size = context_alloc_size + light_cache_size + full_dataset_size;
+
+    char* const alloc_data = static_cast<char*>(std::calloc(1, alloc_size));
+    if (!alloc_data)
+        return nullptr;  // Signal out-of-memory by returning null pointer.
+
+    hash512* const light_cache = reinterpret_cast<hash512*>(alloc_data + context_alloc_size);
+    const hash256 epoch_seed = calculate_epoch_seed(epoch_number);
+    build_fn(light_cache, light_cache_num_items, epoch_seed);
+
+    uint32_t* const l1_cache =
+        reinterpret_cast<uint32_t*>(alloc_data + context_alloc_size + light_cache_size);
+
+    hash1024* full_dataset = full ? reinterpret_cast<hash1024*>(l1_cache) : nullptr;
+
+    epoch_context_full* const context = new (alloc_data) epoch_context_full{
+        epoch_number,
+        light_cache_num_items,
+        light_cache,
+        l1_cache,
+        full_dataset_num_items,
+        full_dataset,
+    };
+
+    auto* full_dataset_2048 = reinterpret_cast<hash2048*>(l1_cache);
+    for (uint32_t i = 0; i < progpow::l1_cache_size / sizeof(full_dataset_2048[0]); ++i)
+        full_dataset_2048[i] = calculate_dataset_item_2048_sha512(*context, i);
+    return context;
+}
+
 }  // namespace generic
 
 void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept
 {
-    // return generic::build_light_cache(keccak512, cache, num_items, seed);
+    return generic::build_light_cache(keccak512, cache, num_items, seed);
+}
+
+void build_light_cache_sha512(hash512 cache[], int num_items, const hash256& seed) noexcept
+{
     return generic::build_light_cache(ethash_sha512, cache, num_items, seed);
 }
 
@@ -197,7 +285,38 @@ struct item_state
     {
         mix = cache[index % num_cache_items];
         mix.word32s[0] ^= le::uint32(seed);
-        // mix = le::uint32s(keccak512(mix));
+        mix = le::uint32s(keccak512(mix));
+    }
+
+    ALWAYS_INLINE void update(uint32_t round) noexcept
+    {
+        static constexpr size_t num_words = sizeof(mix) / sizeof(uint32_t);
+        const uint32_t t = fnv1(seed ^ round, mix.word32s[round % num_words]);
+        const int64_t parent_index = t % num_cache_items;
+        mix = fnv1(mix, le::uint32s(cache[parent_index]));
+    }
+
+    ALWAYS_INLINE hash512 final() noexcept
+    {
+        return keccak512(le::uint32s(mix));
+    }
+};
+
+struct item_state_sha512
+{
+    const hash512* const cache;
+    const int64_t num_cache_items;
+    const uint32_t seed;
+
+    hash512 mix;
+
+    ALWAYS_INLINE item_state_sha512(const epoch_context& context, int64_t index) noexcept
+      : cache{context.light_cache},
+        num_cache_items{context.light_cache_num_items},
+        seed{static_cast<uint32_t>(index)}
+    {
+        mix = cache[index % num_cache_items];
+        mix.word32s[0] ^= le::uint32(seed);
         mix = le::uint32s(ethash_sha512(mix));
     }
 
@@ -211,7 +330,6 @@ struct item_state
 
     ALWAYS_INLINE hash512 final() noexcept
     {
-        // return keccak512(le::uint32s(mix));
         return ethash_sha512(le::uint32s(mix));
     }
 };
@@ -242,12 +360,44 @@ hash1024 calculate_dataset_item_1024(const epoch_context& context, uint32_t inde
     return hash1024{{item0.final(), item1.final()}};
 }
 
+hash1024 calculate_dataset_item_1024_sha512(const epoch_context& context, uint32_t index) noexcept
+{
+    item_state_sha512 item0{context, int64_t(index) * 2};
+    item_state_sha512 item1{context, int64_t(index) * 2 + 1};
+
+    for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
+    {
+        item0.update(j);
+        item1.update(j);
+    }
+
+    return hash1024{{item0.final(), item1.final()}};
+}
+
 hash2048 calculate_dataset_item_2048(const epoch_context& context, uint32_t index) noexcept
 {
     item_state item0{context, int64_t(index) * 4};
     item_state item1{context, int64_t(index) * 4 + 1};
     item_state item2{context, int64_t(index) * 4 + 2};
     item_state item3{context, int64_t(index) * 4 + 3};
+
+    for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
+    {
+        item0.update(j);
+        item1.update(j);
+        item2.update(j);
+        item3.update(j);
+    }
+
+    return hash2048{{item0.final(), item1.final(), item2.final(), item3.final()}};
+}
+
+hash2048 calculate_dataset_item_2048_sha512(const epoch_context& context, uint32_t index) noexcept
+{
+    item_state_sha512 item0{context, int64_t(index) * 4};
+    item_state_sha512 item1{context, int64_t(index) * 4 + 1};
+    item_state_sha512 item2{context, int64_t(index) * 4 + 2};
+    item_state_sha512 item3{context, int64_t(index) * 4 + 3};
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
@@ -270,7 +420,15 @@ inline hash512 hash_seed(const hash256& header_hash, uint64_t nonce) noexcept
     uint8_t init_data[sizeof(header_hash) + sizeof(nonce)];
     std::memcpy(&init_data[0], &header_hash, sizeof(header_hash));
     std::memcpy(&init_data[sizeof(header_hash)], &nonce, sizeof(nonce));
-    // return keccak512(init_data, sizeof(init_data));
+    return keccak512(init_data, sizeof(init_data));
+}
+
+inline hash512 hash_seed_sha512(const hash256& header_hash, uint64_t nonce) noexcept
+{
+    nonce = le::uint64(nonce);
+    uint8_t init_data[sizeof(header_hash) + sizeof(nonce)];
+    std::memcpy(&init_data[0], &header_hash, sizeof(header_hash));
+    std::memcpy(&init_data[sizeof(header_hash)], &nonce, sizeof(nonce));
     return ethash_sha512(init_data, sizeof(init_data));
 }
 
@@ -279,7 +437,14 @@ inline hash256 hash_final(const hash512& seed, const hash256& mix_hash)
     uint8_t final_data[sizeof(seed) + sizeof(mix_hash)];
     std::memcpy(&final_data[0], seed.bytes, sizeof(seed));
     std::memcpy(&final_data[sizeof(seed)], mix_hash.bytes, sizeof(mix_hash));
-    // return keccak256(final_data, sizeof(final_data));
+    return keccak256(final_data, sizeof(final_data));
+}
+
+inline hash256 hash_final_sha512(const hash512& seed, const hash256& mix_hash)
+{
+    uint8_t final_data[sizeof(seed) + sizeof(mix_hash)];
+    std::memcpy(&final_data[0], seed.bytes, sizeof(seed));
+    std::memcpy(&final_data[sizeof(seed)], mix_hash.bytes, sizeof(mix_hash));
     return ethash_sha512_256(final_data, sizeof(final_data));
 }
 
@@ -321,6 +486,13 @@ result hash(const epoch_context& context, const hash256& header_hash, uint64_t n
     return {hash_final(seed, mix_hash), mix_hash};
 }
 
+result hash_sha512(const epoch_context& context, const hash256& header_hash, uint64_t nonce) noexcept
+{
+    const hash512 seed = hash_seed_sha512(header_hash, nonce);
+    const hash256 mix_hash = hash_kernel(context, seed, calculate_dataset_item_1024_sha512);
+    return {hash_final_sha512(seed, mix_hash), mix_hash};
+}
+
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept
 {
     static const auto lazy_lookup = [](const epoch_context& context, uint32_t index) noexcept
@@ -341,11 +513,38 @@ result hash(const epoch_context_full& context, const hash256& header_hash, uint6
     return {hash_final(seed, mix_hash), mix_hash};
 }
 
+result hash_sha512(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept
+{
+    static const auto lazy_lookup = [](const epoch_context& context, uint32_t index) noexcept
+    {
+        auto full_dataset = static_cast<const epoch_context_full&>(context).full_dataset;
+        hash1024& item = full_dataset[index];
+        if (item.word64s[0] == 0)
+        {
+            // TODO: Copy elision here makes it thread-safe?
+            item = calculate_dataset_item_1024_sha512(context, index);
+        }
+
+        return item;
+    };
+
+    const hash512 seed = hash_seed_sha512(header_hash, nonce);
+    const hash256 mix_hash = hash_kernel(context, seed, lazy_lookup);
+    return {hash_final_sha512(seed, mix_hash), mix_hash};
+}
+
 bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
     const hash256& boundary) noexcept
 {
     const hash512 seed = hash_seed(header_hash, nonce);
     return is_less_or_equal(hash_final(seed, mix_hash), boundary);
+}
+
+bool verify_final_hash_sha512(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
+    const hash256& boundary) noexcept
+{
+    const hash512 seed = hash_seed_sha512(header_hash, nonce);
+    return is_less_or_equal(hash_final_sha512(seed, mix_hash), boundary);
 }
 
 bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
@@ -359,6 +558,17 @@ bool verify(const epoch_context& context, const hash256& header_hash, const hash
     return is_equal(expected_mix_hash, mix_hash);
 }
 
+bool verify_sha512(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
+    uint64_t nonce, const hash256& boundary) noexcept
+{
+    const hash512 seed = hash_seed_sha512(header_hash, nonce);
+    if (!is_less_or_equal(hash_final_sha512(seed, mix_hash), boundary))
+        return false;
+
+    const hash256 expected_mix_hash = hash_kernel(context, seed, calculate_dataset_item_1024_sha512);
+    return is_equal(expected_mix_hash, mix_hash);
+}
+
 search_result search_light(const epoch_context& context, const hash256& header_hash,
     const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept
 {
@@ -366,6 +576,19 @@ search_result search_light(const epoch_context& context, const hash256& header_h
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash(context, header_hash, nonce);
+        if (is_less_or_equal(r.final_hash, boundary))
+            return {r, nonce};
+    }
+    return {};
+}
+
+search_result search_light_sha512(const epoch_context& context, const hash256& header_hash,
+    const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept
+{
+    const uint64_t end_nonce = start_nonce + iterations;
+    for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
+    {
+        result r = hash_sha512(context, header_hash, nonce);
         if (is_less_or_equal(r.final_hash, boundary))
             return {r, nonce};
     }
@@ -384,6 +607,20 @@ search_result search(const epoch_context_full& context, const hash256& header_ha
     }
     return {};
 }
+
+search_result search_sha512(const epoch_context_full& context, const hash256& header_hash,
+    const hash256& boundary, uint64_t start_nonce, size_t iterations) noexcept
+{
+    const uint64_t end_nonce = start_nonce + iterations;
+    for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
+    {
+        result r = hash_sha512(context, header_hash, nonce);
+        if (is_less_or_equal(r.final_hash, boundary))
+            return {r, nonce};
+    }
+    return {};
+}
+
 }  // namespace ethash
 
 using namespace ethash;
@@ -394,7 +631,14 @@ ethash_hash256 ethash_calculate_epoch_seed(int epoch_number) noexcept
 {
     ethash_hash256 epoch_seed = {};
     for (int i = 0; i < epoch_number; ++i)
-        // epoch_seed = ethash_keccak256_32(epoch_seed.bytes);
+        epoch_seed = ethash_keccak256_32(epoch_seed.bytes);
+    return epoch_seed;
+}
+
+ethash_hash256 ethash_calculate_epoch_seed_sha512(int epoch_number) noexcept
+{
+    ethash_hash256 epoch_seed = {};
+    for (int i = 0; i < epoch_number; ++i)
         epoch_seed = ethash_sha512_256_32(epoch_seed.bytes);
     return epoch_seed;
 }
@@ -434,9 +678,19 @@ epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
     return generic::create_epoch_context(build_light_cache, epoch_number, false);
 }
 
+epoch_context* ethash_create_epoch_context_sha512(int epoch_number) noexcept
+{
+    return generic::create_epoch_context_sha512(build_light_cache, epoch_number, false);
+}
+
 epoch_context_full* ethash_create_epoch_context_full(int epoch_number) noexcept
 {
     return generic::create_epoch_context(build_light_cache, epoch_number, true);
+}
+
+epoch_context_full* ethash_create_epoch_context_full_sha512(int epoch_number) noexcept
+{
+    return generic::create_epoch_context_sha512(build_light_cache, epoch_number, true);
 }
 
 void ethash_destroy_epoch_context_full(epoch_context_full* context) noexcept

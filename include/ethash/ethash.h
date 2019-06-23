@@ -77,6 +77,8 @@ union ethash_hash256 ethash_calculate_epoch_seed(int epoch_number) NOEXCEPT;
 
 struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXCEPT;
 
+struct ethash_epoch_context* ethash_create_epoch_context_sha512(int epoch_number) NOEXCEPT;
+
 /**
  * Creates the epoch context with the full dataset initialized.
  *
@@ -89,6 +91,8 @@ struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXC
  * @return  Pointer to the context or null in case of memory allocation failure.
  */
 struct ethash_epoch_context_full* ethash_create_epoch_context_full(int epoch_number) NOEXCEPT;
+
+struct ethash_epoch_context_full* ethash_create_epoch_context_full_sha512(int epoch_number) NOEXCEPT;
 
 void ethash_destroy_epoch_context(struct ethash_epoch_context* context) NOEXCEPT;
 
