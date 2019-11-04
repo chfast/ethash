@@ -21,6 +21,11 @@ add_executable(
 
 set_source_files_properties(test_version.cpp PROPERTIES COMPILE_DEFINITIONS TEST_PROJECT_VERSION="${PROJECT_VERSION}")
 
-target_link_libraries(ethash-test PRIVATE ethash GTest::gtest GTest::main)
+target_link_libraries(ethash-test PRIVATE ethash GTest::gtest_main)
 target_include_directories(ethash-test PRIVATE ${ETHASH_PRIVATE_INCLUDE_DIR})
 set_target_properties(ethash-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
+
+if(SANITIZE AND CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_CXX_FLAGS MATCHES -m32)
+    # Workaround for linking with phread when building for 32-bit and with sanitizer.
+    target_link_libraries(ethash-test PRIVATE pthread)
+endif()
