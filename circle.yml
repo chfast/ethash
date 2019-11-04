@@ -181,8 +181,7 @@ jobs:
   linux-32bit-asan:
     environment:
       - BUILD_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit
-      - CMAKE_OPTIONS: -DSANITIZE=address
+      - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit -DSANITIZE=address
       - GTEST_FILTER: -*_oom
     executor: linux
     steps:
@@ -195,8 +194,7 @@ jobs:
   linux-32bit-ubsan:
     environment:
       - BUILD_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit
-      - CMAKE_OPTIONS: -DSANITIZE=undefined
+      - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit -DSANITIZE=undefined
       - UBSAN_OPTIONS: halt_on_error=1
     executor: linux
     steps:
