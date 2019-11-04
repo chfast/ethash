@@ -4,6 +4,7 @@
 
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma clang diagnostic ignored "-Wpedantic"
+#pragma warning(disable : 4127)
 
 #include <ethash/endianness.hpp>
 #include <ethash/ethash-internal.hpp>
@@ -577,13 +578,15 @@ TEST(ethash, verify_hash)
         if (!context || context->epoch_number != epoch_number)
             context = create_epoch_context_full(epoch_number);
 
-#if _WIN32 && !_WIN64
-        // On Windows 32-bit you can only allocate ~ 2GB of memory.
-        static constexpr uint64_t allocation_size_limit = uint64_t(2) * 1024 * 1024 * 1024;
-        if (!context && full_dataset_size > allocation_size_limit)
-            continue;
-#endif
-        ASSERT_NE(context, nullptr);
+        if (sizeof(void*) == 4)
+        {
+            // On 32-bit systems expect failures for allocations > 1GB of memory.
+            static constexpr auto allocation_size_limit = uint64_t{1} * 1024 * 1024 * 1024;
+            if (!context && full_dataset_size > allocation_size_limit)
+                continue;
+        }
+
+        ASSERT_NE(context, nullptr) << full_dataset_size;
         EXPECT_GT(full_dataset_size, 0);
 
         result r = hash(*context, header_hash, nonce);
