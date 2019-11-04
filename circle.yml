@@ -209,7 +209,8 @@ jobs:
       - BUILD_PARALLEL_JOBS: 2
       - TEST_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=mips64 -DCMAKE_EXE_LINKER_FLAGS=-static
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:12-gcc-9
     steps:
       - checkout
       - *install-mips64
