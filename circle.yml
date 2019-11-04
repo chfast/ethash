@@ -192,19 +192,6 @@ jobs:
       - *build
       - *test
 
-  linux-32bit-ubsan:
-    environment:
-      - BUILD_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit -DSANITIZE=undefined
-      - UBSAN_OPTIONS: halt_on_error=1
-    executor: linux
-    steps:
-      - checkout
-      - *install-m32
-      - *configure
-      - *build
-      - *test
-
   mips64:
     environment:
       - BUILD_PARALLEL_JOBS: 2
@@ -353,7 +340,6 @@ workflows:
       - linux-clang-ubsan
       - linux-clang-asan
       - linux-32bit-asan
-      - linux-32bit-ubsan
       - mips64
       - powerpc64
       - macos-xcode-tsan
