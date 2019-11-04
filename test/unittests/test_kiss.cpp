@@ -28,16 +28,16 @@ TEST(kiss99, generate)
 {
     kiss99 rng;
 
-    EXPECT_EQ(rng(), 769445856);
-    EXPECT_EQ(rng(), 742012328);
-    EXPECT_EQ(rng(), 2121196314);
-    EXPECT_EQ(rng(), 2805620942);
+    EXPECT_EQ(rng(), 769445856u);
+    EXPECT_EQ(rng(), 742012328u);
+    EXPECT_EQ(rng(), 2121196314u);
+    EXPECT_EQ(rng(), 2805620942u);
 
     for (int i = 0; i < 100000 - 5; ++i)
         rng();
 
     // The 100000th number.
-    EXPECT_EQ(rng(), 941074834);
+    EXPECT_EQ(rng(), 941074834u);
 }
 
 TEST(kiss99, compare_with_reference)
