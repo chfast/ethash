@@ -183,7 +183,8 @@ jobs:
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit -DSANITIZE=address
       - GTEST_FILTER: -*_oom
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:12-gcc-9
     steps:
       - checkout
       - *install-m32
