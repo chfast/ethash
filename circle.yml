@@ -123,7 +123,7 @@ defaults:
             if ! brew install -q python3; then
               brew upgrade -q python
             fi
-            pip3 install -q requests
+            pip3 install -q requests gitpython
       - checkout
       - *configure
       - *build

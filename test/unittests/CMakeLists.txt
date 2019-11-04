@@ -21,6 +21,6 @@ add_executable(
 
 set_source_files_properties(test_version.cpp PROPERTIES COMPILE_DEFINITIONS TEST_PROJECT_VERSION="${PROJECT_VERSION}")
 
-target_link_libraries(ethash-test PRIVATE ethash GTest::gtest GTest::main)
+target_link_libraries(ethash-test PRIVATE ethash GTest::gtest_main)
 target_include_directories(ethash-test PRIVATE ${ETHASH_PRIVATE_INCLUDE_DIR})
 set_target_properties(ethash-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
