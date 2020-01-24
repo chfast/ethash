@@ -17,9 +17,9 @@ TEST(progpow, revision)
     static_assert(progpow::revision[1] == '.', "");
     static_assert(progpow::revision[2] == '9', "");
     static_assert(progpow::revision[3] == '.', "");
-    static_assert(progpow::revision[4] == '2', "");
-    EXPECT_EQ(progpow::revision, "0.9.2");
-    EXPECT_EQ(progpow::revision, (std::string{"0.9.2"}));
+    static_assert(progpow::revision[4] == '3', "");
+    EXPECT_EQ(progpow::revision, "0.9.3");
+    EXPECT_EQ(progpow::revision, (std::string{"0.9.3"}));
 }
 
 TEST(progpow, l1_cache)
@@ -43,8 +43,8 @@ TEST(progpow, hash_empty)
     auto& context = get_ethash_epoch_context_0();
 
     const auto result = progpow::hash(context, 0, {}, 0);
-    const auto mix_hex = "faeb1be51075b03a4ff44b335067951ead07a3b078539ace76fd56fc410557a3";
-    const auto final_hex = "63155f732f2bf556967f906155b510c917e48e99685ead76ea83f4eca03ab12b";
+    const auto mix_hex = "f4ac202715ded4136e72887c39e63a4738331c57fd9eb79f6ec421c281aa8743";
+    const auto final_hex = "b3bad9ca6f7c566cf0377d1f8cce29d6516a96562c122d924626281ec948ef02";
     EXPECT_EQ(to_hex(result.mix_hash), mix_hex);
     EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }
@@ -59,8 +59,8 @@ TEST(progpow, hash_30000)
     auto context = ethash::create_epoch_context(ethash::get_epoch_number(block_number));
 
     const auto result = progpow::hash(*context, block_number, header, nonce);
-    const auto mix_hex = "11f19805c58ab46610ff9c719dcf0a5f18fa2f1605798eef770c47219274767d";
-    const auto final_hex = "5b7ccd472dbefdd95b895cac8ece67ff0deb5a6bd2ecc6e162383d00c3728ece";
+    const auto mix_hex = "6018c151b0f9895ebe44a4ca6ce2829e5ba6ae1a68a4ccd05a67ac01219655c1";
+    const auto final_hex = "34d8436444aa5c61761ce0bcce0f11401df2eace77f5c14ba7039b86b5800c08";
     EXPECT_EQ(to_hex(result.mix_hash), mix_hex);
     EXPECT_EQ(to_hex(result.final_hash), final_hex);
 }
