@@ -2,13 +2,13 @@
 // Copyright 2018-2019 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
-#include <ethash/endianness.hpp>
-#include <ethash/progpow.hpp>
-
 #include "helpers.hpp"
 #include "progpow_test_vectors.hpp"
 
+#include <ethash/endianness.hpp>
+#include <ethash/progpow.hpp>
 #include <gtest/gtest.h>
+
 #include <array>
 
 TEST(progpow, revision)
@@ -106,9 +106,12 @@ TEST(progpow, search)
     auto& ctx = *ctxp;
     auto& ctxl = reinterpret_cast<const ethash::epoch_context&>(ctx);
 
+    constexpr uint64_t expected_nonce = 11;
+    constexpr size_t iterations = 10;
+
     auto boundary = to_hash256("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-    auto sr = progpow::search(ctx, 0, {}, boundary, 0, 100);
-    auto srl = progpow::search_light(ctxl, 0, {}, boundary, 0, 100);
+    auto sr = progpow::search(ctx, 0, {}, boundary, 0, iterations);
+    auto srl = progpow::search_light(ctxl, 0, {}, boundary, 0, iterations);
 
     EXPECT_EQ(sr.mix_hash, ethash::hash256{});
     EXPECT_EQ(sr.final_hash, ethash::hash256{});
@@ -117,17 +120,17 @@ TEST(progpow, search)
     EXPECT_EQ(sr.final_hash, srl.final_hash);
     EXPECT_EQ(sr.nonce, srl.nonce);
 
-    sr = progpow::search(ctx, 0, {}, boundary, 100, 100);
-    srl = progpow::search_light(ctxl, 0, {}, boundary, 100, 100);
+    sr = progpow::search(ctx, 0, {}, boundary, iterations, iterations);
+    srl = progpow::search_light(ctxl, 0, {}, boundary, iterations, iterations);
 
     EXPECT_NE(sr.mix_hash, ethash::hash256{});
     EXPECT_NE(sr.final_hash, ethash::hash256{});
-    EXPECT_EQ(sr.nonce, 185);
+    EXPECT_EQ(sr.nonce, expected_nonce);
     EXPECT_EQ(sr.mix_hash, srl.mix_hash);
     EXPECT_EQ(sr.final_hash, srl.final_hash);
     EXPECT_EQ(sr.nonce, srl.nonce);
 
-    auto r = progpow::hash(ctx, 0, {}, 185);
+    auto r = progpow::hash(ctx, 0, {}, expected_nonce);
     EXPECT_EQ(sr.final_hash, r.final_hash);
     EXPECT_EQ(sr.mix_hash, r.mix_hash);
 }
