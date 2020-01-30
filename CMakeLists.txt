@@ -43,9 +43,6 @@ if(CABLE_COMPILER_GNULIKE)
     option(ETHASH_NATIVE "Build for native CPU" OFF)
     if(ETHASH_NATIVE)
         add_compile_options(-march=native)
-    else()
-        # Tune for currently most common CPUs.
-        cable_add_cxx_compiler_flag_if_supported(-mtune=generic)
     endif()
 elseif(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4)
     # For Win32 builds allow allocating more than 2 GB of memory.
