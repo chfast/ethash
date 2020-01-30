@@ -1,34 +1,38 @@
 # Changelog
 
-## [0.5.0] - 2019-06-07
+## [0.5.0] — 2019-06-07
 
- - Changed: [#[131](https://github.com/chfast/ethash/pull/131)]
+ - Changed:
    The Keccak implementation has been moved to separate library "keccak", 
    available as ethash::keccak target in the ethash CMake package.
+   [#131](https://github.com/chfast/ethash/pull/131)
 
-## [0.4.4] - 2019-02-26
+## [0.4.4] — 2019-02-26
 
- - Fixed: [[#125](https://github.com/chfast/ethash/pull/125)]
+ - Fixed:
    Fix compilation on PowerPC architectures (-mtune=generic not supported there).
+   [#125](https://github.com/chfast/ethash/pull/125)
 
-## [0.4.3] - 2019-02-19
+## [0.4.3] — 2019-02-19
 
- - Added: [[#121](https://github.com/chfast/ethash/pull/121)]
+ - Added:
    The public `version.h` header with information about the ethash library version.
- - Added: [[#121](https://github.com/chfast/ethash/pull/121)]
+   [#121](https://github.com/chfast/ethash/pull/121)
+ - Added:
    Ethash and ProgPoW revisions exposed as `{ethash,progpow}::revision` constants.
+   [#121](https://github.com/chfast/ethash/pull/121)
 
-## [0.4.2] - 2019-01-24
+## [0.4.2] — 2019-01-24
 
  - Fixed: The `progpow.cpp` file encoding changed from utf-8 to ascii.
 
-## [0.4.1] - 2018-12-14
+## [0.4.1] — 2018-12-14
 
- - Added: [KISS99 PRNG](https://en.wikipedia.org/wiki/KISS_(algorithm)) distribution tester tool.
+ - Added: [KISS99 PRNG](https://en.wikipedia.org/wiki/KISS_(algorithm) distribution tester tool.
  - Changed: ProgPoW implementation updated to revision [0.9.2][ProgPoW-changelog].
  - Changed: ProgPoW implementation optimizations.
 
-## [0.4.0] - 2018-12-04
+## [0.4.0] — 2018-12-04
 
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
@@ -42,3 +46,4 @@
 
 [ProgPoW]: https://github.com/ifdefelse/ProgPOW/blob/master/README.md
 [ProgPoW-changelog]: https://github.com/ifdefelse/ProgPOW#change-history
+[pypi-ethash]: https://pypi.org/project/ethash/
