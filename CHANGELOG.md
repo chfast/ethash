@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.1] - 2020-01-30
+
+ - Added: Experimental Python bindings — [ethash][pypi-ethash] package.
+   [#123](https://github.com/chfast/ethash/pull/123)
+   [#138](https://github.com/chfast/ethash/pull/138)
+ - Added: More functions exposed in C API.
+   [#136](https://github.com/chfast/ethash/pull/136)
+ - Change: ProgPoW implementation updated to revision [0.9.3][ProgPoW-changelog].
+   [#151](https://github.com/chfast/ethash/pull/151)
+
 ## [0.5.0] — 2019-06-07
 
  - Changed:
@@ -37,6 +47,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[0.5.1]: https://github.com/chfast/ethash/releases/tag/v0.5.1
 [0.5.0]: https://github.com/chfast/ethash/releases/tag/v0.5.0
 [0.4.4]: https://github.com/chfast/ethash/releases/tag/v0.4.4
 [0.4.3]: https://github.com/chfast/ethash/releases/tag/v0.4.3
