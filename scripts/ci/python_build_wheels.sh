@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-# Copyright 2019 Pawel Bylica.
+# Copyright 2019-2020 Pawel Bylica.
 # Licensed under the Apache License, Version 2.0.
 
 set -eo pipefail
@@ -13,8 +13,11 @@ elif [ -n "$CIRCLECI" ]; then
     if [ "$OSTYPE" = "linux-gnu" ]; then
         PYTHON_PATHS="/opt/python/cp37-cp37m/bin /opt/python/cp36-cp36m/bin /opt/python/cp35-cp35m/bin"
     else
-        ln -s /usr/local/Cellar/python/3.7.3/bin/python3 /usr/local/Cellar/python/3.7.3/bin/python
-        PYTHON_PATHS="/usr/local/Cellar/python/3.7.3/bin"
+        # The continuation of the script expects "python" executable name,
+        # so make link python -> python3.
+        mkdir -p $HOME/bin
+        ln -s $(which python3) $HOME/bin/python
+        PYTHON_PATHS="$HOME/bin"
     fi
 fi
 
