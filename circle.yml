@@ -298,19 +298,19 @@ jobs:
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
     macos:
-      xcode: "10.0.0"
+      xcode: "11.3.1"
 
-  macos-xcode83:
+  macos-xcode-old:
     <<: *macos-defaults
     macos:
-      xcode: "8.3.3"
+      xcode: "9.4.1"
 
   macos-release:
     environment:
       - BUILD_PARALLEL_JOBS: 4
       - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=~/project/dist
     macos:
-      xcode: "10.2.1"
+      xcode: "11.3.1"
     steps:
       - run:
           name: "Install CMake"
@@ -345,7 +345,7 @@ workflows:
       - mips64
       - powerpc64
       - macos-xcode-tsan
-      - macos-xcode83
+      - macos-xcode-old
       - linux-release
       - linux-release-python:
           requires:
