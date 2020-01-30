@@ -1,10 +1,10 @@
 # ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-# Copyright 2018-2019 Pawel Bylica.
+# Copyright 2018-2020 Pawel Bylica.
 # Licensed under the Apache License, Version 2.0.
 
 file(GLOB c_sources ${PROJECT_SOURCE_DIR}/lib/ethash/*.c)
 
-foreach(c_std 0 90 99 11)
+foreach(c_std 0 99 11)
     set(target test-compile-c${c_std})
     add_library(${target} STATIC ethash_header_test.c ${c_sources})
     target_link_libraries(${target} PRIVATE ethash)
