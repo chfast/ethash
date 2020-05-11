@@ -19,6 +19,8 @@
 #define __BYTE_ORDER __LITTLE_ENDIAN
 #elif __APPLE__
 #include <machine/endian.h>
+#elif __riscv
+#include <machine/endian.h>
 #else
 #include <endian.h>
 #endif
