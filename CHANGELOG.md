@@ -1,6 +1,11 @@
 # Changelog
 
-## [0.5.1] - 2020-01-30
+## [0.5.2] — 2020-08-03
+
+ - Fixed: Fix compilation with MSVC/C++17.
+   [#154](https://github.com/chfast/ethash/issues/154)
+
+## [0.5.1] — 2020-01-30
 
  - Added: Experimental Python bindings — [ethash][pypi-ethash] package.
    [#123](https://github.com/chfast/ethash/pull/123)
@@ -47,6 +52,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[0.5.2]: https://github.com/chfast/ethash/releases/tag/v0.5.2
 [0.5.1]: https://github.com/chfast/ethash/releases/tag/v0.5.1
 [0.5.0]: https://github.com/chfast/ethash/releases/tag/v0.5.0
 [0.4.4]: https://github.com/chfast/ethash/releases/tag/v0.4.4
