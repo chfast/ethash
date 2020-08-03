@@ -149,12 +149,11 @@ jobs:
 
   linux-clang-ubsan:
     environment:
-      - CXX: clang++-8
-      - CC:  clang-8
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=undefined,integer,nullability
       - UBSAN_OPTIONS: halt_on_error=1
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:14-clang-10
     steps:
       - checkout
       - *configure
@@ -164,12 +163,11 @@ jobs:
 
   linux-clang-asan:
     environment:
-      - CXX: clang++-8
-      - CC:  clang-8
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=address
       - ASAN_OPTIONS: allocator_may_return_null=1
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:14-clang-10
     steps:
       - checkout
       - *configure
