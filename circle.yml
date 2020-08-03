@@ -104,7 +104,8 @@ defaults:
     run:
       name: "Upload coverage data"
       command: |
-        codecov --required --gcov-exec "$GCOV" --gcov-root ~/build
+        sudo pip3 install --upgrade --quiet --no-cache-dir codecov
+        codecov --required --gcov-root ~/build
 
 
   macos-defaults: &macos-defaults
@@ -134,13 +135,11 @@ jobs:
 
   linux-gcc-coverage:
     environment:
-      - CXX: g++-8
-      - CC:  gcc-8
-      - GCOV: gcov-8
       - BUILD_PARALLEL_JOBS: 2
       - BUILD_TYPE: Debug
       - CMAKE_OPTIONS: -DCOVERAGE=ON
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:14-gcc-10
     steps:
       - checkout
       - *configure
