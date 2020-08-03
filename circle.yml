@@ -200,7 +200,7 @@ jobs:
       - TEST_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=mips64 -DCMAKE_EXE_LINKER_FLAGS=-static
     docker:
-      - image: ethereum/cpp-build-env:12-gcc-9
+      - image: ethereum/cpp-build-env:14-gcc-10
     steps:
       - checkout
       - *install-mips64
@@ -213,14 +213,15 @@ jobs:
           name: "Test mips64"
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
-            qemu-mips64-static test/ethash-test --gtest_filter='-*_multithreaded.*'
+            qemu-mips64-static test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
 
   powerpc64:
     environment:
       - BUILD_PARALLEL_JOBS: 2
       - TEST_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:14-gcc-10
     steps:
       - checkout
       - *install-powerpc64
@@ -233,7 +234,7 @@ jobs:
           name: "Test powerpc64"
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
-            qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*'
+            qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
 
   linux-release:
     environment:
