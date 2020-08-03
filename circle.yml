@@ -11,9 +11,13 @@ defaults:
     run:
       name: "Environment info"
       command: |
+        CC=${CC:-cc}
+        CXX=${CXX:-cpp}
+        echo CC: $CC
         echo CXX: $CXX
+        $CC --version
         $CXX --version
-        $CXX --version > compiler.version
+        cmake --version
 
   update-submodules: &update-submodules
     run:
@@ -104,7 +108,8 @@ defaults:
     run:
       name: "Upload coverage data"
       command: |
-        codecov --required --gcov-exec "$GCOV" --gcov-root ~/build
+        sudo pip3 install --upgrade --quiet --no-cache-dir codecov
+        codecov --required --gcov-root ~/build
 
 
   macos-defaults: &macos-defaults
@@ -134,13 +139,11 @@ jobs:
 
   linux-gcc-coverage:
     environment:
-      - CXX: g++-8
-      - CC:  gcc-8
-      - GCOV: gcov-8
       - BUILD_PARALLEL_JOBS: 2
       - BUILD_TYPE: Debug
       - CMAKE_OPTIONS: -DCOVERAGE=ON
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:14-gcc-10
     steps:
       - checkout
       - *configure
@@ -150,12 +153,11 @@ jobs:
 
   linux-clang-ubsan:
     environment:
-      - CXX: clang++-8
-      - CC:  clang-8
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=undefined,integer,nullability
       - UBSAN_OPTIONS: halt_on_error=1
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:14-clang-10
     steps:
       - checkout
       - *configure
@@ -165,12 +167,11 @@ jobs:
 
   linux-clang-asan:
     environment:
-      - CXX: clang++-8
-      - CC:  clang-8
       - BUILD_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DSANITIZE=address
       - ASAN_OPTIONS: allocator_may_return_null=1
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:14-clang-10
     steps:
       - checkout
       - *configure
@@ -186,7 +187,7 @@ jobs:
       - GTEST_FILTER: -*_oom
       - ASAN_OPTIONS: allocator_may_return_null=1
     docker:
-      - image: ethereum/cpp-build-env:12-gcc-9
+      - image: ethereum/cpp-build-env:14-gcc-10-multilib
     steps:
       - checkout
       - *install-m32
@@ -200,7 +201,7 @@ jobs:
       - TEST_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=mips64 -DCMAKE_EXE_LINKER_FLAGS=-static
     docker:
-      - image: ethereum/cpp-build-env:12-gcc-9
+      - image: ethereum/cpp-build-env:14-gcc-10
     steps:
       - checkout
       - *install-mips64
@@ -213,14 +214,15 @@ jobs:
           name: "Test mips64"
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
-            qemu-mips64-static test/ethash-test --gtest_filter='-*_multithreaded.*'
+            qemu-mips64-static test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
 
   powerpc64:
     environment:
       - BUILD_PARALLEL_JOBS: 2
       - TEST_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
-    executor: linux
+    docker:
+      - image: ethereum/cpp-build-env:14-gcc-10
     steps:
       - checkout
       - *install-powerpc64
@@ -233,7 +235,7 @@ jobs:
           name: "Test powerpc64"
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
-            qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*'
+            qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
 
   linux-release:
     environment:
@@ -298,7 +300,7 @@ jobs:
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
     macos:
-      xcode: "11.3.1"
+      xcode: "12.0.0"
 
   macos-xcode-old:
     <<: *macos-defaults
@@ -333,6 +335,21 @@ jobs:
           path: ~/project/dist
           destination: dist
 
+  cmake-min:
+    environment:
+      CMAKE_OPTIONS: -DHUNTER_RUN_UPLOAD=FALSE
+    docker:
+      - image: circleci/buildpack-deps:xenial
+    steps:
+      - run:
+          name: "Install default CMake"
+          command: sudo apt-get -q update && sudo apt-get -qy install cmake
+      - *environment-info
+      - checkout
+      - *configure
+      - *build
+      - *test
+
 
 workflows:
   version: 2
@@ -351,3 +368,4 @@ workflows:
           requires:
             - linux-release
       - macos-release
+      - cmake-min
