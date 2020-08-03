@@ -186,7 +186,7 @@ jobs:
       - GTEST_FILTER: -*_oom
       - ASAN_OPTIONS: allocator_may_return_null=1
     docker:
-      - image: ethereum/cpp-build-env:12-gcc-9
+      - image: ethereum/cpp-build-env:14-gcc-10-multilib
     steps:
       - checkout
       - *install-m32
