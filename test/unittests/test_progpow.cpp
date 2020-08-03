@@ -102,7 +102,7 @@ TEST(progpow, hash_and_verify)
 TEST(progpow, search)
 {
     auto ctxp = ethash::create_epoch_context_full(0);
-    ASSERT_NE(ctxp, nullptr);
+    ASSERT_NE(ctxp.get(), nullptr);
     auto& ctx = *ctxp;
     auto& ctxl = reinterpret_cast<const ethash::epoch_context&>(ctx);
 
