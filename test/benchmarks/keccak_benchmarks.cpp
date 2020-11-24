@@ -29,6 +29,42 @@ static void keccakf1600(benchmark::State& state)
 }
 BENCHMARK(keccakf1600);
 
+static void keccakf1600_new(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        KeccakP1600_Permute_24rounds(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_new);
+
+static void keccakf1600_avx2(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        KeccakAVX2_Permute_24rounds(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_avx2);
+
+static void keccakf1600_asm(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        KeccakASM_Permute_24rounds(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_asm);
+
 
 static void keccakf800(benchmark::State& state)
 {

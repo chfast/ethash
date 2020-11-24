@@ -29,6 +29,8 @@
 #define to_le64(X) __builtin_bswap64(X)
 #endif
 
+void KeccakP1600_Permute_24rounds(void* state);
+
 
 /** Loads 64-bit integer from given memory location as little-endian number. */
 static INLINE ALWAYS_INLINE uint64_t load_le(const uint8_t* data)
@@ -55,7 +57,8 @@ static INLINE ALWAYS_INLINE void keccak(
     uint64_t last_word = 0;
     uint8_t* last_word_iter = (uint8_t*)&last_word;
 
-    uint64_t state[25] = {0};
+    uint64_t  state[25]  __attribute__((aligned(64)));
+    KeccakAVX2_Initialize(state);
 
     while (size >= block_size)
     {
@@ -92,7 +95,9 @@ static INLINE ALWAYS_INLINE void keccak(
 
     state[(block_size / word_size) - 1] ^= 0x8000000000000000;
 
-    ethash_keccakf1600(state);
+    //    ethash_keccakf1600(state);
+//    KeccakP1600_Permute_24roundsAVX2(state);
+    KeccakAVX2_Permute_24rounds(state);
 
     for (i = 0; i < (hash_size / word_size); ++i)
         out[i] = to_le64(state[i]);
@@ -100,7 +105,7 @@ static INLINE ALWAYS_INLINE void keccak(
 
 union ethash_hash256 ethash_keccak256(const uint8_t* data, size_t size)
 {
-    union ethash_hash256 hash;
+    union ethash_hash256 hash __attribute__((aligned(64)));
     keccak(hash.word64s, 256, data, size);
     return hash;
 }

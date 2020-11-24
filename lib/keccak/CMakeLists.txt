@@ -5,6 +5,9 @@
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
+enable_language(ASM)
+set(CMAKE_ASM_FLAGS "-Wno-unused-command-line-argument")
+
 add_library(
     keccak
     ${include_dir}/ethash/keccak.h
@@ -12,6 +15,9 @@ add_library(
     keccak.c
     keccakf800.c
     keccakf1600.c
+    xkcp.c
+    KeccakP-1600-AVX2.s
+    KeccakP-1600-x86-64-gas.s
 )
 
 target_include_directories(keccak PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
