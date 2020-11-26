@@ -41,6 +41,18 @@ static void keccakf1600_new(benchmark::State& state)
 }
 BENCHMARK(keccakf1600_new);
 
+static void keccakf1600_openssl(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        openssl_KeccakF1600(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_openssl);
+
 static void keccakf1600_avx2(benchmark::State& state)
 {
     uint64_t keccak_state[25] = {};

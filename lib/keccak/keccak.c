@@ -57,8 +57,8 @@ static INLINE ALWAYS_INLINE void keccak(
     uint64_t last_word = 0;
     uint8_t* last_word_iter = (uint8_t*)&last_word;
 
-    uint64_t  state[25]  __attribute__((aligned(64)));
-    KeccakAVX2_Initialize(state);
+    uint64_t  state[25]  __attribute__((aligned(64))) = {0};
+//    KeccakAVX2_Initialize(state);
 
     while (size >= block_size)
     {
@@ -68,7 +68,7 @@ static INLINE ALWAYS_INLINE void keccak(
             data += word_size;
         }
 
-        ethash_keccakf1600(state);
+        openssl_KeccakF1600(state);
 
         size -= block_size;
     }
@@ -97,7 +97,7 @@ static INLINE ALWAYS_INLINE void keccak(
 
     //    ethash_keccakf1600(state);
 //    KeccakP1600_Permute_24roundsAVX2(state);
-    KeccakAVX2_Permute_24rounds(state);
+    openssl_KeccakF1600(state);
 
     for (i = 0; i < (hash_size / word_size); ++i)
         out[i] = to_le64(state[i]);

@@ -18,6 +18,7 @@ add_library(
     xkcp.c
     KeccakP-1600-AVX2.s
     KeccakP-1600-x86-64-gas.s
+    openssl_keccak1600.c
 )
 
 target_include_directories(keccak PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)

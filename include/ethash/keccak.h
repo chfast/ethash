@@ -46,6 +46,7 @@ void KeccakAVX2_Permute_24rounds(void* state) NOEXCEPT;
 void KeccakAVX2_Initialize(void* state) NOEXCEPT;
 void KeccakASM_Initialize(void* state) NOEXCEPT;
 void KeccakASM_Permute_24rounds(void* state) NOEXCEPT;
+void openssl_KeccakF1600(void* state) NOEXCEPT;
 
 union ethash_hash256 ethash_keccak256(const uint8_t* data, size_t size) NOEXCEPT;
 union ethash_hash256 ethash_keccak256_32(const uint8_t data[32]) NOEXCEPT;
