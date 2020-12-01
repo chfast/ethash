@@ -17,7 +17,7 @@ void fake_keccakf1600(uint64_t* state) noexcept
 }
 
 
-static void keccakf1600(benchmark::State& state)
+static void keccakf1600_simple(benchmark::State& state)
 {
     uint64_t keccak_state[25] = {};
 
@@ -27,7 +27,55 @@ static void keccakf1600(benchmark::State& state)
         benchmark::DoNotOptimize(keccak_state);
     }
 }
-BENCHMARK(keccakf1600);
+BENCHMARK(keccakf1600_simple);
+
+static void keccakf1600_simple_bmi(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        ethash_keccakf1600_bmi(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_simple_bmi);
+
+static void keccakf1600_simple_bmi2(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        ethash_keccakf1600_bmi2(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_simple_bmi2);
+
+static void keccakf1600_simple_avx2(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        ethash_keccakf1600_avx2(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_simple_avx2);
+
+static void keccakf1600_simple_haswell(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        ethash_keccakf1600_haswell(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_simple_haswell);
 
 static void keccakf1600_new(benchmark::State& state)
 {

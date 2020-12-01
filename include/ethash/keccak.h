@@ -29,6 +29,11 @@ extern "C" {
  */
 void ethash_keccakf1600(uint64_t state[25]) NOEXCEPT;
 
+void ethash_keccakf1600_bmi(uint64_t state[25]);
+void ethash_keccakf1600_bmi2(uint64_t state[25]);
+void ethash_keccakf1600_avx2(uint64_t state[25]);
+void ethash_keccakf1600_haswell(uint64_t state[25]);
+
 /**
  * The Keccak-f[800] function.
  *

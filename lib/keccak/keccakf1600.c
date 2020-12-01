@@ -5,7 +5,13 @@
 
 #include <stdint.h>
 
-static uint64_t rol(uint64_t x, unsigned s)
+void ethash_keccakf1600_bmi(uint64_t state[25]) __attribute__((target("bmi")));
+void ethash_keccakf1600_bmi2(uint64_t state[25]) __attribute__((target("bmi,bmi2")));
+void ethash_keccakf1600_avx2(uint64_t state[25]) __attribute__((target("bmi,bmi2,avx,avx2")));
+void ethash_keccakf1600_haswell(uint64_t state[25])
+    __attribute__((target("sse3,sse4,sse4.1,sse4.2,bmi,bmi2,avx,avx2")));
+
+inline uint64_t rol(uint64_t x, unsigned s)
 {
     return (x << s) | (x >> (64 - s));
 }
@@ -37,7 +43,8 @@ static const uint64_t round_constants[24] = {
     0x8000000080008008,
 };
 
-void ethash_keccakf1600(uint64_t state[25])
+__attribute__((always_inline)) inline static void keccakf1600_simple_implementation(
+    uint64_t state[25])
 {
     /* The implementation based on the "simple" implementation by Ronny Van Keer. */
 
@@ -252,4 +259,29 @@ void ethash_keccakf1600(uint64_t state[25])
     state[22] = Asi;
     state[23] = Aso;
     state[24] = Asu;
+}
+
+void ethash_keccakf1600(uint64_t state[25])
+{
+    keccakf1600_simple_implementation(state);
+}
+
+void ethash_keccakf1600_bmi(uint64_t state[25])
+{
+    keccakf1600_simple_implementation(state);
+}
+
+void ethash_keccakf1600_bmi2(uint64_t state[25])
+{
+    keccakf1600_simple_implementation(state);
+}
+
+void ethash_keccakf1600_avx2(uint64_t state[25])
+{
+    keccakf1600_simple_implementation(state);
+}
+
+void ethash_keccakf1600_haswell(uint64_t state[25])
+{
+    keccakf1600_simple_implementation(state);
 }
