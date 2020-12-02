@@ -4,8 +4,11 @@
 
 include(GNUInstallDirs)
 
-add_library(
-    ethash
+add_library(ethash)
+add_library(ethash::ethash ALIAS ethash)
+target_link_libraries(ethash PRIVATE ethash::keccak)
+target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
+target_sources(ethash PRIVATE
     bit_manipulation.h
     builtins.h
     endianness.hpp
@@ -22,8 +25,7 @@ add_library(
     progpow.cpp
 )
 
-target_link_libraries(ethash PRIVATE keccak)
-target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
+
 if(CABLE_COMPILER_GNULIKE AND NOT SANITIZE MATCHES undefined)
     target_compile_options(ethash PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 endif()

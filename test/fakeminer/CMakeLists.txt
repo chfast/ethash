@@ -5,5 +5,5 @@
 find_package(Threads)
 
 add_executable(ethash-fakeminer fakeminer.cpp)
-target_link_libraries(ethash-fakeminer PRIVATE ethash Threads::Threads)
+target_link_libraries(ethash-fakeminer PRIVATE ethash::ethash Threads::Threads)
 set_target_properties(ethash-fakeminer PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)

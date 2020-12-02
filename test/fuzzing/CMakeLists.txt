@@ -5,4 +5,4 @@
 string(REPLACE "-fsanitize=fuzzer-no-link" "-fsanitize=fuzzer" CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
 
 add_executable(keccak-fuzzer keccak_fuzzer.cpp keccak_tiny.c keccak_rhash.c)
-target_link_libraries(keccak-fuzzer PRIVATE ethash)
+target_link_libraries(keccak-fuzzer PRIVATE ethash::ethash)

@@ -2,11 +2,7 @@
 # Copyright 2018-2019 Pawel Bylica.
 # Licensed under the Apache License, Version 2.0.
 
-cmake_minimum_required(VERSION 3.5)
-
-if(POLICY CMP0069)
-    cmake_policy(SET CMP0069 NEW)  # Allow LTO.
-endif()
+cmake_minimum_required(VERSION 3.13.4)
 
 include(cmake/cable/bootstrap.cmake)
 

@@ -238,13 +238,11 @@ jobs:
             qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
 
   linux-release:
+    docker:
+      - image: ethereum/cpp-build-env:16-clang-11
     environment:
-      - CXX: clang++-8
-      - CC:  clang-8
       - BUILD_PARALLEL_JOBS: 4
       - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DHUNTER_ENABLED=OFF
-    docker:
-      - image: ethereum/cpp-build-env:9
     steps:
       - checkout
       - *configure
@@ -300,12 +298,12 @@ jobs:
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
     macos:
-      xcode: "12.0.0"
+      xcode: "12.1.0"
 
   macos-xcode-old:
     <<: *macos-defaults
     macos:
-      xcode: "9.4.1"
+      xcode: "10.3.0"
 
   macos-release:
     environment:
@@ -339,7 +337,7 @@ jobs:
     environment:
       CMAKE_OPTIONS: -DHUNTER_RUN_UPLOAD=FALSE
     docker:
-      - image: circleci/buildpack-deps:xenial
+      - image: circleci/buildpack-deps:buster
     steps:
       - run:
           name: "Install default CMake"
