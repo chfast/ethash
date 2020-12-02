@@ -368,8 +368,9 @@ void ethash_keccakf1600_modified(uint64_t state[25])
     Line* A = (Line*)state;
 
     uint64_t E[5][5];
+    size_t round;
 
-    for (size_t round = 0; round < 24; round += 2)
+    for (round = 0; round < 24; round += 2)
     {
         Round(E, A, round);
         Round(A, E, round + 1);
