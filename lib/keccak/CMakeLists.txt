@@ -6,6 +6,7 @@ include(GNUInstallDirs)
 
 add_library(keccak)
 add_library(ethash::keccak ALIAS keccak)
+target_compile_features(keccak PUBLIC c_std_99)
 target_include_directories(keccak PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
 target_sources(keccak PRIVATE
     ${include_dir}/ethash/keccak.h
