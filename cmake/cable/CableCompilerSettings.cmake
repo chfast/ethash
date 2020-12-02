@@ -107,11 +107,8 @@ macro(cable_configure_compiler)
             if(MSVC)
                 add_compile_options(-arch:AVX)
             else()
-                add_compile_options(-mtune=native -march=native)
+                add_compile_options(-march=native)
             endif()
-        elseif(NOT MSVC)
-            # Tune for currently most common CPUs.
-            cable_add_cxx_compiler_flag_if_supported(-mtune=generic)
         endif()
 
         # Sanitizers support.
