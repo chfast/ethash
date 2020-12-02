@@ -238,13 +238,11 @@ jobs:
             qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
 
   linux-release:
+    docker:
+      - image: ethereum/cpp-build-env:16-clang-11
     environment:
-      - CXX: clang++-8
-      - CC:  clang-8
       - BUILD_PARALLEL_JOBS: 4
       - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DHUNTER_ENABLED=OFF
-    docker:
-      - image: ethereum/cpp-build-env:9
     steps:
       - checkout
       - *configure
