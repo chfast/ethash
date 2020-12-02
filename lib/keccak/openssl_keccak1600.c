@@ -532,7 +532,7 @@ static void KeccakF1600(uint64_t A[5][5])
  * play best with compilers [as well as provide best instruction per
  * processed byte ratio at minimal round unroll factor]...
  */
-static void Round(uint64_t R[5][5], uint64_t A[5][5], size_t i)
+__attribute__((always_inline)) inline static void Round(uint64_t R[5][5], uint64_t A[5][5], size_t i)
 {
     uint64_t C[5], D[5];
 
