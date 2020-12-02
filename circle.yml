@@ -337,7 +337,7 @@ jobs:
     environment:
       CMAKE_OPTIONS: -DHUNTER_RUN_UPLOAD=FALSE
     docker:
-      - image: circleci/buildpack-deps:xenial
+      - image: circleci/buildpack-deps:buster
     steps:
       - run:
           name: "Install default CMake"
