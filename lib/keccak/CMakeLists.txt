@@ -22,6 +22,7 @@ add_library(
 )
 
 target_include_directories(keccak PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
+set_source_files_properties(openssl_keccak1600.c PROPERTIES COMPILE_OPTIONS "-mbmi;-mbmi2")
 
 install(
     TARGETS keccak
