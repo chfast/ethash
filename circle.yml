@@ -138,12 +138,12 @@ defaults:
 jobs:
 
   linux-gcc-coverage:
+    docker:
+      - image: ethereum/cpp-build-env:16-gcc-10
     environment:
       - BUILD_PARALLEL_JOBS: 2
       - BUILD_TYPE: Debug
       - CMAKE_OPTIONS: -DCOVERAGE=ON
-    docker:
-      - image: ethereum/cpp-build-env:14-gcc-10
     steps:
       - checkout
       - *configure
@@ -151,27 +151,14 @@ jobs:
       - *test
       - *upload-coverage-data
 
-  linux-clang-ubsan:
-    environment:
-      - BUILD_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DSANITIZE=undefined,integer,nullability
-      - UBSAN_OPTIONS: halt_on_error=1
+  linux-clang-sanitizers:
     docker:
-      - image: ethereum/cpp-build-env:14-clang-10
-    steps:
-      - checkout
-      - *configure
-      - *build
-      - *test
-      - *benchmark
-
-  linux-clang-asan:
+      - image: ethereum/cpp-build-env:16-clang-11
     environment:
       - BUILD_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DSANITIZE=address
+      - CMAKE_OPTIONS: -DSANITIZE=address,undefined,integer,nullability
       - ASAN_OPTIONS: allocator_may_return_null=1
-    docker:
-      - image: ethereum/cpp-build-env:14-clang-10
+      - UBSAN_OPTIONS: halt_on_error=1
     steps:
       - checkout
       - *configure
@@ -187,7 +174,7 @@ jobs:
       - GTEST_FILTER: -*_oom
       - ASAN_OPTIONS: allocator_may_return_null=1
     docker:
-      - image: ethereum/cpp-build-env:14-gcc-10-multilib
+      - image: ethereum/cpp-build-env:15-gcc-10-multilib
     steps:
       - checkout
       - *install-m32
@@ -201,7 +188,7 @@ jobs:
       - TEST_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=mips64 -DCMAKE_EXE_LINKER_FLAGS=-static
     docker:
-      - image: ethereum/cpp-build-env:14-gcc-10
+      - image: ethereum/cpp-build-env:16-gcc-10
     steps:
       - checkout
       - *install-mips64
@@ -222,7 +209,7 @@ jobs:
       - TEST_PARALLEL_JOBS: 2
       - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
     docker:
-      - image: ethereum/cpp-build-env:14-gcc-10
+      - image: ethereum/cpp-build-env:16-gcc-10
     steps:
       - checkout
       - *install-powerpc64
@@ -354,8 +341,7 @@ workflows:
   ethash:
     jobs:
       - linux-gcc-coverage
-      - linux-clang-ubsan
-      - linux-clang-asan
+      - linux-clang-sanitizers
       - linux-32bit-asan
       - mips64
       - powerpc64
