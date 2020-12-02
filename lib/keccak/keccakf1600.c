@@ -1,11 +1,12 @@
-/* ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
- * Copyright 2018-2019 Pawel Bylica.
- * Licensed under the Apache License, Version 2.0.
- */
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
+// Copyright 2018-2019 Pawel Bylica.
+// Licensed under the Apache License, Version 2.0.
 
-#include <stdint.h>
+#include <ethash/keccak.h>
 
-static uint64_t rol(uint64_t x, unsigned s)
+/// Rotates the bits of x left by the count value specified by s.
+/// The s must be in range <0, 64> exclusively, otherwise the result is undefined.
+static inline uint64_t rol(uint64_t x, unsigned s)
 {
     return (x << s) | (x >> (64 - s));
 }
@@ -37,12 +38,13 @@ static const uint64_t round_constants[24] = {
     0x8000000080008008,
 };
 
+/// The implementation of Keccak-f[1600] function.
+///
+/// The implementation based on:
+/// - "simple" implementation by Ronny Van Keer, included in "Reference and optimized code in C",
+///   https://keccak.team/archives.html, CC0-1.0 / Public Domain.
 void ethash_keccakf1600(uint64_t state[25])
 {
-    /* The implementation based on the "simple" implementation by Ronny Van Keer. */
-
-    int round;
-
     uint64_t Aba, Abe, Abi, Abo, Abu;
     uint64_t Aga, Age, Agi, Ago, Agu;
     uint64_t Aka, Ake, Aki, Ako, Aku;
@@ -85,7 +87,7 @@ void ethash_keccakf1600(uint64_t state[25])
     Aso = state[23];
     Asu = state[24];
 
-    for (round = 0; round < 24; round += 2)
+    for (int round = 0; round < 24; round += 2)
     {
         /* Round (round + 0): Axx -> Exx */
 
