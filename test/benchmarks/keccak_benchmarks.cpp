@@ -77,6 +77,18 @@ static void keccakf1600_simple_haswell(benchmark::State& state)
 }
 BENCHMARK(keccakf1600_simple_haswell);
 
+static void keccakf1600_modified(benchmark::State& state)
+{
+    uint64_t keccak_state[25] = {};
+
+    for (auto _ : state)
+    {
+        ethash_keccakf1600_modified(keccak_state);
+        benchmark::DoNotOptimize(keccak_state);
+    }
+}
+BENCHMARK(keccakf1600_modified);
+
 static void keccakf1600_new(benchmark::State& state)
 {
     uint64_t keccak_state[25] = {};

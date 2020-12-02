@@ -68,7 +68,7 @@ static INLINE ALWAYS_INLINE void keccak(
             data += word_size;
         }
 
-        openssl_KeccakF1600(state);
+        ethash_keccakf1600_modified(state);
 
         size -= block_size;
     }
@@ -97,7 +97,7 @@ static INLINE ALWAYS_INLINE void keccak(
 
     //    ethash_keccakf1600(state);
 //    KeccakP1600_Permute_24roundsAVX2(state);
-    openssl_KeccakF1600(state);
+    ethash_keccakf1600_modified(state);
 
     for (i = 0; i < (hash_size / word_size); ++i)
         out[i] = to_le64(state[i]);
