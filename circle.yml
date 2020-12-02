@@ -298,12 +298,12 @@ jobs:
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
     macos:
-      xcode: "12.0.0"
+      xcode: "12.1.0"
 
   macos-xcode-old:
     <<: *macos-defaults
     macos:
-      xcode: "9.4.1"
+      xcode: "10.3.0"
 
   macos-release:
     environment:
