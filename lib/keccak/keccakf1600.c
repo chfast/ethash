@@ -269,4 +269,10 @@ __attribute__((target("bmi,bmi2"))) void ethash_keccakf1600_bmi(uint64_t state[2
 {
     keccakf1600_implementation(state);
 }
+
+__attribute__((constructor)) static void select_keccakf1600_implementation()
+{
+    if (__builtin_cpu_supports("bmi2"))
+        ethash_keccakf1600 = ethash_keccakf1600_bmi;
+}
 #endif
