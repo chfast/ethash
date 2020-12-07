@@ -2,6 +2,7 @@
 // Copyright 2018-2019 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
+#include "../support/attributes.h"
 #include <ethash/keccak.h>
 
 /// Rotates the bits of x left by the count value specified by s.
@@ -43,7 +44,7 @@ static const uint64_t round_constants[24] = {
 /// The implementation based on:
 /// - "simple" implementation by Ronny Van Keer, included in "Reference and optimized code in C",
 ///   https://keccak.team/archives.html, CC0-1.0 / Public Domain.
-void ethash_keccakf1600(uint64_t state[25])
+static inline ALWAYS_INLINE void keccakf1600_implementation(uint64_t state[25])
 {
     uint64_t Aba, Abe, Abi, Abo, Abu;
     uint64_t Aga, Age, Agi, Ago, Agu;
@@ -254,4 +255,9 @@ void ethash_keccakf1600(uint64_t state[25])
     state[22] = Asi;
     state[23] = Aso;
     state[24] = Asu;
+}
+
+void ethash_keccakf1600(uint64_t state[25])
+{
+    keccakf1600_implementation(state);
 }
