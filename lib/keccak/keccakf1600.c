@@ -257,10 +257,12 @@ static inline ALWAYS_INLINE void keccakf1600_implementation(uint64_t state[25])
     state[24] = Asu;
 }
 
-void ethash_keccakf1600(uint64_t state[25])
+void ethash_keccakf1600_generic(uint64_t state[25])
 {
     keccakf1600_implementation(state);
 }
+
+ethash_keccakf1600_func ethash_keccakf1600 = ethash_keccakf1600_generic;
 
 #if defined(__x86_64__) && __has_attribute(target)
 __attribute__((target("bmi,bmi2"))) void ethash_keccakf1600_bmi(uint64_t state[25])

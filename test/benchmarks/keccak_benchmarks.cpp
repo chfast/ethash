@@ -14,6 +14,10 @@ void fake_keccakf1600(uint64_t* state) noexcept
     (void)state;
 }
 
+inline void best(uint64_t state[25]) noexcept
+{
+    ethash_keccakf1600(state);
+}
 
 template <void Fn(uint64_t*)>
 static void keccakf1600(benchmark::State& state)
@@ -26,10 +30,11 @@ static void keccakf1600(benchmark::State& state)
         benchmark::DoNotOptimize(keccak_state);
     }
 }
-BENCHMARK_TEMPLATE(keccakf1600, ethash_keccakf1600);
+BENCHMARK_TEMPLATE(keccakf1600, ethash_keccakf1600_generic);
 #if defined(__x86_64__) && __has_attribute(target)
 BENCHMARK_TEMPLATE(keccakf1600, ethash_keccakf1600_bmi);
 #endif
+BENCHMARK_TEMPLATE(keccakf1600, best);
 
 
 static void keccakf800(benchmark::State& state)
