@@ -29,6 +29,10 @@ extern "C" {
  */
 void ethash_keccakf1600(uint64_t state[25]) NOEXCEPT;
 
+/// Variant of ethash_keccakf1600() with additional optimization provided by BMI and BMI2
+/// instruction set extensions. May only be used on hardware supporting these extensions.
+void ethash_keccakf1600_bmi(uint64_t state[25]) NOEXCEPT;
+
 /**
  * The Keccak-f[800] function.
  *

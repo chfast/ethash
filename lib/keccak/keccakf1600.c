@@ -261,3 +261,10 @@ void ethash_keccakf1600(uint64_t state[25])
 {
     keccakf1600_implementation(state);
 }
+
+#if defined(__x86_64__) && __has_attribute(target)
+__attribute__((target("bmi,bmi2"))) void ethash_keccakf1600_bmi(uint64_t state[25])
+{
+    keccakf1600_implementation(state);
+}
+#endif
