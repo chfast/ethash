@@ -88,7 +88,7 @@ static inline ALWAYS_INLINE void keccakf1600_implementation(uint64_t state[25])
     Aso = state[23];
     Asu = state[24];
 
-    for (int round = 0; round < 24; round += 2)
+    for (size_t round = 0; round < 24; round += 2)
     {
         /* Round (round + 0): Axx -> Exx */
 
