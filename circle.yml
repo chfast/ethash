@@ -83,13 +83,38 @@ commands:
           command: |
             test/ethash-bench
 
-  upload-coverage-data:
+  collect_coverage_gcc:
+    description: "Collect coverage data (GCC)"
     steps:
       - run:
-          name: "Upload coverage data"
+          name: "Collect coverage data (GCC)"
+          working_directory: ~/build
           command: |
-            sudo pip3 install --upgrade --quiet --no-cache-dir codecov
-            codecov --required --gcov-root ~/build
+            lcov --capture --directory . --output-file coverage.lcov --exclude='/usr/*' --exclude="$HOME/.hunter/*" --exclude="$PWD/_deps/*"
+            lcov --zerocounters --directory .
+            rm -rf coverage
+            genhtml coverage.lcov --output-directory coverage --title $CIRCLE_PROJECT_REPONAME
+
+  upload_coverage:
+    description: "Upload coverage data"
+    parameters:
+      flags:
+        type: string
+    steps:
+      - run:
+          name: "Upgrade codecov"
+          command: sudo pip3 install --upgrade --quiet --no-cache-dir codecov
+      - run:
+          name: "Upload to Codecov"
+          command: |
+            # Convert to relative paths
+            sed -i 's|$(pwd)/||' ~/build/coverage.lcov
+            counter=1
+            until codecov --flags <<parameters.flags>> --required --file ~/build/coverage.lcov -X gcov || [ $counter = 5 ]; do
+              counter=$((counter+1))
+              sleep 1
+              echo "Try #$counter..."
+            done
 
 
   macos-defaults:
@@ -127,7 +152,12 @@ jobs:
       - configure
       - build
       - test
-      - upload-coverage-data
+      - collect_coverage_gcc
+      - store_artifacts:
+          path: ~/build/coverage
+          destination: coverage
+      - upload_coverage:
+          flags: default
 
   linux-clang-sanitizers:
     docker:
