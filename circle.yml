@@ -155,9 +155,20 @@ jobs:
       - collect_coverage_gcc
       - store_artifacts:
           path: ~/build/coverage
-          destination: coverage
+          destination: coverage-default
       - upload_coverage:
           flags: default
+      - run:
+          name: "Install qemu"
+          command: sudo apt -q update && sudo apt -qy install qemu-user-static
+      - run:
+          command: qemu-x86_64-static --cpu qemu64 ~/build/test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
+      - collect_coverage_gcc
+      - store_artifacts:
+          path: ~/build/coverage
+          destination: coverage-x86_64
+      - upload_coverage:
+          flags: x86_64
 
   linux-clang-sanitizers:
     docker:
