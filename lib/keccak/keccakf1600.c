@@ -1,6 +1,6 @@
 // ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018-2019 Pawel Bylica.
-// Licensed under the Apache License, Version 2.0.
+// Copyright 2018 Pawel Bylica.
+// SPDX-License-Identifier: Apache-2.0
 
 #include "../support/attributes.h"
 #include <ethash/keccak.h>
@@ -12,32 +12,13 @@ static inline uint64_t rol(uint64_t x, unsigned s)
     return (x << s) | (x >> (64 - s));
 }
 
-static const uint64_t round_constants[24] = {
-    0x0000000000000001,
-    0x0000000000008082,
-    0x800000000000808a,
-    0x8000000080008000,
-    0x000000000000808b,
-    0x0000000080000001,
-    0x8000000080008081,
-    0x8000000000008009,
-    0x000000000000008a,
-    0x0000000000000088,
-    0x0000000080008009,
-    0x000000008000000a,
-    0x000000008000808b,
-    0x800000000000008b,
-    0x8000000000008089,
-    0x8000000000008003,
-    0x8000000000008002,
-    0x8000000000000080,
-    0x000000000000800a,
-    0x800000008000000a,
-    0x8000000080008081,
-    0x8000000000008080,
-    0x0000000080000001,
-    0x8000000080008008,
-};
+static const uint64_t round_constants[24] = {  //
+    0x0000000000000001, 0x0000000000008082, 0x800000000000808a, 0x8000000080008000,
+    0x000000000000808b, 0x0000000080000001, 0x8000000080008081, 0x8000000000008009,
+    0x000000000000008a, 0x0000000000000088, 0x0000000080008009, 0x000000008000000a,
+    0x000000008000808b, 0x800000000000008b, 0x8000000000008089, 0x8000000000008003,
+    0x8000000000008002, 0x8000000000000080, 0x000000000000800a, 0x800000008000000a,
+    0x8000000080008081, 0x8000000000008080, 0x0000000080000001, 0x8000000080008008};
 
 /// The implementation of Keccak-f[1600] function.
 ///
@@ -88,9 +69,9 @@ static inline ALWAYS_INLINE void keccakf1600_implementation(uint64_t state[25])
     Aso = state[23];
     Asu = state[24];
 
-    for (size_t round = 0; round < 24; round += 2)
+    for (size_t n = 0; n < 24; n += 2)
     {
-        /* Round (round + 0): Axx -> Exx */
+        // Round (n + 0): Axx -> Exx
 
         Ba = Aba ^ Aga ^ Aka ^ Ama ^ Asa;
         Be = Abe ^ Age ^ Ake ^ Ame ^ Ase;
@@ -109,7 +90,7 @@ static inline ALWAYS_INLINE void keccakf1600_implementation(uint64_t state[25])
         Bi = rol(Aki ^ Di, 43);
         Bo = rol(Amo ^ Do, 21);
         Bu = rol(Asu ^ Du, 14);
-        Eba = Ba ^ (~Be & Bi) ^ round_constants[round];
+        Eba = Ba ^ (~Be & Bi) ^ round_constants[n];
         Ebe = Be ^ (~Bi & Bo);
         Ebi = Bi ^ (~Bo & Bu);
         Ebo = Bo ^ (~Bu & Ba);
@@ -160,7 +141,7 @@ static inline ALWAYS_INLINE void keccakf1600_implementation(uint64_t state[25])
         Esu = Bu ^ (~Ba & Be);
 
 
-        /* Round (round + 1): Exx -> Axx */
+        // Round (n + 1): Exx -> Axx
 
         Ba = Eba ^ Ega ^ Eka ^ Ema ^ Esa;
         Be = Ebe ^ Ege ^ Eke ^ Eme ^ Ese;
@@ -179,7 +160,7 @@ static inline ALWAYS_INLINE void keccakf1600_implementation(uint64_t state[25])
         Bi = rol(Eki ^ Di, 43);
         Bo = rol(Emo ^ Do, 21);
         Bu = rol(Esu ^ Du, 14);
-        Aba = Ba ^ (~Be & Bi) ^ round_constants[round + 1];
+        Aba = Ba ^ (~Be & Bi) ^ round_constants[n + 1];
         Abe = Be ^ (~Bi & Bo);
         Abi = Bi ^ (~Bo & Bu);
         Abo = Bo ^ (~Bu & Ba);

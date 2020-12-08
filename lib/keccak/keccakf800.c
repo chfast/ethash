@@ -1,45 +1,22 @@
-/* ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
- * Copyright 2018-2019 Pawel Bylica.
- * Licensed under the Apache License, Version 2.0.
- */
+// ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
+// Copyright 2018 Pawel Bylica.
+// SPDX-License-Identifier: Apache-2.0
 
-#include <stdint.h>
+#include <ethash/keccak.h>
 
-static uint32_t rol(uint32_t x, unsigned s)
+static inline uint32_t rol(uint32_t x, unsigned s)
 {
     return (x << s) | (x >> (32 - s));
 }
 
-static const uint32_t round_constants[22] = {
-    0x00000001,
-    0x00008082,
-    0x0000808A,
-    0x80008000,
-    0x0000808B,
-    0x80000001,
-    0x80008081,
-    0x00008009,
-    0x0000008A,
-    0x00000088,
-    0x80008009,
-    0x8000000A,
-    0x8000808B,
-    0x0000008B,
-    0x00008089,
-    0x00008003,
-    0x00008002,
-    0x00000080,
-    0x0000800A,
-    0x8000000A,
-    0x80008081,
-    0x00008080,
-};
+static const uint32_t round_constants[22] = {  //
+    0x00000001, 0x00008082, 0x0000808A, 0x80008000, 0x0000808B, 0x80000001, 0x80008081, 0x00008009,
+    0x0000008A, 0x00000088, 0x80008009, 0x8000000A, 0x8000808B, 0x0000008B, 0x00008089, 0x00008003,
+    0x00008002, 0x00000080, 0x0000800A, 0x8000000A, 0x80008081, 0x00008080};
 
 void ethash_keccakf800(uint32_t state[25])
 {
-    /* The implementation directly translated from ethash_keccakf1600. */
-
-    int round;
+    // The implementation directly translated from ethash_keccakf1600.
 
     uint32_t Aba, Abe, Abi, Abo, Abu;
     uint32_t Aga, Age, Agi, Ago, Agu;
@@ -83,9 +60,9 @@ void ethash_keccakf800(uint32_t state[25])
     Aso = state[23];
     Asu = state[24];
 
-    for (round = 0; round < 22; round += 2)
+    for (size_t n = 0; n < 22; n += 2)
     {
-        /* Round (round + 0): Axx -> Exx */
+        // Round (n + 0): Axx -> Exx
 
         Ba = Aba ^ Aga ^ Aka ^ Ama ^ Asa;
         Be = Abe ^ Age ^ Ake ^ Ame ^ Ase;
@@ -104,7 +81,7 @@ void ethash_keccakf800(uint32_t state[25])
         Bi = rol(Aki ^ Di, 11);
         Bo = rol(Amo ^ Do, 21);
         Bu = rol(Asu ^ Du, 14);
-        Eba = Ba ^ (~Be & Bi) ^ round_constants[round];
+        Eba = Ba ^ (~Be & Bi) ^ round_constants[n];
         Ebe = Be ^ (~Bi & Bo);
         Ebi = Bi ^ (~Bo & Bu);
         Ebo = Bo ^ (~Bu & Ba);
@@ -155,7 +132,7 @@ void ethash_keccakf800(uint32_t state[25])
         Esu = Bu ^ (~Ba & Be);
 
 
-        /* Round (round + 1): Exx -> Axx */
+        // Round (n + 1): Exx -> Axx
 
         Ba = Eba ^ Ega ^ Eka ^ Ema ^ Esa;
         Be = Ebe ^ Ege ^ Eke ^ Eme ^ Ese;
@@ -174,7 +151,7 @@ void ethash_keccakf800(uint32_t state[25])
         Bi = rol(Eki ^ Di, 11);
         Bo = rol(Emo ^ Do, 21);
         Bu = rol(Esu ^ Du, 14);
-        Aba = Ba ^ (~Be & Bi) ^ round_constants[round + 1];
+        Aba = Ba ^ (~Be & Bi) ^ round_constants[n + 1];
         Abe = Be ^ (~Bi & Bo);
         Abi = Bi ^ (~Bo & Bu);
         Abo = Bo ^ (~Bu & Ba);
