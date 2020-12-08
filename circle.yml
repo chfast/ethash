@@ -5,116 +5,119 @@ executors:
     docker:
       - image: ethereum/cpp-build-env:11
 
-defaults:
+commands:
 
-  environment-info: &environment-info
-    run:
-      name: "Environment info"
-      command: |
-        CC=${CC:-cc}
-        CXX=${CXX:-cpp}
-        echo CC: $CC
-        echo CXX: $CXX
-        $CC --version
-        $CXX --version
-        cmake --version
+  environment-info:
+    steps:
+      - run:
+          name: "Environment info"
+          command: |
+            CC=${CC:-cc}
+            CXX=${CXX:-cpp}
+            echo CC: $CC
+            echo CXX: $CXX
+            $CC --version
+            $CXX --version
+            cmake --version
 
-  update-submodules: &update-submodules
-    run:
-      name: "Update git submodules"
-      command: |
-        git submodule update --init --recursive
+  install-mips64:
+    steps:
+      - run:
+          name: "Install mips64 toolchain"
+          command: |
+            sudo apt -q update
+            sudo apt -qy install g++-mips64-linux-gnuabi64 qemu-user-static
 
-  install-m32: &install-m32
-    run:
-      name: "Install 32-bit toolchain"
-      command: |
-        sudo apt -q update
-        sudo apt -qy install g++-multilib
+  install-powerpc64:
+    steps:
+      - run:
+          name: "Install powerpc64 toolchain"
+          command: |
+            sudo apt -q update
+            sudo apt -qy install g++-powerpc64-linux-gnu qemu-user-static
 
-  install-mips64: &install-mips64
-    run:
-      name: "Install mips64 toolchain"
-      command: |
-        sudo apt -q update
-        sudo apt -qy install g++-mips64-linux-gnuabi64 qemu-user-static
+  configure:
+    steps:
+      - run:
+          name: "Configure"
+          # Build "out-of-source" to have better coverage report
+          # (ninja is using relative paths otherwise).
+          working_directory: ~/build
+          command: |
+            cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=/tmp/local $CMAKE_OPTIONS
 
-  install-powerpc64: &install-powerpc64
-    run:
-      name: "Install powerpc64 toolchain"
-      command: |
-        sudo apt -q update
-        sudo apt -qy install g++-powerpc64-linux-gnu qemu-user-static
+  build:
+    steps:
+      - run:
+          name: "Build"
+          working_directory: ~/build
+          command: |
+            cmake --build . -- -j $BUILD_PARALLEL_JOBS
+            cmake --build . --target install
 
-  configure: &configure
-    run:
-      name: "Configure"
-      # Build "out-of-source" to have better coverage report
-      # (ninja is using relative paths otherwise).
-      working_directory: ~/build
-      command: |
-        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=/tmp/local $CMAKE_OPTIONS
+  build-tests:
+    steps:
+      - run:
+          name: "Build ethash-test"
+          working_directory: ~/build
+          command: |
+            cmake --build . --target ethash-test -- -j $BUILD_PARALLEL_JOBS
 
-  build: &build
-    run:
-      name: "Build"
-      working_directory: ~/build
-      command: |
-        cmake --build . -- -j $BUILD_PARALLEL_JOBS
-        cmake --build . --target install
+  test:
+    steps:
+      - run:
+          name: "Test"
+          working_directory: ~/build
+          command: |
+            if [ -z "$GTEST_FILTER" ]; then
+              test/ethash-test
+            else
+              test/ethash-test --gtest_filter=$GTEST_FILTER
+            fi
 
-  build-tests: &build-tests
-    run:
-      name: "Build ethash-test"
-      working_directory: ~/build
-      command: |
-        cmake --build . --target ethash-test -- -j $BUILD_PARALLEL_JOBS
+  benchmark:
+    steps:
+      - run:
+          name: "Benchmark"
+          working_directory: ~/build
+          command: |
+            test/ethash-bench
 
-  test: &test
-    run:
-      name: "Test"
-      working_directory: ~/build
-      command: |
-        if [ -z "$GTEST_FILTER" ]; then
-          test/ethash-test
-        else
-          test/ethash-test --gtest_filter=$GTEST_FILTER
-        fi
+  collect_coverage_gcc:
+    description: "Collect coverage data (GCC)"
+    steps:
+      - run:
+          name: "Collect coverage data (GCC)"
+          working_directory: ~/build
+          command: |
+            lcov --capture --directory . --output-file coverage.lcov --exclude='/usr/*' --exclude="$HOME/.hunter/*" --exclude="$PWD/_deps/*"
+            lcov --zerocounters --directory .
+            rm -rf coverage
+            genhtml coverage.lcov --output-directory coverage --title $CIRCLE_PROJECT_REPONAME
 
-  test-cmake-config: &test-cmake-config
-    run:
-      name: "Test CMake config"
-      working_directory: ~/project/test/integration/cmake-config
-      command: |
-        cmake -DCMAKE_PREFIX_PATH=/tmp/local .
-        cmake --build .
-        ./ethash-cmake-config-test
-
-  test-mips64: &test-mips64
-    run:
-      name: "Test (mips64)"
-      working_directory: ~/build
-      command: |
-        qemu-mips64 -L /usr/mips64-linux-gnuabi64 test/ethash-test
-
-  benchmark: &benchmark
-    run:
-      name: "Benchmark"
-      working_directory: ~/build
-      command: |
-        test/ethash-bench
-
-  upload-coverage-data: &upload-coverage-data
-    run:
-      name: "Upload coverage data"
-      command: |
-        sudo pip3 install --upgrade --quiet --no-cache-dir codecov
-        codecov --required --gcov-root ~/build
+  upload_coverage:
+    description: "Upload coverage data"
+    parameters:
+      flags:
+        type: string
+    steps:
+      - run:
+          name: "Upgrade codecov"
+          command: sudo pip3 install --upgrade --quiet --no-cache-dir codecov
+      - run:
+          name: "Upload to Codecov"
+          command: |
+            # Convert to relative paths
+            sed -i 's|$(pwd)/||' ~/build/coverage.lcov
+            counter=1
+            until codecov --flags <<parameters.flags>> --required --file ~/build/coverage.lcov -X gcov || [ $counter = 5 ]; do
+              counter=$((counter+1))
+              sleep 1
+              echo "Try #$counter..."
+            done
 
 
-  macos-defaults: &macos-defaults
-    environment:
-      - BUILD_PARALLEL_JOBS: 2
+  macos-defaults:
     steps:
       - run:
           name: "Install CMake"
@@ -130,9 +133,9 @@ defaults:
             fi
             pip3 install -q requests gitpython
       - checkout
-      - *configure
-      - *build
-      - *test
+      - configure
+      - build
+      - test
 
 
 jobs:
@@ -146,10 +149,26 @@ jobs:
       - CMAKE_OPTIONS: -DCOVERAGE=ON
     steps:
       - checkout
-      - *configure
-      - *build
-      - *test
-      - *upload-coverage-data
+      - configure
+      - build
+      - test
+      - collect_coverage_gcc
+      - store_artifacts:
+          path: ~/build/coverage
+          destination: coverage-default
+      - upload_coverage:
+          flags: default
+      - run:
+          name: "Install qemu"
+          command: sudo apt -q update && sudo apt -qy install qemu-user-static
+      - run:
+          command: qemu-x86_64-static --cpu qemu64 ~/build/test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
+      - collect_coverage_gcc
+      - store_artifacts:
+          path: ~/build/coverage
+          destination: coverage-x86_64
+      - upload_coverage:
+          flags: x86_64
 
   linux-clang-sanitizers:
     docker:
@@ -161,10 +180,10 @@ jobs:
       - UBSAN_OPTIONS: halt_on_error=1
     steps:
       - checkout
-      - *configure
-      - *build
-      - *test
-      - *benchmark
+      - configure
+      - build
+      - test
+      - benchmark
 
   linux-32bit-asan:
     environment:
@@ -177,10 +196,9 @@ jobs:
       - image: ethereum/cpp-build-env:15-gcc-10-multilib
     steps:
       - checkout
-      - *install-m32
-      - *configure
-      - *build
-      - *test
+      - configure
+      - build
+      - test
 
   mips64:
     environment:
@@ -191,9 +209,9 @@ jobs:
       - image: ethereum/cpp-build-env:16-gcc-10
     steps:
       - checkout
-      - *install-mips64
-      - *configure
-      - *build-tests
+      - install-mips64
+      - configure
+      - build-tests
       - store_artifacts:
           path: ~/build/test/ethash-test
           destination: ethash-test
@@ -207,14 +225,15 @@ jobs:
     environment:
       - BUILD_PARALLEL_JOBS: 2
       - TEST_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
+      - BUILD_TYPE: Debug
+      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static -DCOVERAGE=ON
     docker:
       - image: ethereum/cpp-build-env:16-gcc-10
     steps:
       - checkout
-      - *install-powerpc64
-      - *configure
-      - *build-tests
+      - install-powerpc64
+      - configure
+      - build-tests
       - store_artifacts:
           path: ~/build/test/ethash-test
           destination: ethash-test
@@ -223,6 +242,12 @@ jobs:
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
             qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
+      - collect_coverage_gcc
+      - store_artifacts:
+          path: ~/build/coverage
+          destination: coverage
+      - upload_coverage:
+          flags: be
 
   linux-release:
     docker:
@@ -232,8 +257,8 @@ jobs:
       - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DHUNTER_ENABLED=OFF
     steps:
       - checkout
-      - *configure
-      - *build
+      - configure
+      - build
       - persist_to_workspace:
           root: /tmp/local
           paths:
@@ -279,18 +304,22 @@ jobs:
             ./setup.py test
 
   macos-xcode-tsan:
-    <<: *macos-defaults
     environment:
-      - BUILD_PARALLEL_JOBS: 2
+      - BUILD_PARALLEL_JOBS: 4
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
     macos:
       xcode: "12.1.0"
+    steps:
+      - macos-defaults
 
   macos-xcode-old:
-    <<: *macos-defaults
+    environment:
+      - BUILD_PARALLEL_JOBS: 4
     macos:
       xcode: "10.3.0"
+    steps:
+      - macos-defaults
 
   macos-release:
     environment:
@@ -307,8 +336,8 @@ jobs:
             ls -l /usr/local/bin
             pip3 install -q cmake
       - checkout
-      - *configure
-      - *build
+      - configure
+      - build
       - run:
           name: "Test"
           command: |
@@ -329,11 +358,11 @@ jobs:
       - run:
           name: "Install default CMake"
           command: sudo apt-get -q update && sudo apt-get -qy install cmake
-      - *environment-info
+      - environment-info
       - checkout
-      - *configure
-      - *build
-      - *test
+      - configure
+      - build
+      - test
 
 
 workflows:
