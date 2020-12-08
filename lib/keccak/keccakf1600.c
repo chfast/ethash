@@ -2,6 +2,7 @@
 // Copyright 2018-2019 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
+#include "../support/attributes.h"
 #include <ethash/keccak.h>
 
 /// Rotates the bits of x left by the count value specified by s.
@@ -43,7 +44,7 @@ static const uint64_t round_constants[24] = {
 /// The implementation based on:
 /// - "simple" implementation by Ronny Van Keer, included in "Reference and optimized code in C",
 ///   https://keccak.team/archives.html, CC0-1.0 / Public Domain.
-void ethash_keccakf1600(uint64_t state[25])
+static inline ALWAYS_INLINE void keccakf1600_implementation(uint64_t state[25])
 {
     uint64_t Aba, Abe, Abi, Abo, Abu;
     uint64_t Aga, Age, Agi, Ago, Agu;
@@ -87,7 +88,7 @@ void ethash_keccakf1600(uint64_t state[25])
     Aso = state[23];
     Asu = state[24];
 
-    for (int round = 0; round < 24; round += 2)
+    for (size_t round = 0; round < 24; round += 2)
     {
         /* Round (round + 0): Axx -> Exx */
 
@@ -255,3 +256,23 @@ void ethash_keccakf1600(uint64_t state[25])
     state[23] = Aso;
     state[24] = Asu;
 }
+
+void ethash_keccakf1600_generic(uint64_t state[25])
+{
+    keccakf1600_implementation(state);
+}
+
+ethash_keccakf1600_func ethash_keccakf1600 = ethash_keccakf1600_generic;
+
+#if defined(__x86_64__) && __has_attribute(target)
+__attribute__((target("bmi,bmi2"))) void ethash_keccakf1600_bmi(uint64_t state[25])
+{
+    keccakf1600_implementation(state);
+}
+
+__attribute__((constructor)) static void select_keccakf1600_implementation()
+{
+    if (__builtin_cpu_supports("bmi2"))
+        ethash_keccakf1600 = ethash_keccakf1600_bmi;
+}
+#endif

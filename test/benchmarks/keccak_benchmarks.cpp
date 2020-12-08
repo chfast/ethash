@@ -3,11 +3,9 @@
 // Licensed under the Apache License, Version 2.0.
 
 #include "keccak_utils.hpp"
-
-#include <ethash/keccak.h>
-#include <ethash/keccak.hpp>
-
+#include "support/attributes.h"
 #include <benchmark/benchmark.h>
+#include <ethash/keccak.h>
 
 
 void fake_keccakf1600(uint64_t* state) noexcept
@@ -16,18 +14,27 @@ void fake_keccakf1600(uint64_t* state) noexcept
     (void)state;
 }
 
+inline void best(uint64_t state[25]) noexcept
+{
+    ethash_keccakf1600(state);
+}
 
+template <void Fn(uint64_t*)>
 static void keccakf1600(benchmark::State& state)
 {
     uint64_t keccak_state[25] = {};
 
     for (auto _ : state)
     {
-        ethash_keccakf1600(keccak_state);
+        Fn(keccak_state);
         benchmark::DoNotOptimize(keccak_state);
     }
 }
-BENCHMARK(keccakf1600);
+BENCHMARK_TEMPLATE(keccakf1600, ethash_keccakf1600_generic);
+#if defined(__x86_64__) && __has_attribute(target)
+BENCHMARK_TEMPLATE(keccakf1600, ethash_keccakf1600_bmi);
+#endif
+BENCHMARK_TEMPLATE(keccakf1600, best);
 
 
 static void keccakf800(benchmark::State& state)
@@ -71,7 +78,7 @@ static void keccak512(benchmark::State& state)
 BENCHMARK(keccak512)->Arg(32)->Arg(64)->Arg(71)->Arg(72)->Arg(142)->Arg(143)->Arg(144);
 
 
-template<void keccak_fn(uint64_t*, const uint8_t*, size_t)>
+template <void keccak_fn(uint64_t*, const uint8_t*, size_t)>
 static void fake_keccak256(benchmark::State& state)
 {
     std::vector<uint8_t> data(static_cast<size_t>(state.range(0)), 0xaa);
@@ -88,7 +95,7 @@ BENCHMARK_TEMPLATE(fake_keccak256, fake_keccak256_default)->Arg(128)->Arg(17 * 8
 BENCHMARK_TEMPLATE(fake_keccak256, fake_keccak256_fastest)->Arg(128)->Arg(17 * 8)->Arg(4096)->Arg(16 * 1024);
 
 
-template<void keccak_fn(uint64_t*, const uint8_t*, size_t)>
+template <void keccak_fn(uint64_t*, const uint8_t*, size_t)>
 static void fake_keccak256_unaligned(benchmark::State& state)
 {
     const auto size = static_cast<size_t>(state.range(0));
