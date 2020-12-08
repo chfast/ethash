@@ -1,6 +1,6 @@
 // Ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018-2019 Pawel Bylica.
-// Licensed under the Apache License, Version 2.0.
+// Copyright 2018 Pawel Bylica.
+// SPDX-License-Identifier: Apache-2.0
 
 #include "keccak_utils.hpp"
 #include "support/attributes.h"
@@ -61,7 +61,7 @@ static void keccak256(benchmark::State& state)
         benchmark::DoNotOptimize(h.bytes);
     }
 }
-BENCHMARK(keccak256)->Arg(32)->Arg(64)->Arg(128)->Arg(135)->Arg(136);
+BENCHMARK(keccak256)->Arg(0)->Arg(32)->Arg(64)->Arg(135)->Arg(136);
 
 
 static void keccak512(benchmark::State& state)
@@ -75,8 +75,10 @@ static void keccak512(benchmark::State& state)
         benchmark::DoNotOptimize(h.bytes);
     }
 }
-BENCHMARK(keccak512)->Arg(32)->Arg(64)->Arg(71)->Arg(72)->Arg(142)->Arg(143)->Arg(144);
+BENCHMARK(keccak512)->Arg(0)->Arg(32)->Arg(64)->Arg(71)->Arg(143)->Arg(144);
 
+
+#define FAKE_KECCAK_ARGS ->Arg(128)->Arg(17 * 8)->Arg(4096)->Arg(16 * 1024)
 
 template <void keccak_fn(uint64_t*, const uint8_t*, size_t)>
 static void fake_keccak256(benchmark::State& state)
@@ -90,9 +92,9 @@ static void fake_keccak256(benchmark::State& state)
         benchmark::DoNotOptimize(out);
     }
 }
-BENCHMARK_TEMPLATE(fake_keccak256, fake_keccak256_default_aligned)->Arg(128)->Arg(17 * 8)->Arg(4096)->Arg(16 * 1024);
-BENCHMARK_TEMPLATE(fake_keccak256, fake_keccak256_default)->Arg(128)->Arg(17 * 8)->Arg(4096)->Arg(16 * 1024);
-BENCHMARK_TEMPLATE(fake_keccak256, fake_keccak256_fastest)->Arg(128)->Arg(17 * 8)->Arg(4096)->Arg(16 * 1024);
+BENCHMARK_TEMPLATE(fake_keccak256, fake_keccak256_default_aligned) FAKE_KECCAK_ARGS;
+BENCHMARK_TEMPLATE(fake_keccak256, fake_keccak256_default) FAKE_KECCAK_ARGS;
+BENCHMARK_TEMPLATE(fake_keccak256, fake_keccak256_fastest) FAKE_KECCAK_ARGS;
 
 
 template <void keccak_fn(uint64_t*, const uint8_t*, size_t)>
@@ -108,8 +110,8 @@ static void fake_keccak256_unaligned(benchmark::State& state)
         benchmark::DoNotOptimize(out);
     }
 }
-BENCHMARK_TEMPLATE(fake_keccak256_unaligned, fake_keccak256_default)->Arg(128)->Arg(17 * 8)->Arg(4096)->Arg(16 * 1024);
-BENCHMARK_TEMPLATE(fake_keccak256_unaligned, fake_keccak256_fastest)->Arg(128)->Arg(17 * 8)->Arg(4096)->Arg(16 * 1024);
+BENCHMARK_TEMPLATE(fake_keccak256_unaligned, fake_keccak256_default) FAKE_KECCAK_ARGS;
+BENCHMARK_TEMPLATE(fake_keccak256_unaligned, fake_keccak256_fastest) FAKE_KECCAK_ARGS;
 
 
 static void fake_keccak256_word4(benchmark::State& state)
