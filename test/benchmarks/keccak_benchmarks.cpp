@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "keccak_utils.hpp"
-#include "support/attributes.h"
 #include <benchmark/benchmark.h>
 #include <ethash/keccak.h>
 
@@ -13,29 +12,6 @@ void fake_keccakf1600(uint64_t* state) noexcept
     // Do nothing to measure performance of the code outside of keccakf function.
     (void)state;
 }
-
-inline void best(uint64_t state[25]) noexcept
-{
-    ethash_keccakf1600(state);
-}
-
-template <void Fn(uint64_t*)>
-static void keccakf1600(benchmark::State& state)
-{
-    uint64_t keccak_state[25] = {};
-
-    for (auto _ : state)
-    {
-        Fn(keccak_state);
-        benchmark::DoNotOptimize(keccak_state);
-    }
-}
-BENCHMARK_TEMPLATE(keccakf1600, ethash_keccakf1600_generic);
-#if defined(__x86_64__) && __has_attribute(target)
-BENCHMARK_TEMPLATE(keccakf1600, ethash_keccakf1600_bmi);
-#endif
-BENCHMARK_TEMPLATE(keccakf1600, best);
-
 
 static void keccakf800(benchmark::State& state)
 {

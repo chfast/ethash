@@ -5,26 +5,15 @@
 #include "../support/attributes.h"
 #include <ethash/keccak.h>
 
-#if _MSC_VER
+#if defined(_MSC_VER)
 #include <string.h>
 #define __builtin_memcpy memcpy
 #endif
 
-#if _WIN32
-/* On Windows assume little endian. */
-#define __LITTLE_ENDIAN 1234
-#define __BIG_ENDIAN 4321
-#define __BYTE_ORDER __LITTLE_ENDIAN
-#elif __APPLE__
-#include <machine/endian.h>
-#else
-#include <endian.h>
-#endif
-
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-#define to_le64(X) X
-#else
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define to_le64(X) __builtin_bswap64(X)
+#else
+#define to_le64(X) X
 #endif
 
 /// Loads 64-bit integer from given memory location as little-endian number.
@@ -55,7 +44,13 @@ static const uint64_t round_constants[24] = {  //
     0x8000000000008002, 0x8000000000000080, 0x000000000000800a, 0x800000008000000a,
     0x8000000080008081, 0x8000000000008080, 0x0000000080000001, 0x8000000080008008};
 
-/// The implementation of Keccak-f[1600] function.
+
+/// The Keccak-f[1600] function.
+///
+/// The implementation of the Keccak-f function with 1600-bit width of the permutation (b).
+/// The size of the state is also 1600 bit what gives 25 64-bit words.
+///
+/// @param state  The state of 25 64-bit words on which the permutation is to be performed.
 ///
 /// The implementation based on:
 /// - "simple" implementation by Ronny Van Keer, included in "Reference and optimized code in C",
@@ -273,15 +268,18 @@ static inline ALWAYS_INLINE void keccakf1600_implementation(uint64_t state[25])
     state[24] = Asu;
 }
 
-void ethash_keccakf1600_generic(uint64_t state[25])
+static void keccakf1600_generic(uint64_t state[25])
 {
     keccakf1600_implementation(state);
 }
 
-ethash_keccakf1600_func ethash_keccakf1600 = ethash_keccakf1600_generic;
+/// The pointer to the best Keccak-f[1600] function implementation,
+/// selected during runtime initialization.
+static void (*keccakf1600_best)(uint64_t[25]) = keccakf1600_generic;
+
 
 #if defined(__x86_64__) && __has_attribute(target)
-__attribute__((target("bmi,bmi2"))) void ethash_keccakf1600_bmi(uint64_t state[25])
+__attribute__((target("bmi,bmi2"))) static void keccakf1600_bmi(uint64_t state[25])
 {
     keccakf1600_implementation(state);
 }
@@ -289,7 +287,7 @@ __attribute__((target("bmi,bmi2"))) void ethash_keccakf1600_bmi(uint64_t state[2
 __attribute__((constructor)) static void select_keccakf1600_implementation()
 {
     if (__builtin_cpu_supports("bmi2"))
-        ethash_keccakf1600 = ethash_keccakf1600_bmi;
+        keccakf1600_best = keccakf1600_bmi;
 }
 #endif
 
@@ -316,7 +314,7 @@ static inline ALWAYS_INLINE void keccak(
             data += word_size;
         }
 
-        ethash_keccakf1600(state);
+        keccakf1600_best(state);
 
         size -= block_size;
     }
@@ -343,7 +341,7 @@ static inline ALWAYS_INLINE void keccak(
 
     state[(block_size / word_size) - 1] ^= 0x8000000000000000;
 
-    ethash_keccakf1600(state);
+    keccakf1600_best(state);
 
     for (i = 0; i < (hash_size / word_size); ++i)
         out[i] = to_le64(state[i]);
