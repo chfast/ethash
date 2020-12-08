@@ -1,13 +1,11 @@
 // Ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018-2019 Pawel Bylica.
-// Licensed under the Apache License, Version 2.0.
+// Copyright 2018 Pawel Bylica.
+// SPDX-License-Identifier: Apache-2.0
 
 #include <cstdint>
 #include <cstring>
 
 #define fix_endianness(X) X
-#define fix_endianness64(X) X
-
 
 void fake_keccakf1600(uint64_t* state) noexcept;
 
