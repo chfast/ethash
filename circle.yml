@@ -214,7 +214,8 @@ jobs:
     environment:
       - BUILD_PARALLEL_JOBS: 2
       - TEST_PARALLEL_JOBS: 2
-      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
+      - BUILD_TYPE: Debug
+      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static -DCOVERAGE=ON
     docker:
       - image: ethereum/cpp-build-env:16-gcc-10
     steps:
@@ -230,6 +231,12 @@ jobs:
           working_directory: ~/build
           command: |  # Software emulation in qemu will not handle threads.
             qemu-ppc64-static test/ethash-test --gtest_filter='-*_multithreaded.*:*_oom'
+      - collect_coverage_gcc
+      - store_artifacts:
+          path: ~/build/coverage
+          destination: coverage
+      - upload_coverage:
+          flags: be
 
   linux-release:
     docker:
