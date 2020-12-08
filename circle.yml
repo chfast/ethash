@@ -19,19 +19,6 @@ defaults:
         $CXX --version
         cmake --version
 
-  update-submodules: &update-submodules
-    run:
-      name: "Update git submodules"
-      command: |
-        git submodule update --init --recursive
-
-  install-m32: &install-m32
-    run:
-      name: "Install 32-bit toolchain"
-      command: |
-        sudo apt -q update
-        sudo apt -qy install g++-multilib
-
   install-mips64: &install-mips64
     run:
       name: "Install mips64 toolchain"
@@ -80,22 +67,6 @@ defaults:
         else
           test/ethash-test --gtest_filter=$GTEST_FILTER
         fi
-
-  test-cmake-config: &test-cmake-config
-    run:
-      name: "Test CMake config"
-      working_directory: ~/project/test/integration/cmake-config
-      command: |
-        cmake -DCMAKE_PREFIX_PATH=/tmp/local .
-        cmake --build .
-        ./ethash-cmake-config-test
-
-  test-mips64: &test-mips64
-    run:
-      name: "Test (mips64)"
-      working_directory: ~/build
-      command: |
-        qemu-mips64 -L /usr/mips64-linux-gnuabi64 test/ethash-test
 
   benchmark: &benchmark
     run:
@@ -177,7 +148,6 @@ jobs:
       - image: ethereum/cpp-build-env:15-gcc-10-multilib
     steps:
       - checkout
-      - *install-m32
       - *configure
       - *build
       - *test
