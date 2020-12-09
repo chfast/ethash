@@ -29,7 +29,7 @@ HunterGate(
 )
 
 project(ethash)
-set(PROJECT_VERSION 0.6.0-alpha.1)
+set(PROJECT_VERSION 0.6.0-alpha.2)
 
 cable_configure_compiler(NO_STACK_PROTECTION)
 if(CABLE_COMPILER_GNULIKE)
