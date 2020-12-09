@@ -286,6 +286,7 @@ __attribute__((target("bmi,bmi2"))) static void keccakf1600_bmi(uint64_t state[2
 
 __attribute__((constructor)) static void select_keccakf1600_implementation()
 {
+    __builtin_cpu_init();
     if (__builtin_cpu_supports("bmi2"))
         keccakf1600_best = keccakf1600_bmi;
 }
