@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0] — 2020-12-15
+
+ - Added: The ethash::keccak library received the optimized Keccak implementation
+   which uses BMI and BMI2 x86_64 extensions. This implementation is automatically
+   selected at startup provided the used extensions are available in the hardware.
+   [#162](https://github.com/chfast/ethash/pull/162)
+   [#168](https://github.com/chfast/ethash/pull/168)
+
 ## [0.5.2] — 2020-08-03
 
  - Fixed: Fix compilation with MSVC/C++17.
@@ -52,6 +60,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[0.6.0]: https://github.com/chfast/ethash/releases/tag/v0.6.0
 [0.5.2]: https://github.com/chfast/ethash/releases/tag/v0.5.2
 [0.5.1]: https://github.com/chfast/ethash/releases/tag/v0.5.1
 [0.5.0]: https://github.com/chfast/ethash/releases/tag/v0.5.0
