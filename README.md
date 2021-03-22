@@ -2,7 +2,7 @@
 
 [![readme style standard](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-> C/C++ implementation of Ethash – the Ethereum Proof of Work algorithm
+> C/C++ implementation of Ethash and ProgPoW – the Ethereum Proof of Work algorithms
 
 
 ## Table of Contents
