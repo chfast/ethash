@@ -4,6 +4,7 @@
 
 add_subdirectory(keccak)
 add_subdirectory(ethash)
+add_subdirectory(global_context)
 
 get_filename_component(ETHASH_PRIVATE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
 set(ETHASH_PRIVATE_INCLUDE_DIR ${ETHASH_PRIVATE_INCLUDE_DIR} PARENT_SCOPE)
