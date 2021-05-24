@@ -278,25 +278,24 @@ jobs:
           path: ~/project/dist
           destination: dist
       - run:
-          name: "Install CMake"
+          name: "Select Python"
           command: |
-            export PATH=/opt/python/cp37-cp37m/bin:$PATH
-            pip install cmake
+            echo 'export PATH=/opt/python/cp39-cp39/bin:$PATH' >> $BASH_ENV
+            source $BASH_ENV
+            python --version
+            pip --version
+      - run:
+          name: "Install CMake"
+          command: pip install cmake
       - run:
           name: "Build source dist"
-          command: |
-            export PATH=/opt/python/cp37-cp37m/bin:$PATH
-            ./setup.py sdist
+          command: ./setup.py sdist
       - run:
           name: "Build wheel with CMake build"
-          command: |
-            export PATH=/opt/python/cp37-cp37m/bin:$PATH
-            ./setup.py bdist_wheel
+          command: ./setup.py bdist_wheel
       - run:
           name: "Test"
-          command: |
-            export PATH=/opt/python/cp37-cp37m/bin:$PATH
-            ./setup.py test
+          command: ./setup.py test
 
   macos-xcode-tsan:
     macos:
