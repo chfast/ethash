@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 #include <ethash/ethash.hpp>
+#include <ethash/global_context.hpp>
 
 #include <atomic>
 #include <chrono>

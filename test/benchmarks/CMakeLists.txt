@@ -10,7 +10,7 @@ add_executable(ethash-bench
     keccak_benchmarks.cpp
     keccak_utils.hpp
     keccak_utils.cpp
-    managed_benchmarks.cpp
+    global_context_benchmarks.cpp
     progpow_benchmarks.cpp
     threadsync_benchmarks.cpp
     threadsync_utils.hpp

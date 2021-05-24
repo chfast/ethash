@@ -6,6 +6,7 @@
 #include "test_cases.hpp"
 
 #include <ethash/ethash-internal.hpp>
+#include <ethash/global_context.hpp>
 
 #include <gtest/gtest.h>
 

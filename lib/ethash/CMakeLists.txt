@@ -17,12 +17,15 @@ target_sources(ethash PRIVATE
     ethash-internal.hpp
     ethash.cpp
     ${include_dir}/ethash/hash_types.h
-    managed.cpp
     kiss99.hpp
     primes.h
     primes.c
     ${include_dir}/ethash/progpow.hpp
     progpow.cpp
+
+    ${include_dir}/ethash/global_context.h
+    ${include_dir}/ethash/global_context.hpp
+    global_context.cpp
 )
 
 

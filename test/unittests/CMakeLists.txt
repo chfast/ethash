@@ -13,7 +13,7 @@ add_executable(
     test_ethash.cpp
     test_keccak.cpp
     test_kiss.cpp
-    test_managed.cpp
+    test_global_context.cpp
     test_primes.cpp
     test_progpow.cpp
     test_version.cpp

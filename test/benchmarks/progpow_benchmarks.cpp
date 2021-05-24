@@ -2,8 +2,7 @@
 // Copyright 2018-2019 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
-#include "../unittests/helpers.hpp"
-
+#include <ethash/global_context.hpp>
 #include <ethash/progpow.hpp>
 
 #include <benchmark/benchmark.h>
