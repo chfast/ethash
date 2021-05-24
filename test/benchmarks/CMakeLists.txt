@@ -10,11 +10,11 @@ add_executable(ethash-bench
     keccak_benchmarks.cpp
     keccak_utils.hpp
     keccak_utils.cpp
-    managed_benchmarks.cpp
+    global_context_benchmarks.cpp
     progpow_benchmarks.cpp
     threadsync_benchmarks.cpp
     threadsync_utils.hpp
     threadsync_utils.cpp)
-target_link_libraries(ethash-bench PRIVATE ethash::ethash benchmark::benchmark)
+target_link_libraries(ethash-bench PRIVATE ethash::global-context benchmark::benchmark)
 target_include_directories(ethash-bench PRIVATE ${ETHASH_PRIVATE_INCLUDE_DIR})
 set_target_properties(ethash-bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)

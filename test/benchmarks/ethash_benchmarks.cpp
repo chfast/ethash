@@ -6,6 +6,7 @@
 
 #include <benchmark/benchmark.h>
 #include <ethash/ethash-internal.hpp>
+#include <ethash/global_context.hpp>
 #include <ethash/keccak.hpp>
 #include <ethash/primes.h>
 

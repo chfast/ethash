@@ -24,9 +24,10 @@ ffibuilder.set_source(
     r"""
     #include <ethash/keccak.h>
     #include <ethash/ethash.h>
+    #include <ethash/global_context.h>
      """,
     include_dirs=['include'],
-    libraries=['ethash', 'keccak'] + stdlib,
+    libraries=['ethash-global-context', 'ethash', 'keccak'] + stdlib,
 )
 
 ffibuilder.cdef("""

@@ -9,6 +9,7 @@ include(cmake/cable/bootstrap.cmake)
 include(CableBuildType)
 include(CableCompilerSettings)
 include(CableToolchains)
+include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 include(HunterGate)
 
@@ -55,9 +56,14 @@ endif()
 
 set(include_dir ${PROJECT_SOURCE_DIR}/include)
 
+option(ETHASH_BUILD_ETHASH "Build ethash::ethash library (if NO only ethash::keccak is built)" YES)
+
+cmake_dependent_option(ETHASH_BUILD_GLOBAL_CONTEXT "Build ethash::global-context library" YES "ETHASH_BUILD_ETHASH" NO)
+
+option(ETHASH_BUILD_TESTS "Build unit tests" YES)
+
 add_subdirectory(lib)
 
-option(ETHASH_BUILD_TESTS "Build unit tests" ON)
 if(ETHASH_BUILD_TESTS)
     add_subdirectory(test)
 endif()

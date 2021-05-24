@@ -134,8 +134,8 @@ inline bool verify_final_hash(const hash256& header_hash, const hash256& mix_has
     return ethash_verify_final_hash(&header_hash, &mix_hash, nonce, &boundary);
 }
 
-inline bool verify(const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
-    uint64_t nonce, const hash256& boundary) noexcept
+inline bool verify(const epoch_context& context, const hash256& header_hash,
+    const hash256& mix_hash, uint64_t nonce, const hash256& boundary) noexcept
 {
     return ethash_verify(&context, &header_hash, &mix_hash, nonce, &boundary);
 }
@@ -157,16 +157,4 @@ search_result search(const epoch_context_full& context, const hash256& header_ha
 /// @return      The epoch number or -1 if not found.
 int find_epoch_number(const hash256& seed) noexcept;
 
-
-/// Get global shared epoch context.
-inline const epoch_context& get_global_epoch_context(int epoch_number) noexcept
-{
-    return *ethash_get_global_epoch_context(epoch_number);
-}
-
-/// Get global shared epoch context with full dataset initialized.
-inline const epoch_context_full& get_global_epoch_context_full(int epoch_number) noexcept
-{
-    return *ethash_get_global_epoch_context_full(epoch_number);
-}
 }  // namespace ethash

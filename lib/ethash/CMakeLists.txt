@@ -17,7 +17,6 @@ target_sources(ethash PRIVATE
     ethash-internal.hpp
     ethash.cpp
     ${include_dir}/ethash/hash_types.h
-    managed.cpp
     kiss99.hpp
     primes.h
     primes.c
