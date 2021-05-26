@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.0] — unreleased
+
+ - Changed: The global context API (aka "managed" API) has been moved to
+   separate library `ethash::global-context` and `ethash/global_context.hpp`
+   header.
+   [#175](https://github.com/chfast/ethash/pull/175)
+ - Added: CMake options to disable building of individual libraries:
+   - `-DETHASH_BUILD_GLOBAL_CONTEXT=NO` disables building
+     `ethash::global-context`.
+   - `-DETHASH_BUILD_ETHASH=NO` disables building `ethash::ethash` and
+     `ethash::global-context`. Only `ethash::keccak` is built then.
+ - Added: Basic support for building to WebAssembly
+   [#175](https://github.com/chfast/ethash/pull/175)
+   
 ## [0.6.0] — 2020-12-15
 
  - Added: The ethash::keccak library received the optimized Keccak implementation
@@ -20,7 +34,7 @@
    [#138](https://github.com/chfast/ethash/pull/138)
  - Added: More functions exposed in C API.
    [#136](https://github.com/chfast/ethash/pull/136)
- - Change: ProgPoW implementation updated to revision [0.9.3][ProgPoW-changelog].
+ - Changed: ProgPoW implementation updated to revision [0.9.3][ProgPoW-changelog].
    [#151](https://github.com/chfast/ethash/pull/151)
 
 ## [0.5.0] — 2019-06-07
@@ -60,6 +74,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[0.7.0]: https://github.com/chfast/ethash/compare/v0.6.0..master
 [0.6.0]: https://github.com/chfast/ethash/releases/tag/v0.6.0
 [0.5.2]: https://github.com/chfast/ethash/releases/tag/v0.5.2
 [0.5.1]: https://github.com/chfast/ethash/releases/tag/v0.5.1
