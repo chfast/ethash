@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.7.0] — unreleased
+## [0.7.0] — 2021-05-26
 
  - Changed: The global context API (aka "managed" API) has been moved to
    separate library `ethash::global-context` and `ethash/global_context.hpp`
@@ -74,7 +74,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
-[0.7.0]: https://github.com/chfast/ethash/compare/v0.6.0..master
+[0.7.0]: https://github.com/chfast/ethash/releases/tag/v0.7.0
 [0.6.0]: https://github.com/chfast/ethash/releases/tag/v0.6.0
 [0.5.2]: https://github.com/chfast/ethash/releases/tag/v0.5.2
 [0.5.1]: https://github.com/chfast/ethash/releases/tag/v0.5.1
