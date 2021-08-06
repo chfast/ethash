@@ -9,6 +9,11 @@
 #define __has_attribute(name) 0
 #endif
 
+// Provide __has_builtin macro if not defined.
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
 // [[always_inline]]
 #if _MSC_VER
 #define ALWAYS_INLINE __forceinline
