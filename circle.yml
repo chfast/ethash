@@ -299,7 +299,7 @@ jobs:
 
   macos-xcode-tsan:
     macos:
-      xcode: "12.4.0"
+      xcode: "12.5.1"
     environment:
       - BUILD_PARALLEL_JOBS: 4
       - CMAKE_OPTIONS: -DSANITIZE=thread
@@ -309,7 +309,7 @@ jobs:
 
   macos-xcode-old:
     macos:
-      xcode: "10.3.0"
+      xcode: "11.2.1"
     environment:
       - BUILD_PARALLEL_JOBS: 4
     steps:
@@ -317,7 +317,7 @@ jobs:
 
   macos-release:
     macos:
-      xcode: "12.4.0"
+      xcode: "12.5.1"
     environment:
       - BUILD_PARALLEL_JOBS: 4
       - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=~/project/dist
