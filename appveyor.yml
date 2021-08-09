@@ -30,7 +30,6 @@ environment:
 install:
   # Set default Python version.
   - set PATH=C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%
-  - pip install requests
 
 before_build:
   - call "%ProgramFiles(x86)%\Microsoft Visual Studio\%VS%\Community\Common7\Tools\vsdevcmd" -arch=%ARCH%
