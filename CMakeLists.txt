@@ -13,21 +13,10 @@ include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 include(HunterGate)
 
-include(defaults/HunterCacheServers)
-
 cable_configure_toolchain(DEFAULT cxx11)
 cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo Debug)
 
-if(NOT WIN32)
-    # Outside of Windows build only Release packages.
-    set(HUNTER_CONFIGURATION_TYPES Release
-        CACHE STRING "Build type of the Hunter packages")
-endif()
-
-HunterGate(
-    URL "https://github.com/cpp-pm/hunter/archive/v0.23.224.tar.gz"
-    SHA1 "18e57a43efc435f2e1dae1291e82e42afbf940be"
-)
+include(cmake/Hunter/init.cmake)
 
 project(ethash)
 set(PROJECT_VERSION 0.7.0)
