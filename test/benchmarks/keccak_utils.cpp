@@ -2,13 +2,15 @@
 // Copyright 2018 Pawel Bylica.
 // SPDX-License-Identifier: Apache-2.0
 
+#include "keccak_utils.hpp"
 #include <cstdint>
 #include <cstring>
 
+#pragma GCC diagnostic ignored "-Wcast-qual"
+#pragma clang diagnostic ignored "-Wcast-qual"
+#pragma clang diagnostic ignored "-Wcast-align"
+
 #define fix_endianness(X) X
-
-void fake_keccakf1600(uint64_t* state) noexcept;
-
 
 namespace
 {
@@ -101,7 +103,7 @@ inline void keccak_default(uint64_t* out, const uint8_t* data, size_t size) noex
 }
 
 /// Loads 64-bit integer from given memory location.
-inline uint64_t load_le(const uint8_t *data) noexcept
+inline uint64_t load_le(const uint8_t* data) noexcept
 {
     // memcpy is the best way of expressing the intention. Every compiler will
     // optimize is to single load instruction if the target architecture

@@ -1,5 +1,5 @@
 // Ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018-2019 Pawel Bylica.
+// Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
 #include <ethash/kiss99.hpp>
@@ -17,20 +17,19 @@ int main()
 
     constexpr double expected = double(1) / mod;
 
-    for (uint64_t i = 0; i <= uint64_t(-1); ++i)
+    for (uint64_t i = 0; i < uint64_t(-1); ++i)
     {
         auto x = rng() % mod;
         ++histogram[x];
 
         if (i == output_point)
         {
-            std::cout << std::right << std::setw(4) << (i / output_interval)
-                      << "G:" << std::fixed;
+            std::cout << std::right << std::setw(4) << (i / output_interval) << "G:" << std::fixed;
 
-//            // Probabilities:
-//            for (auto h : histogram)
-//                std::cout << ' ' << std::setw(9) << (double(h) / double(i));
-//            std::cout << '\n';
+            // Probabilities:
+            // for (auto h : histogram)
+            //     std::cout << ' ' << std::setw(9) << (double(h) / double(i));
+            // std::cout << '\n';
 
             // Errors:
             for (auto h : histogram)

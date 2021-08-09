@@ -1,5 +1,5 @@
 // ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018-2019 Pawel Bylica.
+// Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -705,7 +705,7 @@ TEST(ethash, small_dataset)
     EXPECT_EQ(solution.nonce, 0);
 }
 
-#if !__APPLE__
+#ifndef __APPLE__
 
 // The Out-Of-Memory tests try to allocate huge memory buffers. This fails on
 // Linux and Windows, but not on macOS. Because the macOS tries too hard
@@ -714,7 +714,7 @@ TEST(ethash, small_dataset)
 // filter) because we don't want developers using macOS to be hit by this
 // behavior.
 
-#if __linux__
+#ifdef __linux__
 #include <sys/resource.h>
 
 namespace

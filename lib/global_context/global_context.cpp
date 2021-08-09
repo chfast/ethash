@@ -14,7 +14,7 @@
 
 #if __has_cpp_attribute(gnu::noinline)
 #define ATTRIBUTE_NOINLINE [[gnu::noinline]]
-#elif _MSC_VER
+#elif defined(_MSC_VER)
 #define ATTRIBUTE_NOINLINE __declspec(noinline)
 #else
 #define ATTRIBUTE_NOINLINE

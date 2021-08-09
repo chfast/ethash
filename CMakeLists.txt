@@ -1,5 +1,5 @@
 # ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-# Copyright 2018-2019 Pawel Bylica.
+# Copyright 2018 Pawel Bylica.
 # Licensed under the Apache License, Version 2.0.
 
 cmake_minimum_required(VERSION 3.13.4)
@@ -25,6 +25,14 @@ cable_configure_compiler(NO_STACK_PROTECTION)
 if(CABLE_COMPILER_GNULIKE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
+
+    add_compile_options(
+        -Wcast-qual
+        -Wsign-conversion
+        -Wundef
+        $<$<COMPILE_LANGUAGE:C>:-Wmissing-prototypes>
+        $<$<CXX_COMPILER_ID:Clang>:-Wnewline-eof>
+    )
 
     option(ETHASH_NATIVE "Build for native CPU" OFF)
     if(ETHASH_NATIVE)
