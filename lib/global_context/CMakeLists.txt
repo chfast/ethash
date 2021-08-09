@@ -15,7 +15,7 @@ target_sources(global-context PRIVATE
     global_context.cpp
 )
 
-if(CABLE_COMPILER_GNULIKE AND NOT SANITIZE MATCHES undefined)
+if(CABLE_COMPILER_GNULIKE AND NOT MSVC AND NOT SANITIZE MATCHES undefined)
     target_compile_options(global-context PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 endif()
 
