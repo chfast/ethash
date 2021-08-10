@@ -20,6 +20,10 @@ environment:
       TOOLCHAIN: cxx17
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - VS: 2019
+      CC: clang-cl
+      CXX: clang-cl
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    - VS: 2019
       PYTHON: true
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - VS: 2017
@@ -33,7 +37,7 @@ install:
 
 before_build:
   - call "%ProgramFiles(x86)%\Microsoft Visual Studio\%VS%\Community\Common7\Tools\vsdevcmd" -arch=%ARCH%
-  - cmake -S . -B build -G Ninja .. -Wno-dev -DTOOLCHAIN=%TOOLCHAIN% -DCMAKE_INSTALL_PREFIX=./dist -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
+  - cmake -S . -B build -G Ninja -Wno-dev -DTOOLCHAIN=%TOOLCHAIN% -DCMAKE_INSTALL_PREFIX=./dist -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
 
 build_script:
   - cmake --build build --target install

@@ -34,6 +34,15 @@ if(CABLE_COMPILER_GNULIKE)
         $<$<CXX_COMPILER_ID:Clang>:-Wnewline-eof>
     )
 
+    if(MSVC) # clang-cl
+        add_compile_options(
+            -Wno-exit-time-destructors
+            -Wno-global-constructors
+            $<$<COMPILE_LANGUAGE:CXX>:-Wno-c++98-compat-pedantic>
+            $<$<COMPILE_LANGUAGE:CXX>:-Wno-old-style-cast>
+        )
+    endif()
+
     option(ETHASH_NATIVE "Build for native CPU" OFF)
     if(ETHASH_NATIVE)
         add_compile_options(-march=native)
