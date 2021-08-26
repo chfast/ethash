@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.1] — 2021-08-26
+
+ - Added: Support for building with clang-cl (LLVM-based toolchain for Visual Studio 2019).
+   [#179](https://github.com/chfast/ethash/pull/179)
+   [#180](https://github.com/chfast/ethash/pull/180)
+   [#182](https://github.com/chfast/ethash/pull/182)
+   [#183](https://github.com/chfast/ethash/pull/183)
+   [#184](https://github.com/chfast/ethash/pull/184)
+
 ## [0.7.0] — 2021-05-26
 
  - Changed: The global context API (aka "managed" API) has been moved to
@@ -74,6 +83,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[0.7.1]: https://github.com/chfast/ethash/releases/tag/v0.7.1
 [0.7.0]: https://github.com/chfast/ethash/releases/tag/v0.7.0
 [0.6.0]: https://github.com/chfast/ethash/releases/tag/v0.6.0
 [0.5.2]: https://github.com/chfast/ethash/releases/tag/v0.5.2
