@@ -25,7 +25,8 @@ extern "C" struct ethash_epoch_context_full : ethash_epoch_context
 
 namespace ethash
 {
-inline bool is_less_or_equal(const hash256& a, const hash256& b) noexcept
+/// Returns true if a <= b in byte-wise comparison (i.e. as big-endian numbers).
+inline bool less_equal(const hash256& a, const hash256& b) noexcept
 {
     for (size_t i = 0; i < (sizeof(a) / sizeof(a.word64s[0])); ++i)
     {
@@ -37,7 +38,8 @@ inline bool is_less_or_equal(const hash256& a, const hash256& b) noexcept
     return true;
 }
 
-inline bool is_equal(const hash256& a, const hash256& b) noexcept
+/// Returns true if a == b in byte-wise comparison.
+inline bool equal(const hash256& a, const hash256& b) noexcept
 {
     return (a.word64s[0] == b.word64s[0]) & (a.word64s[1] == b.word64s[1]) &
            (a.word64s[2] == b.word64s[2]) & (a.word64s[3] == b.word64s[3]);
