@@ -62,7 +62,7 @@ hash512 copy(const hash512& h) noexcept
 {
     return h;
 }
-}
+}  // namespace
 
 TEST(ethash, revision)
 {
@@ -773,14 +773,14 @@ TEST(ethash, create_context_oom)
 
 namespace
 {
-struct is_less_or_equal_test_case
+struct less_equal_test_case
 {
     const char* a_hex;
     const char* b_hex;
-    bool excected_result;
+    bool expected_result;
 };
 
-is_less_or_equal_test_case is_less_or_equal_test_cases[] = {
+less_equal_test_case less_equal_test_cases[] = {
     {"0000000000000000000000000000000000000000000000000000000000000000",
         "0000000000000000000000000000000000000000000000000000000000000000", true},
     {"0000000000000000000000000000000000000000000000000000000000000001",
@@ -826,12 +826,12 @@ is_less_or_equal_test_case is_less_or_equal_test_cases[] = {
 };
 }  // namespace
 
-TEST(ethash, is_less_or_equal)
+TEST(ethash, less_equal)
 {
-    for (const auto& t : is_less_or_equal_test_cases)
+    for (const auto& t : less_equal_test_cases)
     {
         auto a = to_hash256(t.a_hex);
         auto b = to_hash256(t.b_hex);
-        EXPECT_EQ(is_less_or_equal(a, b), t.excected_result);
+        EXPECT_EQ(less_equal(a, b), t.expected_result);
     }
 }

@@ -296,8 +296,7 @@ result hash(const epoch_context& context, int block_number, const hash256& heade
 result hash(const epoch_context_full& context, int block_number, const hash256& header_hash,
     uint64_t nonce) noexcept
 {
-    static const auto lazy_lookup = [](const epoch_context& ctx, uint32_t index) noexcept
-    {
+    static const auto lazy_lookup = [](const epoch_context& ctx, uint32_t index) noexcept {
         auto* full_dataset_1024 = static_cast<const epoch_context_full&>(ctx).full_dataset;
         auto* full_dataset_2048 = reinterpret_cast<hash2048*>(full_dataset_1024);
         hash2048& item = full_dataset_2048[index];
@@ -321,12 +320,12 @@ bool verify(const epoch_context& context, int block_number, const hash256& heade
 {
     const uint64_t seed = keccak_progpow_64(header_hash, nonce);
     const hash256 final_hash = keccak_progpow_256(header_hash, seed, mix_hash);
-    if (!is_less_or_equal(final_hash, boundary))
+    if (!less_equal(final_hash, boundary))
         return false;
 
     const hash256 expected_mix_hash =
         hash_mix(context, block_number, seed, calculate_dataset_item_2048);
-    return is_equal(expected_mix_hash, mix_hash);
+    return equal(expected_mix_hash, mix_hash);
 }
 
 search_result search_light(const epoch_context& context, int block_number,
@@ -337,7 +336,7 @@ search_result search_light(const epoch_context& context, int block_number,
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash(context, block_number, header_hash, nonce);
-        if (is_less_or_equal(r.final_hash, boundary))
+        if (less_equal(r.final_hash, boundary))
             return {r, nonce};
     }
     return {};
@@ -351,7 +350,7 @@ search_result search(const epoch_context_full& context, int block_number,
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash(context, block_number, header_hash, nonce);
-        if (is_less_or_equal(r.final_hash, boundary))
+        if (less_equal(r.final_hash, boundary))
             return {r, nonce};
     }
     return {};

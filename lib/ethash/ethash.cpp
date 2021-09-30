@@ -4,17 +4,12 @@
 
 #include "ethash-internal.hpp"
 
-#include "../support/attributes.h"
 #include "bit_manipulation.h"
-#include "endianness.hpp"
 #include "primes.h"
 #include <ethash/keccak.hpp>
 #include <ethash/progpow.hpp>
-
-#include <cassert>
 #include <cstdlib>
 #include <cstring>
-#include <limits>
 
 namespace ethash
 {
@@ -305,8 +300,7 @@ inline hash256 hash_kernel(
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept
 {
-    static const auto lazy_lookup = [](const epoch_context& ctx, uint32_t index) noexcept
-    {
+    static const auto lazy_lookup = [](const epoch_context& ctx, uint32_t index) noexcept {
         auto full_dataset = static_cast<const epoch_context_full&>(ctx).full_dataset;
         hash1024& item = full_dataset[index];
         if (item.word64s[0] == 0)
@@ -330,7 +324,7 @@ search_result search_light(const epoch_context& context, const hash256& header_h
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash(context, header_hash, nonce);
-        if (is_less_or_equal(r.final_hash, boundary))
+        if (less_equal(r.final_hash, boundary))
             return {r, nonce};
     }
     return {};
@@ -343,7 +337,7 @@ search_result search(const epoch_context_full& context, const hash256& header_ha
     for (uint64_t nonce = start_nonce; nonce < end_nonce; ++nonce)
     {
         result r = hash(context, header_hash, nonce);
-        if (is_less_or_equal(r.final_hash, boundary))
+        if (less_equal(r.final_hash, boundary))
             return {r, nonce};
     }
     return {};
@@ -425,18 +419,18 @@ bool ethash_verify_final_hash(const hash256* header_hash, const hash256* mix_has
     const hash256* boundary) noexcept
 {
     const hash512 seed = hash_seed(*header_hash, nonce);
-    return is_less_or_equal(hash_final(seed, *mix_hash), *boundary);
+    return less_equal(hash_final(seed, *mix_hash), *boundary);
 }
 
 bool ethash_verify(const epoch_context* context, const hash256* header_hash,
     const hash256* mix_hash, uint64_t nonce, const hash256* boundary) noexcept
 {
     const hash512 seed = hash_seed(*header_hash, nonce);
-    if (!is_less_or_equal(hash_final(seed, *mix_hash), *boundary))
+    if (!less_equal(hash_final(seed, *mix_hash), *boundary))
         return false;
 
     const hash256 expected_mix_hash = hash_kernel(*context, seed, calculate_dataset_item_1024);
-    return is_equal(expected_mix_hash, *mix_hash);
+    return equal(expected_mix_hash, *mix_hash);
 }
 
 }  // extern "C"
