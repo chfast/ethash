@@ -88,7 +88,7 @@ TEST(managed_multithreaded, verify_all)
 
 TEST(managed_multithreaded, verify_parallel)
 {
-    std::vector<std::future<ethash_errc>> futures;
+    std::vector<std::future<std::error_code>> futures;
 
     for (const auto& t : hash_test_cases)
     {

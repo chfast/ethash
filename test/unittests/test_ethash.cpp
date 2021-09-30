@@ -72,6 +72,35 @@ TEST(ethash, revision)
     EXPECT_EQ(ethash::revision, (std::string{"23"}));
 }
 
+TEST(ethash, error_code)
+{
+    std::ostringstream os;
+    std::error_code ec = ETHASH_SUCCESS;
+    EXPECT_FALSE(ec);
+    EXPECT_EQ(ec.message(), "");
+
+    ec = ETHASH_INVALID_FINAL_HASH;
+    EXPECT_TRUE(ec);
+    EXPECT_EQ(ec.message(), "invalid final hash");
+    os.str({});
+    os << ec;
+    EXPECT_EQ(os.str(), "ethash:1");
+
+    ec = ETHASH_INVALID_MIX_HASH;
+    EXPECT_TRUE(ec);
+    EXPECT_EQ(ec.message(), "invalid mix hash");
+    os.str({});
+    os << ec;
+    EXPECT_EQ(os.str(), "ethash:2");
+
+    ec = static_cast<ethash_errc>(3);
+    EXPECT_TRUE(ec);
+    EXPECT_EQ(ec.message(), "unknown error");
+    os.str({});
+    os << ec;
+    EXPECT_EQ(os.str(), "ethash:3");
+}
+
 TEST(hash, hash256_from_bytes)
 {
     const uint8_t bytes[32] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
@@ -547,6 +576,8 @@ TEST(ethash, verify_hash_light)
 
         auto ec = verify_final_hash(header_hash, mix_hash, nonce, boundary);
         EXPECT_EQ(ec, ETHASH_SUCCESS);
+        EXPECT_FALSE(ec);
+        EXPECT_EQ(ec.category(), ethash_category());
         ec = verify(*context, header_hash, mix_hash, nonce, boundary);
         EXPECT_EQ(ec, ETHASH_SUCCESS);
 

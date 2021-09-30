@@ -20,6 +20,18 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <system_error>
+
+namespace std
+{
+/// Template specialization of std::is_error_code_enum for ethash_errc.
+/// This enabled implicit conversions from evmc::hex_errc to std::error_code.
+template <>
+struct is_error_code_enum<ethash_errc> : true_type
+{
+};
+}  // namespace std
+
 
 namespace ethash
 {
@@ -128,13 +140,13 @@ inline result hash(
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept;
 
-inline ethash_errc verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
-    const hash256& boundary) noexcept
+inline std::error_code verify_final_hash(const hash256& header_hash, const hash256& mix_hash,
+    uint64_t nonce, const hash256& boundary) noexcept
 {
     return ethash_verify_final_hash(&header_hash, &mix_hash, nonce, &boundary);
 }
 
-inline ethash_errc verify(const epoch_context& context, const hash256& header_hash,
+inline std::error_code verify(const epoch_context& context, const hash256& header_hash,
     const hash256& mix_hash, uint64_t nonce, const hash256& boundary) noexcept
 {
     return ethash_verify(&context, &header_hash, &mix_hash, nonce, &boundary);
@@ -157,4 +169,40 @@ search_result search(const epoch_context_full& context, const hash256& header_ha
 /// @return      The epoch number or -1 if not found.
 int find_epoch_number(const hash256& seed) noexcept;
 
+
+/// Obtains a reference to the static error category object for ethash errors.
+inline const std::error_category& ethash_category() noexcept
+{
+    struct ethash_category_impl : std::error_category
+    {
+        const char* name() const noexcept final { return "ethash"; }
+
+        std::string message(int ev) const final
+        {
+            switch (ev)
+            {
+            case ETHASH_SUCCESS:
+                return "";
+            case ETHASH_INVALID_FINAL_HASH:
+                return "invalid final hash";
+            case ETHASH_INVALID_MIX_HASH:
+                return "invalid mix hash";
+            default:
+                return "unknown error";
+            }
+        }
+    };
+
+    static ethash_category_impl category_instance;
+    return category_instance;
+}
 }  // namespace ethash
+
+
+/// Creates error_code object out of an Ethash error code value.
+/// This is used by std::error_code to implement implicit conversion ethash_errc -> std::error_code,
+/// therefore the definition is in the global namespace to match the definition of ethash_errc.
+inline std::error_code make_error_code(ethash_errc errc) noexcept
+{
+    return {errc, ethash::ethash_category()};
+}
