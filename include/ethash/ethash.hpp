@@ -128,13 +128,13 @@ inline result hash(
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept;
 
-inline bool verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
+inline ethash_errc verify_final_hash(const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
     const hash256& boundary) noexcept
 {
     return ethash_verify_final_hash(&header_hash, &mix_hash, nonce, &boundary);
 }
 
-inline bool verify(const epoch_context& context, const hash256& header_hash,
+inline ethash_errc verify(const epoch_context& context, const hash256& header_hash,
     const hash256& mix_hash, uint64_t nonce, const hash256& boundary) noexcept
 {
     return ethash_verify(&context, &header_hash, &mix_hash, nonce, &boundary);
