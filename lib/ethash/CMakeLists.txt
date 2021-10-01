@@ -6,6 +6,7 @@ include(GNUInstallDirs)
 
 add_library(ethash)
 add_library(ethash::ethash ALIAS ethash)
+target_compile_features(ethash PUBLIC c_std_11 cxx_std_11)
 target_link_libraries(ethash PRIVATE ethash::keccak)
 target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
 target_sources(ethash PRIVATE
