@@ -582,13 +582,13 @@ TEST(ethash, verify_hash_light)
         ec = verify_final_hash(header_hash, mix_hash, nonce, dec(boundary));
         EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
 
-        ec = verify(*context, header_hash, mix_hash, nonce, boundary);
+        ec = verify_against_boundary(*context, header_hash, mix_hash, nonce, boundary);
         EXPECT_EQ(ec, ETHASH_SUCCESS);
 
-        ec = verify(*context, header_hash, mix_hash, nonce, dec(boundary));
+        ec = verify_against_boundary(*context, header_hash, mix_hash, nonce, dec(boundary));
         EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
 
-        ec = verify(*context, header_hash, mix_hash, nonce, inc(boundary));
+        ec = verify_against_boundary(*context, header_hash, mix_hash, nonce, inc(boundary));
         EXPECT_EQ(ec, ETHASH_SUCCESS);
 
         const bool within_significant_boundary = r.final_hash.bytes[0] == 0;
@@ -597,12 +597,12 @@ TEST(ethash, verify_hash_light)
             ec = verify_final_hash(header_hash, mix_hash, nonce + 1, boundary);
             EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH) << t.final_hash_hex;
 
-            ec = verify(*context, header_hash, mix_hash, nonce + 1, boundary);
+            ec = verify_against_boundary(*context, header_hash, mix_hash, nonce + 1, boundary);
             EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
         }
         else
         {
-            ec = verify(*context, header_hash, mix_hash, nonce + 1, boundary);
+            ec = verify_against_boundary(*context, header_hash, mix_hash, nonce + 1, boundary);
             EXPECT_EQ(ec, ETHASH_INVALID_MIX_HASH);
         }
     }
@@ -651,7 +651,8 @@ TEST(ethash, verify_final_hash_only)
         to_hash256("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
     EXPECT_EQ(verify_final_hash(header_hash, mix_hash, nonce, boundary), ETHASH_SUCCESS);
-    EXPECT_EQ(verify(context, header_hash, mix_hash, nonce, boundary), ETHASH_INVALID_MIX_HASH);
+    EXPECT_EQ(verify_against_boundary(context, header_hash, mix_hash, nonce, boundary),
+        ETHASH_INVALID_MIX_HASH);
 }
 
 TEST(ethash, verify_boundary)
@@ -675,16 +676,17 @@ TEST(ethash, verify_boundary)
     EXPECT_EQ(r.final_hash, boundary_eq);
     EXPECT_EQ(to_hex(r.final_hash), to_hex(boundary_eq));
 
-    EXPECT_EQ(verify(context, example_header_hash, r.mix_hash, nonce, boundary_eq), ETHASH_SUCCESS);
-    EXPECT_EQ(verify(context, example_header_hash, r.mix_hash, nonce, boundary_gt), ETHASH_SUCCESS);
-    EXPECT_EQ(verify(context, example_header_hash, r.mix_hash, nonce, boundary_lt),
+    EXPECT_EQ(verify_against_boundary(context, example_header_hash, r.mix_hash, nonce, boundary_eq),
+        ETHASH_SUCCESS);
+    EXPECT_EQ(verify_against_boundary(context, example_header_hash, r.mix_hash, nonce, boundary_gt),
+        ETHASH_SUCCESS);
+    EXPECT_EQ(verify_against_boundary(context, example_header_hash, r.mix_hash, nonce, boundary_lt),
         ETHASH_INVALID_FINAL_HASH);
 }
 
 TEST(ethash_multithreaded, small_dataset)
 {
-    // This test creates an extremely small dataset for full search to discover
-    // sync issues between threads.
+    // This test creates a tiny dataset for full search to discover sync issues between threads.
 
     constexpr size_t num_treads = 8;
     constexpr int num_dataset_items = 501;

@@ -75,7 +75,8 @@ TEST(managed_multithreaded, verify_all)
                 const hash256 boundary = final_hash;
                 const int epoch_number = get_epoch_number(t.block_number);
                 auto& context = get_global_epoch_context(epoch_number);
-                const auto ec = verify(context, header_hash, mix_hash, nonce, boundary);
+                const auto ec =
+                    verify_against_boundary(context, header_hash, mix_hash, nonce, boundary);
                 EXPECT_EQ(ec, ETHASH_SUCCESS);
             }
         });
@@ -98,7 +99,7 @@ TEST(managed_multithreaded, verify_parallel)
             const hash256 boundary = final_hash;
             const int epoch_number = get_epoch_number(t.block_number);
             auto& context = get_global_epoch_context(epoch_number);
-            return verify(context, header_hash, mix_hash, nonce, boundary);
+            return verify_against_boundary(context, header_hash, mix_hash, nonce, boundary);
         }));
     }
 

@@ -6,9 +6,29 @@
 #pragma once
 
 #include <ethash/hash_types.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-id-macro"
+
+#ifndef __has_cpp_attribute
+#define __has_cpp_attribute(X) 0
+#endif
+
+#ifndef __has_attribute
+#define __has_attribute(X) 0
+#endif
+
+#pragma clang diagnostic pop
+
+#if defined(__cplusplus) && __has_cpp_attribute(deprecated) < __cplusplus
+#define DEPRECATED(MSG) [[deprecated(MSG)]]
+#elif __has_attribute(deprecated)
+#define DEPRECATED(MSG) __attribute__((deprecated(MSG)))
+#else
+#define DEPRECATED(MSG)
+#endif
 
 #ifdef __cplusplus
 #define NOEXCEPT noexcept
@@ -116,15 +136,31 @@ struct ethash_result ethash_hash(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, uint64_t nonce) NOEXCEPT;
 
 /**
- * Verify Ethash validity of a header hash.
+ * Verify Ethash validity of a header hash against given boundary.
+ *
+ * This checks if final hash header_hash is within difficulty boundary header_hash <= boundary,
+ * where boundary = 2^256 / difficulty.
+ * It also checks if the Ethash result produced out of (header_hash, nonce) matches the provided
+ * mix_hash.
  *
  * @return  Error code: ::ETHASH_SUCCESS if valid, ::ETHASH_INVALID_FINAL_HASH if the final hash is
  *          not within provided boundary, ::ETHASH_INVALID_MIX_HASH if the provided mix hash
  *          mismatches the computed one.
  */
-ethash_errc ethash_verify(const struct ethash_epoch_context* context,
+ethash_errc ethash_verify_against_boundary(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
     const union ethash_hash256* boundary) NOEXCEPT;
+
+/**
+ * @deprecated Use ethash_verify_against_boundary().
+ */
+DEPRECATED("use ethash_verify_against_boundary()")
+static inline ethash_errc ethash_verify(const struct ethash_epoch_context* context,
+    const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
+    const union ethash_hash256* boundary) NOEXCEPT
+{
+    return ethash_verify_against_boundary(context, header_hash, mix_hash, nonce, boundary);
+}
 
 /**
  * Verify only the final hash. This can be performed quickly without accessing Ethash context.

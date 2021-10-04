@@ -423,7 +423,7 @@ ethash_errc ethash_verify_final_hash(const hash256* header_hash, const hash256* 
                                                                 ETHASH_INVALID_FINAL_HASH;
 }
 
-ethash_errc ethash_verify(const epoch_context* context, const hash256* header_hash,
+ethash_errc ethash_verify_against_boundary(const epoch_context* context, const hash256* header_hash,
     const hash256* mix_hash, uint64_t nonce, const hash256* boundary) noexcept
 {
     const hash512 seed = hash_seed(*header_hash, nonce);

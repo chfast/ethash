@@ -146,10 +146,18 @@ inline std::error_code verify_final_hash(const hash256& header_hash, const hash2
     return ethash_verify_final_hash(&header_hash, &mix_hash, nonce, &boundary);
 }
 
-inline std::error_code verify(const epoch_context& context, const hash256& header_hash,
-    const hash256& mix_hash, uint64_t nonce, const hash256& boundary) noexcept
+inline std::error_code verify_against_boundary(const epoch_context& context,
+    const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
+    const hash256& boundary) noexcept
 {
-    return ethash_verify(&context, &header_hash, &mix_hash, nonce, &boundary);
+    return ethash_verify_against_boundary(&context, &header_hash, &mix_hash, nonce, &boundary);
+}
+
+[[deprecated("use verify_against_boundary()")]] inline std::error_code verify(
+    const epoch_context& context, const hash256& header_hash, const hash256& mix_hash,
+    uint64_t nonce, const hash256& boundary) noexcept
+{
+    return ethash_verify_against_boundary(&context, &header_hash, &mix_hash, nonce, &boundary);
 }
 
 search_result search_light(const epoch_context& context, const hash256& header_hash,
