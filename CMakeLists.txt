@@ -27,11 +27,16 @@ if(CABLE_COMPILER_GNULIKE)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
 
     add_compile_options(
+        # -Wcast-align  #TODO: Build fails on mips64
         -Wcast-qual
+        -Wmissing-declarations
         -Wsign-conversion
         -Wundef
+        -Wunreachable-code
         $<$<COMPILE_LANGUAGE:C>:-Wmissing-prototypes>
+        $<$<CXX_COMPILER_ID:Clang>:-Wduplicate-enum>
         $<$<CXX_COMPILER_ID:Clang>:-Wnewline-eof>
+        $<$<CXX_COMPILER_ID:Clang>:-Wunreachable-code-aggressive>
     )
 
     if(MSVC) # clang-cl
