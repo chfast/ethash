@@ -31,6 +31,15 @@ extern "C" {
 #define ETHASH_FULL_DATASET_ITEM_SIZE 128
 #define ETHASH_NUM_DATASET_ACCESSES 64
 
+/** Ethash error codes. */
+enum ethash_errc
+{
+    ETHASH_SUCCESS = 0,
+    ETHASH_INVALID_FINAL_HASH = 1,
+    ETHASH_INVALID_MIX_HASH = 2
+};
+typedef enum ethash_errc ethash_errc;
+
 
 struct ethash_epoch_context
 {
@@ -106,11 +115,24 @@ void ethash_destroy_epoch_context_full(struct ethash_epoch_context_full* context
 struct ethash_result ethash_hash(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, uint64_t nonce) NOEXCEPT;
 
-bool ethash_verify(const struct ethash_epoch_context* context,
+/**
+ * Verify Ethash validity of a header hash.
+ *
+ * @return  Error code: ::ETHASH_SUCCESS if valid, ::ETHASH_INVALID_FINAL_HASH if the final hash is
+ *          not within provided boundary, ::ETHASH_INVALID_MIX_HASH if the provided mix hash
+ *          mismatches the computed one.
+ */
+ethash_errc ethash_verify(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
     const union ethash_hash256* boundary) NOEXCEPT;
 
-bool ethash_verify_final_hash(const union ethash_hash256* header_hash,
+/**
+ * Verify only the final hash. This can be performed quickly without accessing Ethash context.
+ *
+ * @return  Error code: ::ETHASH_SUCCESS if valid, ::ETHASH_INVALID_FINAL_HASH if the final hash is
+ *          not within provided boundary.
+ */
+ethash_errc ethash_verify_final_hash(const union ethash_hash256* header_hash,
     const union ethash_hash256* mix_hash, uint64_t nonce,
     const union ethash_hash256* boundary) NOEXCEPT;
 

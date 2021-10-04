@@ -77,8 +77,8 @@ TEST(managed_multithreaded, verify_all)
                 const hash256 boundary = final_hash;
                 const int epoch_number = get_epoch_number(t.block_number);
                 auto& context = get_global_epoch_context(epoch_number);
-                const bool valid = verify(context, header_hash, mix_hash, nonce, boundary);
-                EXPECT_TRUE(valid);
+                const auto ec = verify(context, header_hash, mix_hash, nonce, boundary);
+                EXPECT_EQ(ec, ETHASH_SUCCESS);
             }
         });
     }
@@ -88,7 +88,7 @@ TEST(managed_multithreaded, verify_all)
 
 TEST(managed_multithreaded, verify_parallel)
 {
-    std::vector<std::future<bool>> futures;
+    std::vector<std::future<std::error_code>> futures;
 
     for (const auto& t : hash_test_cases)
     {
@@ -105,7 +105,7 @@ TEST(managed_multithreaded, verify_parallel)
     }
 
     for (auto& f : futures)
-        EXPECT_TRUE(f.get());
+        EXPECT_EQ(f.get(), ETHASH_SUCCESS);
 }
 
 TEST(managed_multithreaded, get_epoch_context_random)

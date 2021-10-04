@@ -415,22 +415,23 @@ ethash_result ethash_hash(
     return {hash_final(seed, mix_hash), mix_hash};
 }
 
-bool ethash_verify_final_hash(const hash256* header_hash, const hash256* mix_hash, uint64_t nonce,
-    const hash256* boundary) noexcept
+ethash_errc ethash_verify_final_hash(const hash256* header_hash, const hash256* mix_hash,
+    uint64_t nonce, const hash256* boundary) noexcept
 {
     const hash512 seed = hash_seed(*header_hash, nonce);
-    return less_equal(hash_final(seed, *mix_hash), *boundary);
+    return less_equal(hash_final(seed, *mix_hash), *boundary) ? ETHASH_SUCCESS :
+                                                                ETHASH_INVALID_FINAL_HASH;
 }
 
-bool ethash_verify(const epoch_context* context, const hash256* header_hash,
+ethash_errc ethash_verify(const epoch_context* context, const hash256* header_hash,
     const hash256* mix_hash, uint64_t nonce, const hash256* boundary) noexcept
 {
     const hash512 seed = hash_seed(*header_hash, nonce);
     if (!less_equal(hash_final(seed, *mix_hash), *boundary))
-        return false;
+        return ETHASH_INVALID_FINAL_HASH;
 
     const hash256 expected_mix_hash = hash_kernel(*context, seed, calculate_dataset_item_1024);
-    return equal(expected_mix_hash, *mix_hash);
+    return equal(expected_mix_hash, *mix_hash) ? ETHASH_SUCCESS : ETHASH_INVALID_MIX_HASH;
 }
 
 }  // extern "C"
