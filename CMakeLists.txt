@@ -13,7 +13,7 @@ include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 include(HunterGate)
 
-cable_configure_toolchain(DEFAULT cxx11)
+cable_configure_toolchain(DEFAULT cxx14)
 cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo Debug)
 
 include(cmake/Hunter/init.cmake)
