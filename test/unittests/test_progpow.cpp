@@ -101,8 +101,11 @@ TEST(progpow, hash_and_verify)
 
 TEST(progpow, search)
 {
-    auto ctxp = ethash::create_epoch_context_full(0);
-    ASSERT_NE(ctxp.get(), nullptr);
+    const auto ctxp = ethash::create_epoch_context_full(0);
+
+    if (ctxp == nullptr)
+        GTEST_SKIP_("full context allocation failure");  // Can fail on 32-bit architectures.
+
     auto& ctx = *ctxp;
     auto& ctxl = reinterpret_cast<const ethash::epoch_context&>(ctx);
 
