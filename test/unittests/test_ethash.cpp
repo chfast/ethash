@@ -578,7 +578,17 @@ TEST(ethash, verify_hash_light)
         EXPECT_EQ(ec, ETHASH_SUCCESS);
         EXPECT_FALSE(ec);
         EXPECT_EQ(ec.category(), ethash_category());
+
+        ec = verify_final_hash(header_hash, mix_hash, nonce, dec(boundary));
+        EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
+
         ec = verify(*context, header_hash, mix_hash, nonce, boundary);
+        EXPECT_EQ(ec, ETHASH_SUCCESS);
+
+        ec = verify(*context, header_hash, mix_hash, nonce, dec(boundary));
+        EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
+
+        ec = verify(*context, header_hash, mix_hash, nonce, inc(boundary));
         EXPECT_EQ(ec, ETHASH_SUCCESS);
 
         const bool within_significant_boundary = r.final_hash.bytes[0] == 0;
@@ -646,23 +656,21 @@ TEST(ethash, verify_final_hash_only)
 
 TEST(ethash, verify_boundary)
 {
-    auto& context = get_ethash_epoch_context_0();
-    hash256 example_header_hash =
+    const auto& context = get_ethash_epoch_context_0();
+    const hash256 example_header_hash =
         to_hash256("e74e5e8688d3c6f17885fa5e64eb6718046b57895a2a24c593593070ab71f5fd");
-    uint64_t nonce = 6666;
-    auto r = hash(context, example_header_hash, nonce);
-    hash256 boundary_eq =
+    const uint64_t nonce = 6666;
+    const auto r = hash(context, example_header_hash, nonce);
+    const auto boundary_eq =
         to_hash256("13c5a668bba6b86ed16098113d9d6a7a5cac1802e9c8f2d57c932d8818375eb7");
 
-    hash256 boundary_gt = boundary_eq;
-    ++boundary_gt.bytes[31];
-    auto boundary_gt_hex = "13c5a668bba6b86ed16098113d9d6a7a5cac1802e9c8f2d57c932d8818375eb8";
-    EXPECT_EQ(to_hex(boundary_gt), boundary_gt_hex);
+    const auto boundary_gt = inc(boundary_eq);
+    EXPECT_EQ(
+        to_hex(boundary_gt), "13c5a668bba6b86ed16098113d9d6a7a5cac1802e9c8f2d57c932d8818375eb8");
 
-    hash256 boundary_lt = boundary_eq;
-    --boundary_lt.bytes[31];
-    auto boundary_lt_hex = "13c5a668bba6b86ed16098113d9d6a7a5cac1802e9c8f2d57c932d8818375eb6";
-    EXPECT_EQ(to_hex(boundary_lt), boundary_lt_hex);
+    const auto boundary_lt = dec(boundary_eq);
+    EXPECT_EQ(
+        to_hex(boundary_lt), "13c5a668bba6b86ed16098113d9d6a7a5cac1802e9c8f2d57c932d8818375eb6");
 
     EXPECT_EQ(r.final_hash, boundary_eq);
     EXPECT_EQ(to_hex(r.final_hash), to_hex(boundary_eq));
@@ -871,4 +879,44 @@ TEST(ethash, less_equal)
         auto b = to_hash256(t.b_hex);
         EXPECT_EQ(less_equal(a, b), t.expected_result);
     }
+}
+
+TEST(ethash, inc)
+{
+    const auto t = [](const char* s) { return to_hex(inc(to_hash256(s))); };
+
+    EXPECT_EQ(t("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(t("0000000000000000000000000000000000000000000000000000000000000000"),
+        "0000000000000000000000000000000000000000000000000000000000000001");
+    EXPECT_EQ(t("000000000000000000000000000000000000000000000000ffffffffffffffff"),
+        "0000000000000000000000000000000000000000000000010000000000000000");
+    EXPECT_EQ(t("00000000000000000000000000000000ffffffffffffffffffffffffffffffff"),
+        "0000000000000000000000000000000100000000000000000000000000000000");
+    EXPECT_EQ(t("0000000000000000ffffffffffffffffffffffffffffffffffffffffffffffff"),
+        "0000000000000001000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(t("0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        "1000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(t("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe"),
+        "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+}
+
+TEST(ethash, dec)
+{
+    const auto t = [](const char* s) { return to_hex(dec(to_hash256(s))); };
+
+    EXPECT_EQ(t("0000000000000000000000000000000000000000000000000000000000000000"),
+        "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    EXPECT_EQ(t("0000000000000000000000000000000000000000000000000000000000000001"),
+        "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(t("0000000000000000000000000000000000000000000000010000000000000000"),
+        "000000000000000000000000000000000000000000000000ffffffffffffffff");
+    EXPECT_EQ(t("0000000000000000000000000000000100000000000000000000000000000000"),
+        "00000000000000000000000000000000ffffffffffffffffffffffffffffffff");
+    EXPECT_EQ(t("0000000000000001000000000000000000000000000000000000000000000000"),
+        "0000000000000000ffffffffffffffffffffffffffffffffffffffffffffffff");
+    EXPECT_EQ(t("1000000000000000000000000000000000000000000000000000000000000000"),
+        "0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    EXPECT_EQ(t("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe");
 }
