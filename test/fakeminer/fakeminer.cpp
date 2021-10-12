@@ -1,19 +1,17 @@
 // ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-// Copyright 2018-2019 Pawel Bylica.
+// Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
 #include <ethash/ethash.hpp>
 #include <ethash/global_context.hpp>
-
 #include <atomic>
 #include <chrono>
 #include <future>
 #include <iomanip>
 #include <iostream>
 #include <string>
-#include <unordered_map>
+#include <thread>
 #include <vector>
-
 
 using namespace std::chrono;
 using timer = std::chrono::steady_clock;
@@ -25,8 +23,8 @@ class ethash_interface
 public:
     virtual ~ethash_interface() noexcept = default;
 
-    virtual void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
-        noexcept = 0;
+    virtual void search(
+        const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const noexcept = 0;
 };
 
 class ethash_light : public ethash_interface
@@ -38,8 +36,8 @@ public:
       : context(ethash::get_global_epoch_context(epoch_number))
     {}
 
-    void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
-        noexcept override
+    void search(const ethash::hash256& header_hash, uint64_t nonce,
+        size_t iterations) const noexcept override
     {
         ethash::search_light(context, header_hash, {}, nonce, iterations);
     }
@@ -54,8 +52,8 @@ public:
       : context(ethash::get_global_epoch_context_full(epoch_number))
     {}
 
-    void search(const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const
-        noexcept override
+    void search(const ethash::hash256& header_hash, uint64_t nonce,
+        size_t iterations) const noexcept override
     {
         ethash::search(context, header_hash, {}, nonce, iterations);
     }
