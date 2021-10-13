@@ -252,14 +252,14 @@ jobs:
 
   linux-release-python:
     docker:
-      - image: quay.io/pypa/manylinux1_x86_64
+      - image: quay.io/pypa/manylinux_2_24_x86_64
     steps:
       - checkout
       - attach_workspace:
           at: ~/project/dist
       - run:
           name: "Build wheels"
-          command: sh scripts/ci/python_build_wheels.sh
+          command: scripts/ci/python_build_wheels.sh
       - run:
           name: "Tag wheels"
           working_directory: ~/project/dist
@@ -275,6 +275,9 @@ jobs:
             source $BASH_ENV
             python --version
             pip --version
+      - run:
+          name: "Install libffi"
+          command: apt -q update && apt -qy install libffi-dev
       - run:
           name: "Install CMake"
           command: pip install cmake
