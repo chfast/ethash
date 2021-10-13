@@ -80,7 +80,7 @@ setup(
     packages=['ethash'],
     cffi_modules=['bindings/python/ethash/_build.py:ffibuilder'],
 
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     setup_requires=['cffi>=1.12'],
     install_requires=['cffi>=1.12'],
 
@@ -93,8 +93,9 @@ setup(
         'Programming Language :: C',
         'Programming Language :: C++',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
 )
