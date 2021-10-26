@@ -49,6 +49,7 @@ struct le
 
 struct be
 {
+    static uint32_t uint32(uint32_t x) noexcept { return bswap32(x); }
     static uint64_t uint64(uint64_t x) noexcept { return bswap64(x); }
 };
 
@@ -84,6 +85,7 @@ struct le
 
 struct be
 {
+    static uint32_t uint32(uint32_t x) noexcept { return x; }
     static uint64_t uint64(uint64_t x) noexcept { return x; }
 };
 
