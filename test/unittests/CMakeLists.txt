@@ -10,6 +10,7 @@ add_executable(
     helpers.hpp
     test_bit_manipulation.cpp
     test_cases.hpp
+    test_difficulty.cpp
     test_ethash.cpp
     test_keccak.cpp
     test_kiss.cpp
@@ -21,7 +22,7 @@ add_executable(
 
 set_source_files_properties(test_version.cpp PROPERTIES COMPILE_DEFINITIONS TEST_PROJECT_VERSION="${PROJECT_VERSION}")
 
-target_link_libraries(ethash-test PRIVATE ethash::global-context GTest::gtest_main)
+target_link_libraries(ethash-test PRIVATE ethash::global-context ethash::experimental GTest::gtest_main)
 target_include_directories(ethash-test PRIVATE ${ETHASH_PRIVATE_INCLUDE_DIR})
 set_target_properties(ethash-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
 
