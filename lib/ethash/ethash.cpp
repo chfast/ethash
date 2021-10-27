@@ -342,6 +342,107 @@ search_result search(const epoch_context_full& context, const hash256& header_ha
     }
     return {};
 }
+
+
+#pragma clang diagnostic ignored "-Wunknown-sanitizers"
+
+struct uint128
+{
+    uint64_t lo;
+    uint64_t hi;
+};
+
+/// Full unsigned multiplication 64 x 64 -> 128.
+NO_SANITIZE("unsigned-integer-overflow")
+NO_SANITIZE("unsigned-shift-base")
+inline uint128 umul(uint64_t x, uint64_t y) noexcept
+{
+#ifdef __SIZEOF_INT128__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"  // Usage of __int128 triggers a pedantic warning.
+    using builtin_uint128 = unsigned __int128;
+#pragma GCC diagnostic pop
+
+    const auto p = builtin_uint128{x} * builtin_uint128{y};
+    const auto hi = static_cast<uint64_t>(p >> 64);
+    const auto lo = static_cast<uint64_t>(p);
+#else
+    uint64_t xl = x & 0xffffffff;
+    uint64_t xh = x >> 32;
+    uint64_t yl = y & 0xffffffff;
+    uint64_t yh = y >> 32;
+
+    uint64_t t0 = xl * yl;
+    uint64_t t1 = xh * yl;
+    uint64_t t2 = xl * yh;
+    uint64_t t3 = xh * yh;
+
+    uint64_t u1 = t1 + (t0 >> 32);
+    uint64_t u2 = t2 + (u1 & 0xffffffff);
+
+    uint64_t lo = (u2 << 32) | (t0 & 0xffffffff);
+    uint64_t hi = t3 + (u2 >> 32) + (u1 >> 32);
+#endif
+    return {lo, hi};
+}
+
+NO_SANITIZE("unsigned-integer-overflow")
+bool check_against_difficulty(const hash256& final_hash, const hash256& difficulty) noexcept
+{
+    constexpr size_t num_words = sizeof(hash256) / sizeof(uint64_t);
+
+    // Convert difficulty to little-endian array of native 64-bit words.
+    uint64_t d[num_words];
+    for (size_t i = 0; i < num_words; ++i)
+        d[i] = be::uint64(difficulty.word64s[num_words - 1 - i]);
+
+    // Convert hash to little-endian array of native 64-bit words.
+    uint64_t h[num_words];
+    for (size_t i = 0; i < num_words; ++i)
+        h[i] = be::uint64(final_hash.word64s[num_words - 1 - i]);
+
+    // Compute p = h * d.
+    uint64_t p[2 * num_words];
+
+    {  // First round for d[0]. Fills p[0:4].
+        uint64_t k = 0;
+        for (size_t i = 0; i < num_words; ++i)
+        {
+            const auto r = umul(h[i], d[0]);
+            p[i] = r.lo + k;
+            k = r.hi + (p[i] < k);
+        }
+        p[4] = k;
+    }
+
+    // Rounds 1-3. The d[j] is likely 0 so omit the round in such case.
+    for (size_t j = 1; j < num_words; ++j)
+    {
+        uint64_t k = 0;
+        if (d[j] != 0)
+        {
+            for (size_t i = 0; i < num_words; ++i)
+            {
+                const auto r = umul(h[i], d[j]);
+                const auto t = p[j + i] + r.lo;
+                p[i + j] = t + k;
+                k = r.hi + (t < r.lo) + (p[j + i] < k);
+            }
+        }
+        p[j + 4] = k;  // Always init p[].
+    }
+
+    // Check if p <= 2^256.
+    // In most cases the p < 2^256 (i.e. top 4 words are zero) should be enough.
+    const auto high_zero = (p[7] | p[6] | p[5] | p[4]) == 0;
+    if (high_zero)
+        return true;
+
+    // Lastly, check p == 2^256.
+    const auto low_zero = (p[3] | p[2] | p[1] | p[0]) == 0;
+    const auto high_one = (((p[7] | p[6] | p[5]) == 0) & (p[4] == 1)) != 0;
+    return low_zero && high_one;
+}
 }  // namespace ethash
 
 using namespace ethash;
@@ -415,12 +516,13 @@ ethash_result ethash_hash(
     return {hash_final(seed, mix_hash), mix_hash};
 }
 
+
 ethash_errc ethash_verify_final_hash(const hash256* header_hash, const hash256* mix_hash,
     uint64_t nonce, const hash256* boundary) noexcept
 {
-    const hash512 seed = hash_seed(*header_hash, nonce);
-    return less_equal(hash_final(seed, *mix_hash), *boundary) ? ETHASH_SUCCESS :
-                                                                ETHASH_INVALID_FINAL_HASH;
+    return less_equal(hash_final(hash_seed(*header_hash, nonce), *mix_hash), *boundary) ?
+               ETHASH_SUCCESS :
+               ETHASH_INVALID_FINAL_HASH;
 }
 
 ethash_errc ethash_verify_against_boundary(const epoch_context* context, const hash256* header_hash,
@@ -428,6 +530,18 @@ ethash_errc ethash_verify_against_boundary(const epoch_context* context, const h
 {
     const hash512 seed = hash_seed(*header_hash, nonce);
     if (!less_equal(hash_final(seed, *mix_hash), *boundary))
+        return ETHASH_INVALID_FINAL_HASH;
+
+    const hash256 expected_mix_hash = hash_kernel(*context, seed, calculate_dataset_item_1024);
+    return equal(expected_mix_hash, *mix_hash) ? ETHASH_SUCCESS : ETHASH_INVALID_MIX_HASH;
+}
+
+ethash_errc ethash_verify_against_difficulty(const epoch_context* context,
+    const hash256* header_hash, const hash256* mix_hash, uint64_t nonce,
+    const hash256* difficulty) noexcept
+{
+    const hash512 seed = hash_seed(*header_hash, nonce);
+    if (!check_against_difficulty(hash_final(seed, *mix_hash), *difficulty))
         return ETHASH_INVALID_FINAL_HASH;
 
     const hash256 expected_mix_hash = hash_kernel(*context, seed, calculate_dataset_item_1024);
