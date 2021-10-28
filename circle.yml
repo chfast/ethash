@@ -154,9 +154,9 @@ jobs:
 
   linux-clang-sanitizers:
     docker:
-      - image: ethereum/cpp-build-env:17-clang-12
+      - image: ethereum/cpp-build-env:17-clang-13
     environment:
-      - CMAKE_OPTIONS: -DSANITIZE=address,undefined,unsigned-integer-overflow,shift-exponent,implicit-conversion,nullability
+      - CMAKE_OPTIONS: -DSANITIZE=address,undefined,unsigned-integer-overflow,shift-exponent,implicit-conversion,nullability -DCMAKE_CXX_CLANG_TIDY=clang-tidy
       - ASAN_OPTIONS: allocator_may_return_null=1
       - UBSAN_OPTIONS: halt_on_error=1
     steps:

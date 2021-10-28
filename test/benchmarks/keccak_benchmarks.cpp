@@ -7,7 +7,7 @@
 #include <ethash/keccak.h>
 
 
-void fake_keccakf1600(uint64_t* state) noexcept
+void fake_keccakf1600(const uint64_t* state) noexcept
 {
     // Do nothing to measure performance of the code outside the keccakf function.
     (void)state;
