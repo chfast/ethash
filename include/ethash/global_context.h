@@ -13,13 +13,13 @@ extern "C" {
 /**
  * Get global shared epoch context.
  */
-const struct ethash_epoch_context* ethash_get_global_epoch_context(int epoch_number) NOEXCEPT;
+const struct ethash_epoch_context* ethash_get_global_epoch_context(int epoch_number) noexcept;
 
 /**
  * Get global shared epoch context with full dataset initialized.
  */
 const struct ethash_epoch_context_full* ethash_get_global_epoch_context_full(
-    int epoch_number) NOEXCEPT;
+    int epoch_number) noexcept;
 
 #ifdef __cplusplus
 }

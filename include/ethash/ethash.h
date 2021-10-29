@@ -30,10 +30,8 @@
 #define DEPRECATED(MSG)
 #endif
 
-#ifdef __cplusplus
-#define NOEXCEPT noexcept
-#else
-#define NOEXCEPT
+#ifndef __cplusplus
+#define noexcept  // Ignore noexcept in C code.
 #endif
 
 #ifdef __cplusplus
@@ -90,7 +88,7 @@ struct ethash_result
  * @param epoch_number  The epoch number.
  * @return              The number items in the light cache.
  */
-int ethash_calculate_light_cache_num_items(int epoch_number) NOEXCEPT;
+int ethash_calculate_light_cache_num_items(int epoch_number) noexcept;
 
 
 /**
@@ -102,17 +100,17 @@ int ethash_calculate_light_cache_num_items(int epoch_number) NOEXCEPT;
  * @param epoch_number  The epoch number.
  * @return              The number items in the full dataset.
  */
-int ethash_calculate_full_dataset_num_items(int epoch_number) NOEXCEPT;
+int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept;
 
 /**
  * Calculates the epoch seed hash.
  * @param epoch_number  The epoch number.
  * @return              The epoch seed hash.
  */
-union ethash_hash256 ethash_calculate_epoch_seed(int epoch_number) NOEXCEPT;
+union ethash_hash256 ethash_calculate_epoch_seed(int epoch_number) noexcept;
 
 
-struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXCEPT;
+struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) noexcept;
 
 /**
  * Creates the epoch context with the full dataset initialized.
@@ -125,15 +123,15 @@ struct ethash_epoch_context* ethash_create_epoch_context(int epoch_number) NOEXC
  * @param epoch_number  The epoch number.
  * @return  Pointer to the context or null in case of memory allocation failure.
  */
-struct ethash_epoch_context_full* ethash_create_epoch_context_full(int epoch_number) NOEXCEPT;
+struct ethash_epoch_context_full* ethash_create_epoch_context_full(int epoch_number) noexcept;
 
-void ethash_destroy_epoch_context(struct ethash_epoch_context* context) NOEXCEPT;
+void ethash_destroy_epoch_context(struct ethash_epoch_context* context) noexcept;
 
-void ethash_destroy_epoch_context_full(struct ethash_epoch_context_full* context) NOEXCEPT;
+void ethash_destroy_epoch_context_full(struct ethash_epoch_context_full* context) noexcept;
 
 
 struct ethash_result ethash_hash(const struct ethash_epoch_context* context,
-    const union ethash_hash256* header_hash, uint64_t nonce) NOEXCEPT;
+    const union ethash_hash256* header_hash, uint64_t nonce) noexcept;
 
 /**
  * Verify Ethash validity of a header hash against given boundary.
@@ -149,7 +147,7 @@ struct ethash_result ethash_hash(const struct ethash_epoch_context* context,
  */
 ethash_errc ethash_verify_against_boundary(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
-    const union ethash_hash256* boundary) NOEXCEPT;
+    const union ethash_hash256* boundary) noexcept;
 
 /**
  * Verify Ethash validity of a header hash against given difficulty.
@@ -169,7 +167,7 @@ ethash_errc ethash_verify_against_boundary(const struct ethash_epoch_context* co
  */
 ethash_errc ethash_verify_against_difficulty(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
-    const union ethash_hash256* difficulty) NOEXCEPT;
+    const union ethash_hash256* difficulty) noexcept;
 
 
 /**
@@ -178,7 +176,7 @@ ethash_errc ethash_verify_against_difficulty(const struct ethash_epoch_context* 
 DEPRECATED("use ethash_verify_against_boundary()")
 static inline ethash_errc ethash_verify(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
-    const union ethash_hash256* boundary) NOEXCEPT
+    const union ethash_hash256* boundary) noexcept
 {
     return ethash_verify_against_boundary(context, header_hash, mix_hash, nonce, boundary);
 }
@@ -191,7 +189,7 @@ static inline ethash_errc ethash_verify(const struct ethash_epoch_context* conte
  */
 ethash_errc ethash_verify_final_hash(const union ethash_hash256* header_hash,
     const union ethash_hash256* mix_hash, uint64_t nonce,
-    const union ethash_hash256* boundary) NOEXCEPT;
+    const union ethash_hash256* boundary) noexcept;
 
 #ifdef __cplusplus
 }

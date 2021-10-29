@@ -14,7 +14,7 @@ extern "C" {
 /// @param upper_bound  The upper bound. SHOULD be greater than 1.
 /// @return  The largest prime number `p` such `p <= upper_bound`.
 ///          In case `upper_bound <= 1`, returns 0.
-int ethash_find_largest_prime(int upper_bound) NOEXCEPT;
+int ethash_find_largest_prime(int upper_bound) noexcept;
 
 #ifdef __cplusplus
 }
