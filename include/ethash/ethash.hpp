@@ -146,6 +146,13 @@ inline std::error_code verify_final_hash(const hash256& header_hash, const hash2
     return ethash_verify_final_hash(&header_hash, &mix_hash, nonce, &boundary);
 }
 
+inline std::error_code verify_against_difficulty(const epoch_context& context,
+    const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
+    const hash256& difficulty) noexcept
+{
+    return ethash_verify_against_difficulty(&context, &header_hash, &mix_hash, nonce, &difficulty);
+}
+
 inline std::error_code verify_against_boundary(const epoch_context& context,
     const hash256& header_hash, const hash256& mix_hash, uint64_t nonce,
     const hash256& boundary) noexcept

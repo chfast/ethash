@@ -45,6 +45,8 @@ inline bool equal(const hash256& a, const hash256& b) noexcept
            (a.word64s[2] == b.word64s[2]) & (a.word64s[3] == b.word64s[3]);
 }
 
+bool check_against_difficulty(const hash256& final_hash, const hash256& difficulty) noexcept;
+
 void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept;
 
 hash512 calculate_dataset_item_512(const epoch_context& context, int64_t index) noexcept;

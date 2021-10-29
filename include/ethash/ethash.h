@@ -152,6 +152,27 @@ ethash_errc ethash_verify_against_boundary(const struct ethash_epoch_context* co
     const union ethash_hash256* boundary) NOEXCEPT;
 
 /**
+ * Verify Ethash validity of a header hash against given difficulty.
+ *
+ * This checks if final hash header_hash satisfies difficulty requirement
+ * header_hash <= (2^256 / difficulty). The checks is implemented by multiplication
+ * header_hash * difficulty <= 2^256 therefore big-number division is not needed.
+ * It also checks if the Ethash result produced out of (header_hash, nonce) matches the provided
+ * mix_hash.
+ *
+ * @param difficulty  The difficulty number as big-endian 256-bit value. The encoding matches the
+ *                    way the difficulty is stored in block headers.
+ *
+ * @return  Error code: ::ETHASH_SUCCESS if valid, ::ETHASH_INVALID_FINAL_HASH if the final hash
+ *          does not satisfies difficulty, ::ETHASH_INVALID_MIX_HASH if the provided mix hash
+ *          mismatches the computed one.
+ */
+ethash_errc ethash_verify_against_difficulty(const struct ethash_epoch_context* context,
+    const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
+    const union ethash_hash256* difficulty) NOEXCEPT;
+
+
+/**
  * @deprecated Use ethash_verify_against_boundary().
  */
 DEPRECATED("use ethash_verify_against_boundary()")

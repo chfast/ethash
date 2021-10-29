@@ -11,6 +11,7 @@
 #include <ethash/ethash.hpp>
 #include <ethash/keccak.hpp>
 
+#include "../experimental/difficulty.h"
 #include "helpers.hpp"
 #include "test_cases.hpp"
 
@@ -557,6 +558,9 @@ TEST(ethash, dataset_items_epoch13)
 
 TEST(ethash, verify_hash_light)
 {
+    const hash256 zero{};
+    const hash256 one = inc(zero);
+
     epoch_context_ptr context{nullptr, ethash_destroy_epoch_context};
 
     for (const auto& t : hash_test_cases)
@@ -566,6 +570,7 @@ TEST(ethash, verify_hash_light)
         const hash256 header_hash = to_hash256(t.header_hash_hex);
         const hash256 mix_hash = to_hash256(t.mix_hash_hex);
         const hash256 boundary = to_hash256(t.final_hash_hex);
+        const hash256 difficulty = ethash_difficulty_to_boundary(&boundary);
 
         if (!context || context->epoch_number != epoch_number)
             context = create_epoch_context(epoch_number);
@@ -591,18 +596,39 @@ TEST(ethash, verify_hash_light)
         ec = verify_against_boundary(*context, header_hash, mix_hash, nonce, inc(boundary));
         EXPECT_EQ(ec, ETHASH_SUCCESS);
 
+        ec = verify_against_difficulty(*context, header_hash, mix_hash, nonce, difficulty);
+        EXPECT_EQ(ec, ETHASH_SUCCESS);
+
+        ec = verify_against_difficulty(*context, header_hash, mix_hash, nonce, dec(difficulty));
+        EXPECT_EQ(ec, ETHASH_SUCCESS);
+
+        ec = verify_against_difficulty(*context, header_hash, mix_hash, nonce, inc(difficulty));
+        EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
+
+        ec = verify_against_difficulty(*context, header_hash, mix_hash, nonce, zero);
+        EXPECT_EQ(ec, ETHASH_SUCCESS);
+
+        ec = verify_against_difficulty(*context, header_hash, mix_hash, nonce, one);
+        EXPECT_EQ(ec, ETHASH_SUCCESS);
+
         const bool within_significant_boundary = r.final_hash.bytes[0] == 0;
         if (within_significant_boundary)
         {
             ec = verify_final_hash(header_hash, mix_hash, nonce + 1, boundary);
-            EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH) << t.final_hash_hex;
+            EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
 
             ec = verify_against_boundary(*context, header_hash, mix_hash, nonce + 1, boundary);
+            EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
+
+            ec = verify_against_difficulty(*context, header_hash, mix_hash, nonce + 1, difficulty);
             EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
         }
         else
         {
             ec = verify_against_boundary(*context, header_hash, mix_hash, nonce + 1, boundary);
+            EXPECT_EQ(ec, ETHASH_INVALID_MIX_HASH);
+
+            ec = verify_against_difficulty(*context, header_hash, mix_hash, nonce + 1, difficulty);
             EXPECT_EQ(ec, ETHASH_INVALID_MIX_HASH);
         }
     }
