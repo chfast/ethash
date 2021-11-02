@@ -579,12 +579,12 @@ TEST(ethash, verify_hash_light)
         EXPECT_EQ(to_hex(r.final_hash), t.final_hash_hex);
         EXPECT_EQ(to_hex(r.mix_hash), t.mix_hash_hex);
 
-        auto ec = verify_final_hash(header_hash, mix_hash, nonce, boundary);
+        auto ec = verify_final_hash_against_difficulty(header_hash, mix_hash, nonce, difficulty);
         EXPECT_EQ(ec, ETHASH_SUCCESS);
         EXPECT_FALSE(ec);
         EXPECT_EQ(ec.category(), ethash_category());
 
-        ec = verify_final_hash(header_hash, mix_hash, nonce, dec(boundary));
+        ec = verify_final_hash_against_difficulty(header_hash, mix_hash, nonce, inc(difficulty));
         EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
 
         ec = verify_against_boundary(*context, header_hash, mix_hash, nonce, boundary);
@@ -614,7 +614,7 @@ TEST(ethash, verify_hash_light)
         const bool within_significant_boundary = r.final_hash.bytes[0] == 0;
         if (within_significant_boundary)
         {
-            ec = verify_final_hash(header_hash, mix_hash, nonce + 1, boundary);
+            ec = verify_final_hash_against_difficulty(header_hash, mix_hash, nonce + 1, difficulty);
             EXPECT_EQ(ec, ETHASH_INVALID_FINAL_HASH);
 
             ec = verify_against_boundary(*context, header_hash, mix_hash, nonce + 1, boundary);
@@ -673,11 +673,12 @@ TEST(ethash, verify_final_hash_only)
     const hash256 header_hash = {};
     const hash256 mix_hash = {};
     uint64_t nonce = 3221208;
-    const hash256 boundary =
-        to_hash256("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    const hash256 difficulty =
+        to_hash256("00000000000000000000000000000000000000000000000000000000012853fe");
 
-    EXPECT_EQ(verify_final_hash(header_hash, mix_hash, nonce, boundary), ETHASH_SUCCESS);
-    EXPECT_EQ(verify_against_boundary(context, header_hash, mix_hash, nonce, boundary),
+    EXPECT_EQ(verify_final_hash_against_difficulty(header_hash, mix_hash, nonce, difficulty),
+        ETHASH_SUCCESS);
+    EXPECT_EQ(verify_against_difficulty(context, header_hash, mix_hash, nonce, difficulty),
         ETHASH_INVALID_MIX_HASH);
 }
 

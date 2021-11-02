@@ -517,10 +517,11 @@ ethash_result ethash_hash(
 }
 
 
-ethash_errc ethash_verify_final_hash(const hash256* header_hash, const hash256* mix_hash,
-    uint64_t nonce, const hash256* boundary) noexcept
+ethash_errc ethash_verify_final_hash_against_difficulty(const hash256* header_hash,
+    const hash256* mix_hash, uint64_t nonce, const hash256* difficulty) noexcept
 {
-    return less_equal(hash_final(hash_seed(*header_hash, nonce), *mix_hash), *boundary) ?
+    return check_against_difficulty(
+               hash_final(hash_seed(*header_hash, nonce), *mix_hash), *difficulty) ?
                ETHASH_SUCCESS :
                ETHASH_INVALID_FINAL_HASH;
 }

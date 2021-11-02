@@ -140,10 +140,10 @@ inline result hash(
 
 result hash(const epoch_context_full& context, const hash256& header_hash, uint64_t nonce) noexcept;
 
-inline std::error_code verify_final_hash(const hash256& header_hash, const hash256& mix_hash,
-    uint64_t nonce, const hash256& boundary) noexcept
+inline std::error_code verify_final_hash_against_difficulty(const hash256& header_hash,
+    const hash256& mix_hash, uint64_t nonce, const hash256& difficulty) noexcept
 {
-    return ethash_verify_final_hash(&header_hash, &mix_hash, nonce, &boundary);
+    return ethash_verify_final_hash_against_difficulty(&header_hash, &mix_hash, nonce, &difficulty);
 }
 
 inline std::error_code verify_against_difficulty(const epoch_context& context,

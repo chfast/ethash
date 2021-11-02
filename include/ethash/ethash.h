@@ -162,7 +162,7 @@ ethash_errc ethash_verify_against_boundary(const struct ethash_epoch_context* co
  *                    way the difficulty is stored in block headers.
  *
  * @return  Error code: ::ETHASH_SUCCESS if valid, ::ETHASH_INVALID_FINAL_HASH if the final hash
- *          does not satisfies difficulty, ::ETHASH_INVALID_MIX_HASH if the provided mix hash
+ *          does not satisfy difficulty, ::ETHASH_INVALID_MIX_HASH if the provided mix hash
  *          mismatches the computed one.
  */
 ethash_errc ethash_verify_against_difficulty(const struct ethash_epoch_context* context,
@@ -184,12 +184,12 @@ static inline ethash_errc ethash_verify(const struct ethash_epoch_context* conte
 /**
  * Verify only the final hash. This can be performed quickly without accessing Ethash context.
  *
- * @return  Error code: ::ETHASH_SUCCESS if valid, ::ETHASH_INVALID_FINAL_HASH if the final hash is
- *          not within provided boundary.
+ * @return  Error code: ::ETHASH_SUCCESS if valid, ::ETHASH_INVALID_FINAL_HASH if the final hash
+ *          does not satisfy difficulty.
  */
-ethash_errc ethash_verify_final_hash(const union ethash_hash256* header_hash,
+ethash_errc ethash_verify_final_hash_against_difficulty(const union ethash_hash256* header_hash,
     const union ethash_hash256* mix_hash, uint64_t nonce,
-    const union ethash_hash256* boundary) noexcept;
+    const union ethash_hash256* difficulty) noexcept;
 
 #ifdef __cplusplus
 }
