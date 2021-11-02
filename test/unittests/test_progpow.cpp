@@ -11,6 +11,10 @@
 
 #include <array>
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma warning(disable : 4996)
+
+
 TEST(progpow, revision)
 {
     static_assert(progpow::revision[0] == '0', "");

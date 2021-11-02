@@ -7,6 +7,9 @@
 
 #include <benchmark/benchmark.h>
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma warning(disable : 4996)
+
 static void progpow_hash(benchmark::State& state)
 {
     // Get block number in millions.

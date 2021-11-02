@@ -12,6 +12,9 @@
 
 #include <array>
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma warning(disable : 4996)
+
 namespace progpow
 {
 namespace
