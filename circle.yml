@@ -312,9 +312,7 @@ jobs:
 
   cmake-min:
     docker:
-      - image: circleci/buildpack-deps:buster
-    environment:
-      CMAKE_OPTIONS: -DHUNTER_RUN_UPLOAD=FALSE
+      - image: circleci/buildpack-deps:focal
     steps:
       - run:
           name: "Install default CMake"

@@ -2,7 +2,7 @@
 # Copyright 2018 Pawel Bylica.
 # Licensed under the Apache License, Version 2.0.
 
-cmake_minimum_required(VERSION 3.13.4)
+cmake_minimum_required(VERSION 3.16.2)
 
 include(cmake/cable/bootstrap.cmake)
 
