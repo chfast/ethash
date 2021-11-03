@@ -1,6 +1,8 @@
 # ethash: C/C++ implementation of Ethash, the Ethereum Proof of Work algorithm.
-# Copyright 2018-2019 Pawel Bylica.
+# Copyright 2018 Pawel Bylica.
 # Licensed under the Apache License, Version 2.0.
+
+include(GoogleTest)
 
 hunter_add_package(GTest)
 find_package(GTest CONFIG REQUIRED)
@@ -30,3 +32,5 @@ if(SANITIZE AND CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_CXX_FLAGS MATCHES -m3
     # Workaround for linking with phread when building for 32-bit and with sanitizer.
     target_link_libraries(ethash-test PRIVATE pthread)
 endif()
+
+gtest_discover_tests(ethash-test TEST_PREFIX ${PROJECT_NAME}/unittests/)

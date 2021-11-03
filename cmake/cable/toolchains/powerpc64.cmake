@@ -12,13 +12,4 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if(${CMAKE_VERSION} VERSION_LESS 3.10.0)
-    # Until CMake 3.10 the FindThreads uses try_run() check of -pthread flag,
-    # what causes CMake error in crosscompiling mode. Avoid the try_run() check
-    # by specifying the result up front.
-    set(THREADS_PTHREAD_ARG TRUE)
-endif()
+set(CMAKE_CROSSCOMPILING_EMULATOR qemu-ppc64-static;-L;${CMAKE_FIND_ROOT_PATH})

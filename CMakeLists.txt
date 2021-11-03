@@ -70,6 +70,7 @@ option(ETHASH_BUILD_TESTS "Build unit tests" YES)
 add_subdirectory(lib)
 
 if(ETHASH_BUILD_TESTS)
+    enable_testing()
     add_subdirectory(test)
 endif()
 
