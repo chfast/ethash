@@ -112,6 +112,7 @@ TEST(managed_multithreaded, get_epoch_context_random)
     static constexpr int num_threads = 4;
 
     std::vector<std::future<int>> futures;
+    futures.reserve(num_threads);
 
     for (int i = 0; i < num_threads; ++i)
     {
@@ -141,6 +142,7 @@ TEST(managed_multithreaded, get_epoch_context_full)
     static constexpr int num_threads = 4;
 
     std::vector<std::future<bool>> futures;
+    futures.reserve(num_threads);
 
     for (int i = 0; i < num_threads; ++i)
     {

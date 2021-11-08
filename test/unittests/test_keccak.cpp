@@ -226,10 +226,10 @@ TEST(keccak, unaligned)
 
     for (size_t offset = 1; offset < sizeof(uint64_t); ++offset)
     {
-        uint8_t *data = &buffer[offset];
-        std::memcpy(data, test_text, text_length);
+        uint8_t* data = &buffer[offset];
+        std::memcpy(data, test_text, text_length);  // NOLINT(bugprone-not-null-terminated-result)
 
-        for (auto &t : test_cases)
+        for (auto& t : test_cases)
         {
             const auto h256 = keccak256(data, t.input_size);
             ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
