@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.8.0] — unreleased
+
+- Added: The new set of functions which verify Ethash hashes against difficulty
+  has been added to the library: `verify_against_difficulty()` and
+  `verify_final_hash_against_difficulty()`. These functions improve usability
+  by omitting previously required difficulty to boundary conversion.
+  The old verification function is still available under
+  the `verify_against_boundary()` name but its usage is discouraged.
+  [#195](https://github.com/chfast/ethash/pull/195)
+- Added: The dedicated procedure to convert difficulty to boundary
+  `ethash_difficulty_to_boundary()` has been added to the testing infrastructure
+  but can be promoted to the public API if requested.
+  [#191](https://github.com/chfast/ethash/pull/191)
+- Deprecated: `verify()` has been deprecated and replaced with
+  `verify_against_boundary()`.
+  [#193](https://github.com/chfast/ethash/pull/193)
+- Deprecated: `verify_final_hash()` has been replaced by
+  `verify_final_hash_against_difficulty()`.
+  [#200](https://github.com/chfast/ethash/pull/200)
+- Deprecated: The ProgPoW support has been deprecated and will be removed 
+  in the next release.
+  [#201](https://github.com/chfast/ethash/pull/201)
+- Changed: The internal hash type comparison operators have been 
+  optimized and the dependency on the `memcmp()` function has been dropped.
+  [#186](https://github.com/chfast/ethash/pull/186)
+- Changed: Verification functions now return error codes instead of `bool`
+  with additional information about which verification check has failed.
+  [#187](https://github.com/chfast/ethash/pull/187)
+  - In C API error codes are represented by the `ethash_errc` enum,
+  - In C++ the error codes are wrapped into `std::error_code`.
+- Changed: Some build requirements have been increased.
+  - C11 is required (previously C99),
+    [#188](https://github.com/chfast/ethash/pull/188)
+  - C++14 is required (previously C++11),
+    [#189](https://github.com/chfast/ethash/pull/189)
+  - CMake 3.16 is required (previously 3.13),
+    [#205](https://github.com/chfast/ethash/pull/205)
+  - Python wheels are now built with `manylinux_2_24`.
+    [#194](https://github.com/chfast/ethash/pull/194)
+
+
 ## [0.7.1] — 2021-08-26
 
  - Added: Support for building with clang-cl (LLVM-based toolchain for Visual Studio 2019).
@@ -83,6 +124,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[0.8.0]: https://github.com/chfast/ethash/compare/v0.7.1..master
 [0.7.1]: https://github.com/chfast/ethash/releases/tag/v0.7.1
 [0.7.0]: https://github.com/chfast/ethash/releases/tag/v0.7.0
 [0.6.0]: https://github.com/chfast/ethash/releases/tag/v0.6.0

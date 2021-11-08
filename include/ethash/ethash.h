@@ -141,6 +141,9 @@ struct ethash_result ethash_hash(const struct ethash_epoch_context* context,
  * It also checks if the Ethash result produced out of (header_hash, nonce) matches the provided
  * mix_hash.
  *
+ * In most use-cases users should have access to the difficulty value directly therefore
+ * usage of ethash_verify_against_difficulty() is recommended instead.
+ *
  * @return  Error code: ::ETHASH_SUCCESS if valid, ::ETHASH_INVALID_FINAL_HASH if the final hash is
  *          not within provided boundary, ::ETHASH_INVALID_MIX_HASH if the provided mix hash
  *          mismatches the computed one.
