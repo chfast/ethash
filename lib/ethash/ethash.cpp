@@ -201,18 +201,10 @@ struct item_state
     ALWAYS_INLINE hash512 final() noexcept { return keccak512(le::uint32s(mix)); }
 };
 
-hash512 calculate_dataset_item_512(const epoch_context& context, int64_t index) noexcept
-{
-    item_state item0{context, index};
-    for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
-        item0.update(j);
-    return item0.final();
-}
-
-/// Calculates a full dataset item
+/// Calculates a full dataset item.
 ///
-/// This consist of two 512-bit items produced by calculate_dataset_item_partial().
-/// Here the computation is done interleaved for better performance.
+/// This consist of two 512-bit items defined by the Ethash specification, but these items
+/// are never needed separately. Here the computation is done interleaved for better performance.
 hash1024 calculate_dataset_item_1024(const epoch_context& context, uint32_t index) noexcept
 {
     item_state item0{context, int64_t(index) * 2};

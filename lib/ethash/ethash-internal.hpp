@@ -49,7 +49,6 @@ bool check_against_difficulty(const hash256& final_hash, const hash256& difficul
 
 void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept;
 
-hash512 calculate_dataset_item_512(const epoch_context& context, int64_t index) noexcept;
 hash1024 calculate_dataset_item_1024(const epoch_context& context, uint32_t index) noexcept;
 
 namespace generic

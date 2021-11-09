@@ -79,19 +79,6 @@ BENCHMARK(create_context)->Arg(1)->Unit(benchmark::kMillisecond);
 BENCHMARK(create_context)->Arg(333)->Unit(benchmark::kMillisecond);
 
 
-static void ethash_calculate_dataset_item_512(benchmark::State& state)
-{
-    auto& ctx = get_ethash_epoch_context_0();
-
-    for (auto _ : state)
-    {
-        auto item = ethash::calculate_dataset_item_512(ctx, 1234);
-        benchmark::DoNotOptimize(item.bytes);
-    }
-}
-BENCHMARK(ethash_calculate_dataset_item_512);
-
-
 static void ethash_calculate_dataset_item_1024(benchmark::State& state)
 {
     auto& ctx = get_ethash_epoch_context_0();

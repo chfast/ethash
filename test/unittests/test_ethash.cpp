@@ -476,12 +476,6 @@ TEST(ethash, fake_dataset_items)
         const hash1024 item1024 = calculate_dataset_item_1024(*context, t.index);
         EXPECT_EQ(to_hex(item1024.hash512s[0]), t.hash1_hex) << "index: " << t.index;
         EXPECT_EQ(to_hex(item1024.hash512s[1]), t.hash2_hex) << "index: " << t.index;
-
-        const hash512 item512_0 = calculate_dataset_item_512(*context, int64_t(t.index) * 2);
-        EXPECT_EQ(to_hex(item512_0), t.hash1_hex) << "index: " << t.index;
-
-        const hash512 item512_1 = calculate_dataset_item_512(*context, int64_t(t.index) * 2 + 1);
-        EXPECT_EQ(to_hex(item512_1), t.hash2_hex) << "index: " << t.index;
     }
 }
 
