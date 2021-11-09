@@ -4,7 +4,6 @@
 
 #include "ethash-internal.hpp"
 
-#include "bit_manipulation.h"
 #include "primes.h"
 #include <ethash/keccak.hpp>
 #include <cstdlib>
@@ -29,7 +28,15 @@ static_assert(full_dataset_item_size == ETHASH_FULL_DATASET_ITEM_SIZE, "");
 
 namespace
 {
-using ::fnv1;
+/// The core transformation of the FNV-1 hash function.
+/// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1_hash.
+NO_SANITIZE("unsigned-integer-overflow")
+inline uint32_t fnv1(uint32_t u, uint32_t v) noexcept
+{
+    static const uint32_t fnv_prime = 0x01000193;
+    return (u * fnv_prime) ^ v;
+}
+
 
 inline hash512 fnv1(const hash512& u, const hash512& v) noexcept
 {
