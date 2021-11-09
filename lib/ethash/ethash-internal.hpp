@@ -51,7 +51,6 @@ void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noex
 
 hash512 calculate_dataset_item_512(const epoch_context& context, int64_t index) noexcept;
 hash1024 calculate_dataset_item_1024(const epoch_context& context, uint32_t index) noexcept;
-hash2048 calculate_dataset_item_2048(const epoch_context& context, uint32_t index) noexcept;
 
 namespace generic
 {

@@ -220,24 +220,6 @@ hash1024 calculate_dataset_item_1024(const epoch_context& context, uint32_t inde
     return hash1024{{item0.final(), item1.final()}};
 }
 
-hash2048 calculate_dataset_item_2048(const epoch_context& context, uint32_t index) noexcept
-{
-    item_state item0{context, int64_t(index) * 4};
-    item_state item1{context, int64_t(index) * 4 + 1};
-    item_state item2{context, int64_t(index) * 4 + 2};
-    item_state item3{context, int64_t(index) * 4 + 3};
-
-    for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
-    {
-        item0.update(j);
-        item1.update(j);
-        item2.update(j);
-        item3.update(j);
-    }
-
-    return hash2048{{item0.final(), item1.final(), item2.final(), item3.final()}};
-}
-
 namespace
 {
 using lookup_fn = hash1024 (*)(const epoch_context&, uint32_t);

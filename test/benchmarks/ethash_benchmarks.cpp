@@ -105,19 +105,6 @@ static void ethash_calculate_dataset_item_1024(benchmark::State& state)
 BENCHMARK(ethash_calculate_dataset_item_1024);
 
 
-static void ethash_calculate_dataset_item_2048(benchmark::State& state)
-{
-    auto& ctx = get_ethash_epoch_context_0();
-
-    for (auto _ : state)
-    {
-        auto item = ethash::calculate_dataset_item_2048(ctx, 1234);
-        benchmark::DoNotOptimize(item.bytes);
-    }
-}
-BENCHMARK(ethash_calculate_dataset_item_2048);
-
-
 static void ethash_hash(benchmark::State& state)
 {
     // Get block number in millions.
