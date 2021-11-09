@@ -13,7 +13,6 @@ target_sources(keccak PRIVATE
     ${include_dir}/ethash/keccak.h
     ${include_dir}/ethash/keccak.hpp
     keccak.c
-    keccakf800.c
 )
 
 install(
