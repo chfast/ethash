@@ -7,7 +7,6 @@
 #include "bit_manipulation.h"
 #include "primes.h"
 #include <ethash/keccak.hpp>
-#include <ethash/progpow.hpp>
 #include <cstdlib>
 #include <cstring>
 
@@ -133,8 +132,7 @@ epoch_context_full* create_epoch_context(
     const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
     const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
     const size_t full_dataset_size =
-        full ? static_cast<size_t>(full_dataset_num_items) * sizeof(hash1024) :
-               progpow::l1_cache_size;
+        full ? static_cast<size_t>(full_dataset_num_items) * sizeof(hash1024) : 0;
 
     const size_t alloc_size = context_alloc_size + light_cache_size + full_dataset_size;
 
@@ -146,23 +144,18 @@ epoch_context_full* create_epoch_context(
     const hash256 epoch_seed = calculate_epoch_seed(epoch_number);
     build_fn(light_cache, light_cache_num_items, epoch_seed);
 
-    uint32_t* const l1_cache =
-        reinterpret_cast<uint32_t*>(alloc_data + context_alloc_size + light_cache_size);
-
-    hash1024* full_dataset = full ? reinterpret_cast<hash1024*>(l1_cache) : nullptr;
+    hash1024* const full_dataset =
+        full ? reinterpret_cast<hash1024*>(alloc_data + context_alloc_size + light_cache_size) :
+               nullptr;
 
     epoch_context_full* const context = new (alloc_data) epoch_context_full{
         epoch_number,
         light_cache_num_items,
         light_cache,
-        l1_cache,
         full_dataset_num_items,
         full_dataset,
     };
 
-    auto* full_dataset_2048 = reinterpret_cast<hash2048*>(l1_cache);
-    for (uint32_t i = 0; i < progpow::l1_cache_size / sizeof(full_dataset_2048[0]); ++i)
-        full_dataset_2048[i] = calculate_dataset_item_2048(*context, i);
     return context;
 }
 }  // namespace generic
