@@ -3,10 +3,25 @@
 // Licensed under the Apache License, Version 2.0.
 
 #include "difficulty.h"
-#include "../../lib/ethash/builtins.h"
 #include "../../lib/ethash/endianness.hpp"
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
+#endif
+
 #pragma clang diagnostic ignored "-Wunknown-sanitizers"
+
+inline int clz(uint32_t x) noexcept
+{
+#if defined(_MSC_VER) && !defined(__clang__)
+    unsigned long most_significant_bit;
+    _BitScanReverse(&most_significant_bit, x);
+    return 31 - (int)most_significant_bit;
+#else
+    return x != 0 ? __builtin_clz(x) : 32;
+#endif
+}
+
 
 extern "C" {
 NO_SANITIZE("unsigned-integer-overflow")
@@ -40,7 +55,7 @@ ethash_hash256 ethash_difficulty_to_boundary(const ethash_hash256* difficulty) n
 
     // Normalize d.
     uint32_t dn[num_words];
-    const int shift = __builtin_clz(d[n - 1]);
+    const int shift = clz(d[n - 1]);
     for (int i = n - 1; i > 0; i--)
         dn[i] = shift ? (d[i] << shift) | (d[i - 1] >> (32 - shift)) : d[i];
     dn[0] = d[0] << shift;
