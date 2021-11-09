@@ -11,7 +11,6 @@ set_target_properties(ethash PROPERTIES C_EXTENSIONS OFF CXX_EXTENSIONS OFF)
 target_link_libraries(ethash PRIVATE ethash::keccak)
 target_include_directories(ethash PUBLIC $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:include>)
 target_sources(ethash PRIVATE
-    bit_manipulation.h
     builtins.h
     endianness.hpp
     ${include_dir}/ethash/ethash.h
@@ -19,11 +18,8 @@ target_sources(ethash PRIVATE
     ethash-internal.hpp
     ethash.cpp
     ${include_dir}/ethash/hash_types.h
-    kiss99.hpp
     primes.h
     primes.c
-    ${include_dir}/ethash/progpow.hpp
-    progpow.cpp
 )
 
 

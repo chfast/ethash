@@ -4,10 +4,8 @@
 
 #include "ethash-internal.hpp"
 
-#include "bit_manipulation.h"
 #include "primes.h"
 #include <ethash/keccak.hpp>
-#include <ethash/progpow.hpp>
 #include <cstdlib>
 #include <cstring>
 
@@ -30,7 +28,15 @@ static_assert(full_dataset_item_size == ETHASH_FULL_DATASET_ITEM_SIZE, "");
 
 namespace
 {
-using ::fnv1;
+/// The core transformation of the FNV-1 hash function.
+/// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1_hash.
+NO_SANITIZE("unsigned-integer-overflow")
+inline uint32_t fnv1(uint32_t u, uint32_t v) noexcept
+{
+    static const uint32_t fnv_prime = 0x01000193;
+    return (u * fnv_prime) ^ v;
+}
+
 
 inline hash512 fnv1(const hash512& u, const hash512& v) noexcept
 {
@@ -133,8 +139,7 @@ epoch_context_full* create_epoch_context(
     const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
     const size_t light_cache_size = get_light_cache_size(light_cache_num_items);
     const size_t full_dataset_size =
-        full ? static_cast<size_t>(full_dataset_num_items) * sizeof(hash1024) :
-               progpow::l1_cache_size;
+        full ? static_cast<size_t>(full_dataset_num_items) * sizeof(hash1024) : 0;
 
     const size_t alloc_size = context_alloc_size + light_cache_size + full_dataset_size;
 
@@ -146,23 +151,18 @@ epoch_context_full* create_epoch_context(
     const hash256 epoch_seed = calculate_epoch_seed(epoch_number);
     build_fn(light_cache, light_cache_num_items, epoch_seed);
 
-    uint32_t* const l1_cache =
-        reinterpret_cast<uint32_t*>(alloc_data + context_alloc_size + light_cache_size);
-
-    hash1024* full_dataset = full ? reinterpret_cast<hash1024*>(l1_cache) : nullptr;
+    hash1024* const full_dataset =
+        full ? reinterpret_cast<hash1024*>(alloc_data + context_alloc_size + light_cache_size) :
+               nullptr;
 
     epoch_context_full* const context = new (alloc_data) epoch_context_full{
         epoch_number,
         light_cache_num_items,
         light_cache,
-        l1_cache,
         full_dataset_num_items,
         full_dataset,
     };
 
-    auto* full_dataset_2048 = reinterpret_cast<hash2048*>(l1_cache);
-    for (uint32_t i = 0; i < progpow::l1_cache_size / sizeof(full_dataset_2048[0]); ++i)
-        full_dataset_2048[i] = calculate_dataset_item_2048(*context, i);
     return context;
 }
 }  // namespace generic
@@ -225,24 +225,6 @@ hash1024 calculate_dataset_item_1024(const epoch_context& context, uint32_t inde
     }
 
     return hash1024{{item0.final(), item1.final()}};
-}
-
-hash2048 calculate_dataset_item_2048(const epoch_context& context, uint32_t index) noexcept
-{
-    item_state item0{context, int64_t(index) * 4};
-    item_state item1{context, int64_t(index) * 4 + 1};
-    item_state item2{context, int64_t(index) * 4 + 2};
-    item_state item3{context, int64_t(index) * 4 + 3};
-
-    for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
-    {
-        item0.update(j);
-        item1.update(j);
-        item2.update(j);
-        item3.update(j);
-    }
-
-    return hash2048{{item0.final(), item1.final(), item2.final(), item3.final()}};
 }
 
 namespace
