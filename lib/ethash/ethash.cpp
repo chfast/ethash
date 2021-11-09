@@ -173,34 +173,6 @@ void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noex
     return generic::build_light_cache(keccak512, cache, num_items, seed);
 }
 
-struct item_state
-{
-    const hash512* const cache;
-    const int64_t num_cache_items;
-    const uint32_t seed;
-
-    hash512 mix;
-
-    ALWAYS_INLINE item_state(const epoch_context& context, int64_t index) noexcept
-      : cache{context.light_cache},
-        num_cache_items{context.light_cache_num_items},
-        seed{static_cast<uint32_t>(index)}
-    {
-        mix = cache[index % num_cache_items];
-        mix.word32s[0] ^= le::uint32(seed);
-        mix = le::uint32s(keccak512(mix));
-    }
-
-    ALWAYS_INLINE void update(uint32_t round) noexcept
-    {
-        static constexpr size_t num_words = sizeof(mix) / sizeof(uint32_t);
-        const uint32_t t = fnv1(seed ^ round, mix.word32s[round % num_words]);
-        const int64_t parent_index = t % num_cache_items;
-        mix = fnv1(mix, le::uint32s(cache[parent_index]));
-    }
-
-    ALWAYS_INLINE hash512 final() noexcept { return keccak512(le::uint32s(mix)); }
-};
 
 /// Calculates a full dataset item.
 ///
@@ -208,16 +180,31 @@ struct item_state
 /// are never needed separately. Here the computation is done interleaved for better performance.
 hash1024 calculate_dataset_item_1024(const epoch_context& context, uint32_t index) noexcept
 {
-    item_state item0{context, int64_t(index) * 2};
-    item_state item1{context, int64_t(index) * 2 + 1};
+    const uint32_t num_cache_items = static_cast<uint32_t>(context.light_cache_num_items);
+    const hash512* const cache = context.light_cache;
+
+    const uint32_t seed0 = index * 2;
+    const uint32_t seed1 = seed0 + 1;
+
+    hash512 mix0 = cache[seed0 % num_cache_items];
+    hash512 mix1 = cache[seed1 % num_cache_items];
+
+    mix0.word32s[0] ^= le::uint32(seed0);
+    mix1.word32s[0] ^= le::uint32(seed1);
+
+    mix0 = le::uint32s(keccak512(mix0));
+    mix1 = le::uint32s(keccak512(mix1));
 
     for (uint32_t j = 0; j < full_dataset_item_parents; ++j)
     {
-        item0.update(j);
-        item1.update(j);
+        constexpr size_t num_words = sizeof(mix0) / sizeof(uint32_t);
+        const uint32_t t0 = fnv1(seed0 ^ j, mix0.word32s[j % num_words]);
+        const uint32_t t1 = fnv1(seed1 ^ j, mix1.word32s[j % num_words]);
+        mix0 = fnv1(mix0, le::uint32s(cache[t0 % num_cache_items]));
+        mix1 = fnv1(mix1, le::uint32s(cache[t1 % num_cache_items]));
     }
 
-    return hash1024{{item0.final(), item1.final()}};
+    return hash1024{{keccak512(le::uint32s(mix0)), keccak512(le::uint32s(mix1))}};
 }
 
 namespace
