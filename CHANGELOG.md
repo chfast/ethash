@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.8.0] — unreleased
+## [0.8.0] — 2021-11-09
 
 - Added: The new set of functions which verify Ethash hashes against difficulty
   has been added to the library: `verify_against_difficulty()` and
@@ -124,7 +124,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
-[0.8.0]: https://github.com/chfast/ethash/compare/v0.7.1..master
+[0.8.0]: https://github.com/chfast/ethash/releases/tag/v0.8.0
 [0.7.1]: https://github.com/chfast/ethash/releases/tag/v0.7.1
 [0.7.0]: https://github.com/chfast/ethash/releases/tag/v0.7.0
 [0.6.0]: https://github.com/chfast/ethash/releases/tag/v0.6.0
