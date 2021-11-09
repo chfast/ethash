@@ -10,7 +10,6 @@ find_package(GTest CONFIG REQUIRED)
 add_executable(
     ethash-test
     helpers.hpp
-    test_bit_manipulation.cpp
     test_cases.hpp
     test_difficulty.cpp
     test_ethash.cpp
