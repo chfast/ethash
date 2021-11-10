@@ -20,7 +20,9 @@ static void calculate_light_cache_num_items(benchmark::State& state)
         benchmark::DoNotOptimize(&answer);
     }
 }
-BENCHMARK(calculate_light_cache_num_items)->Arg(32638)->Arg(32639);
+BENCHMARK(calculate_light_cache_num_items)
+    ->Arg(ethash::max_epoch_number - 1)
+    ->Arg(ethash::max_epoch_number);
 
 static void calculate_full_dataset_num_items(benchmark::State& state)
 {
@@ -32,7 +34,9 @@ static void calculate_full_dataset_num_items(benchmark::State& state)
         benchmark::DoNotOptimize(&answer);
     }
 }
-BENCHMARK(calculate_full_dataset_num_items)->Arg(32638)->Arg(32639);
+BENCHMARK(calculate_full_dataset_num_items)
+    ->Arg(ethash::max_epoch_number - 1)
+    ->Arg(ethash::max_epoch_number);
 
 
 static void seed(benchmark::State& state)

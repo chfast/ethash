@@ -49,6 +49,14 @@ extern "C" {
 #define ETHASH_FULL_DATASET_ITEM_SIZE 128
 #define ETHASH_NUM_DATASET_ACCESSES 64
 
+/// The maximum epoch number supported by this implementation.
+///
+/// The value represents the last epoch where the light cache size fits 4GB size limit.
+/// It also allows to make some assumptions about the max values of datasets indices.
+/// The DAG size in the last epoch is 252GB and the block number is above 979M
+/// which gives over 60 years of blocks assuming 2s block times.
+#define ETHASH_MAX_EPOCH_NUMBER 32639
+
 /** Ethash error codes. */
 enum ethash_errc
 {

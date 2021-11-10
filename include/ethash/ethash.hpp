@@ -37,10 +37,12 @@ namespace ethash
 {
 constexpr auto revision = ETHASH_REVISION;
 
-static constexpr int epoch_length = ETHASH_EPOCH_LENGTH;
-static constexpr int light_cache_item_size = ETHASH_LIGHT_CACHE_ITEM_SIZE;
-static constexpr int full_dataset_item_size = ETHASH_FULL_DATASET_ITEM_SIZE;
-static constexpr int num_dataset_accesses = ETHASH_NUM_DATASET_ACCESSES;
+constexpr int epoch_length = ETHASH_EPOCH_LENGTH;
+constexpr int light_cache_item_size = ETHASH_LIGHT_CACHE_ITEM_SIZE;
+constexpr int full_dataset_item_size = ETHASH_FULL_DATASET_ITEM_SIZE;
+constexpr int num_dataset_accesses = ETHASH_NUM_DATASET_ACCESSES;
+
+constexpr int max_epoch_number = ETHASH_MAX_EPOCH_NUMBER;
 
 using epoch_context = ethash_epoch_context;
 using epoch_context_full = ethash_epoch_context_full;

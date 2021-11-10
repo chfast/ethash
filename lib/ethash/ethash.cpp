@@ -57,8 +57,6 @@ inline hash512 bitwise_xor(const hash512& x, const hash512& y) noexcept
 
 int find_epoch_number(const hash256& seed) noexcept
 {
-    static constexpr int num_tries = 30000;  // Divisible by 16.
-
     // Thread-local cache of the last search.
     static thread_local int cached_epoch_number = 0;
     static thread_local hash256 cached_seed = {};
@@ -82,7 +80,7 @@ int find_epoch_number(const hash256& seed) noexcept
 
     // Search for matching seed starting from epoch 0.
     s = {};
-    for (int i = 0; i < num_tries; ++i)
+    for (int i = 0; i <= max_epoch_number; ++i)
     {
         if (s.word32s[0] == seed_part)
         {
@@ -134,6 +132,9 @@ epoch_context_full* create_epoch_context(
 {
     static_assert(sizeof(epoch_context_full) < sizeof(hash512), "epoch_context too big");
     static constexpr size_t context_alloc_size = sizeof(hash512);
+
+    if (epoch_number < 0 || epoch_number > max_epoch_number)
+        return nullptr;
 
     const int light_cache_num_items = calculate_light_cache_num_items(epoch_number);
     const int full_dataset_num_items = calculate_full_dataset_num_items(epoch_number);
@@ -428,13 +429,16 @@ ethash_hash256 ethash_calculate_epoch_seed(int epoch_number) noexcept
 
 int ethash_calculate_light_cache_num_items(int epoch_number) noexcept
 {
-    static constexpr int item_size = sizeof(hash512);
-    static constexpr int num_items_init = light_cache_init_size / item_size;
-    static constexpr int num_items_growth = light_cache_growth / item_size;
+    constexpr int item_size = sizeof(hash512);
+    constexpr int num_items_init = light_cache_init_size / item_size;
+    constexpr int num_items_growth = light_cache_growth / item_size;
     static_assert(
         light_cache_init_size % item_size == 0, "light_cache_init_size not multiple of item size");
     static_assert(
         light_cache_growth % item_size == 0, "light_cache_growth not multiple of item size");
+
+    if (epoch_number < 0 || epoch_number > max_epoch_number)
+        return 0;
 
     int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
     int num_items = ethash_find_largest_prime(num_items_upper_bound);
@@ -443,13 +447,16 @@ int ethash_calculate_light_cache_num_items(int epoch_number) noexcept
 
 int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
 {
-    static constexpr int item_size = sizeof(hash1024);
-    static constexpr int num_items_init = full_dataset_init_size / item_size;
-    static constexpr int num_items_growth = full_dataset_growth / item_size;
+    constexpr int item_size = sizeof(hash1024);
+    constexpr int num_items_init = full_dataset_init_size / item_size;
+    constexpr int num_items_growth = full_dataset_growth / item_size;
     static_assert(full_dataset_init_size % item_size == 0,
         "full_dataset_init_size not multiple of item size");
     static_assert(
         full_dataset_growth % item_size == 0, "full_dataset_growth not multiple of item size");
+
+    if (epoch_number < 0 || epoch_number > max_epoch_number)
+        return 0;
 
     int num_items_upper_bound = num_items_init + epoch_number * num_items_growth;
     int num_items = ethash_find_largest_prime(num_items_upper_bound);

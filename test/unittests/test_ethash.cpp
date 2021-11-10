@@ -190,7 +190,10 @@ static dataset_size_test_case dataset_size_test_cases[] = {
     {1956, 273153856, 17481857408},
     {2047, 285081536, 18245220736},
     {30000, 3948936512, 252731976832},
-    {32639, 4294836032, 274869514624},
+    {max_epoch_number, 4294836032, 274'869'514'624},
+    {max_epoch_number + 1, 0, 0},
+    {max_epoch_number * 2, 0, 0},
+    {-1, 0, 0},
 };
 
 TEST(ethash, light_cache_size)
@@ -220,13 +223,15 @@ struct epoch_seed_test_case
     const char* const epoch_seed_hex;
 };
 
-static epoch_seed_test_case epoch_seed_test_cases[] = {
+constexpr epoch_seed_test_case epoch_seed_test_cases[] = {
     {0, "0000000000000000000000000000000000000000000000000000000000000000"},
     {1, "290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563"},
     {171, "a9b0e0c9aca72c07ba06b5bbdae8b8f69e61878301508473379bb4f71807d707"},
     {2048, "20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920"},
     {29998, "1222b1faed7f93098f8ae498621fb3479805a664b70186063861c46596c66164"},
     {29999, "ee1d0f61b054dff0f3025ebba821d405c8dc19a983e582e9fa5436fc3e7a07d8"},
+    {max_epoch_number - 1, "9472a82f992649315e3977120843a5a246e375715bd70ee98b3dd77c63154e99"},
+    {max_epoch_number, "09b435f2d92d0ddee038c379be8db1f895c904282e9ceb790f519a6aa3f83810"},
 };
 
 TEST(ethash, calculate_epoch_seed)
@@ -234,7 +239,7 @@ TEST(ethash, calculate_epoch_seed)
     for (auto& t : epoch_seed_test_cases)
     {
         const hash256 epoch_seed = calculate_epoch_seed(t.epoch_number);
-        EXPECT_EQ(epoch_seed, to_hash256(t.epoch_seed_hex));
+        EXPECT_EQ(to_hex(epoch_seed), t.epoch_seed_hex);
     }
 }
 
@@ -268,7 +273,7 @@ TEST(ethash, find_epoch_number_double_descending)
 TEST(ethash, find_epoch_number_sequential)
 {
     hash256 seed = {};
-    for (int i = 0; i < 30000; ++i)
+    for (int i = 0; i <= max_epoch_number; ++i)
     {
         auto e = find_epoch_number(seed);
         EXPECT_EQ(e, i);
@@ -276,11 +281,22 @@ TEST(ethash, find_epoch_number_sequential)
     }
 }
 
+TEST(ethash, find_epoch_number_max)
+{
+    const auto seed_max = to_hash256(epoch_seed_test_cases[7].epoch_seed_hex);
+    const auto seed_out_of_range = keccak256(seed_max);
+
+    find_epoch_number({});  // Reset cache.
+    EXPECT_EQ(find_epoch_number(seed_out_of_range), -1);
+    find_epoch_number({});  // Reset cache.
+    EXPECT_EQ(find_epoch_number(seed_max), max_epoch_number);
+}
+
 TEST(ethash, find_epoch_number_sequential_gap)
 {
     constexpr int start_epoch = 200;
     hash256 seed = calculate_epoch_seed(start_epoch);
-    for (int i = start_epoch; i < 30000; ++i)
+    for (int i = start_epoch; i <= max_epoch_number; ++i)
     {
         auto e = find_epoch_number(seed);
         EXPECT_EQ(e, i);
@@ -315,7 +331,7 @@ TEST(ethash, find_epoch_number_invalid)
 
 TEST(ethash, find_epoch_number_epoch_too_high)
 {
-    hash256 seed = calculate_epoch_seed(30000);
+    hash256 seed = calculate_epoch_seed(max_epoch_number + 1);
     int epoch = find_epoch_number(seed);
     EXPECT_EQ(epoch, -1);
 }
@@ -324,7 +340,7 @@ TEST(ethash_multithreaded, find_epoch_number_sequential)
 {
     auto fn = [] {
         hash256 seed = {};
-        for (int i = 0; i < 30000; ++i)
+        for (int i = 0; i <= max_epoch_number; ++i)
         {
             auto e = find_epoch_number(seed);
             EXPECT_EQ(e, i);
@@ -348,6 +364,9 @@ TEST(ethash, get_epoch_number)
     EXPECT_EQ(get_epoch_number(30001), 1);
     EXPECT_EQ(get_epoch_number(30002), 1);
     EXPECT_EQ(get_epoch_number(5000000), 166);
+    EXPECT_EQ(get_epoch_number(max_epoch_number * epoch_length), max_epoch_number);
+    constexpr auto max_block = max_epoch_number * epoch_length + epoch_length - 1;
+    EXPECT_EQ(get_epoch_number(max_block), max_epoch_number);
 }
 
 TEST(ethash, light_cache)
@@ -373,6 +392,12 @@ TEST(ethash, light_cache)
         const hash256 light_cache_hash = keccak256(light_cache_data, light_cache_size);
         EXPECT_EQ(light_cache_hash, to_hash256(t.hash));
     }
+}
+
+TEST(ethash, create_context_invalid_epoch)
+{
+    EXPECT_EQ(create_epoch_context(-1), nullptr);
+    EXPECT_EQ(create_epoch_context(max_epoch_number + 1), nullptr);
 }
 
 TEST(ethash, fake_dataset_partial_items)
@@ -462,7 +487,10 @@ TEST(ethash, fake_dataset_items)
         {740620450,
             "7e4a3533ef6f0d9fa7e41b8304e08fe9e52556334cad0cc861337bd1155bbea211cf0b0198b4f08567cc47fcc964bbbdfb2f851437da1edba7c6f4bd3fd61a3a",
             "f20969bd0407bb76560e7c099224a1ea185214808950519fafdcd02ba2874e9b4ebf1797cafb3b80e903b13a87ddac5d54d67ed58acf49bb12e03b81eb6c99af"},
-        {4294967295,
+        {2147418082,  // Max index for epoch 32639.
+            "a79eaa61a5c2256eb3bf9c78a2b6509929780d8826d7a7d1324328ab786ca9c23fc1437e1efb432ab823c5d5448b4183893d16168aebe21470e3515104eab67f",
+            "496baeac6ea83fdd5a6a20827029ddd73d1be507dc7f210c2aed29f0757eefea72ab7e4c92aab9ee34ed46027bdc9918e047b0f845c7fbbd254b8014141c7605"},
+        {0x7fffffff,  // Max allowed index value.
             "21471504c1f31007c14acd107a8ade1aad6c2a6c2ad879b3aca3b12517105483502d0e3e902acf3b128d294c0a69f2cc199bf8813be1f8bb4b5625822b70ec09",
             "8e4fdb5dc602598f10a42b5061132eec05299380db872a3caf04aa21e3d4970350394dfbd58c5ab54571b1be0cc9001d788c6b14cbf003d7decc2aaef1232b8c"},
     };
@@ -527,9 +555,12 @@ TEST(ethash, dataset_items_epoch13)
         {740620450,
             "df0c2e2f4df033a64b1bcd207c30c7ce48c7d8ca8edd1284c87a91d54372ed0cb513d1876b1dbef6fc06c496941039cba6c50676596d6379152689d9841c97e4",
             "357bacef5baf4687c87e7ff07d5ab104ce39badcf9633c22ee31c3c3de0887b296f9385ea27573cb94bc3423cc39ab2a733be97a98e860290c31e94f03f39814"},
-        {4294967295,
-            "11fab5bafdf0e29f199cad053a542f777fcd8b4fb8a0203bf720b9a01718e8c76d0e374e979ebf0e1faf8ce992638a5e92ea8be8000c47e8307acad261df1abb",
-            "164ff9a893a162319f9ccb4294e33fb6ae50ea05d02a753fd4797662676c1fad6d70b11db6d4aa0298d6aa695c9be8dea3dad70f953368cb11b283eb145d17e3"},
+        {2147418082,  // Max index for epoch 32639.
+            "9705a12d9f1a193ffea9b9c6603b8d17315896b84ea6649e613fec1578c867535e6bbfd71cb18ce0c0dd6ca8051f7bfb5cfa2d89b29d1bf25a0b36ae57505844",
+            "c2f3475bf52ec727a0b684d9fbc5ce9234331abc585c383e87fa70e8c860819b35c12e6173df081f3f84bea218633ad54c9da6051ba90efc3985e887530cb89e"},
+        {0x7fffffff,  // Max allowed index value.
+            "d463d63e393e6ccc31b240d3d12301a14e0410377657b0554d6041541303c2ddc8ec026432adf73311b56de486f6fdca808f87f3824587b413a4e4f7a571d046",
+            "9e15d844f137ae66e7fc23934cc51d53a36ec28a5d1a246d50773471252ae9ea30fe20e817434e771bbf77577899cf2cce8de11578b925a12af2ad9dd316f0ec"},
     };
     // clang-format on
 
