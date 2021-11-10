@@ -95,6 +95,8 @@ int find_epoch_number(const hash256& seed) noexcept
     return -1;
 }
 
+namespace
+{
 void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept
 {
     hash512 item = keccak512(seed.bytes, sizeof(seed));
@@ -123,8 +125,6 @@ void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noex
     }
 }
 
-namespace
-{
 epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
 {
     static_assert(sizeof(epoch_context_full) < sizeof(hash512), "epoch_context too big");
