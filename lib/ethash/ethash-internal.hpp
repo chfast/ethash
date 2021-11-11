@@ -47,21 +47,6 @@ inline bool equal(const hash256& a, const hash256& b) noexcept
 
 bool check_against_difficulty(const hash256& final_hash, const hash256& difficulty) noexcept;
 
-void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept;
-
 hash1024 calculate_dataset_item_1024(const epoch_context& context, uint32_t index) noexcept;
-
-namespace generic
-{
-using hash_fn_512 = hash512 (*)(const uint8_t* data, size_t size);
-using build_light_cache_fn = void (*)(hash512 cache[], int num_items, const hash256& seed);
-
-void build_light_cache(
-    hash_fn_512 hash_fn, hash512 cache[], int num_items, const hash256& seed) noexcept;
-
-epoch_context_full* create_epoch_context(
-    build_light_cache_fn build_fn, int epoch_number, bool full) noexcept;
-
-}  // namespace generic
 
 }  // namespace ethash

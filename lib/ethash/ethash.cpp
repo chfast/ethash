@@ -95,16 +95,15 @@ int find_epoch_number(const hash256& seed) noexcept
     return -1;
 }
 
-namespace generic
+namespace
 {
-void build_light_cache(
-    hash_fn_512 hash_fn, hash512 cache[], int num_items, const hash256& seed) noexcept
+void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept
 {
-    hash512 item = hash_fn(seed.bytes, sizeof(seed));
+    hash512 item = keccak512(seed.bytes, sizeof(seed));
     cache[0] = item;
     for (int i = 1; i < num_items; ++i)
     {
-        item = hash_fn(item.bytes, sizeof(item));
+        item = keccak512(item);
         cache[i] = item;
     }
 
@@ -121,14 +120,12 @@ void build_light_cache(
             // Second index.
             const uint32_t w = static_cast<uint32_t>(num_items + (i - 1)) % index_limit;
 
-            const hash512 x = bitwise_xor(cache[v], cache[w]);
-            cache[i] = hash_fn(x.bytes, sizeof(x));
+            cache[i] = keccak512(bitwise_xor(cache[v], cache[w]));
         }
     }
 }
 
-epoch_context_full* create_epoch_context(
-    build_light_cache_fn build_fn, int epoch_number, bool full) noexcept
+epoch_context_full* create_epoch_context(int epoch_number, bool full) noexcept
 {
     static_assert(sizeof(epoch_context_full) < sizeof(hash512), "epoch_context too big");
     static constexpr size_t context_alloc_size = sizeof(hash512);
@@ -150,7 +147,7 @@ epoch_context_full* create_epoch_context(
 
     hash512* const light_cache = reinterpret_cast<hash512*>(alloc_data + context_alloc_size);
     const hash256 epoch_seed = calculate_epoch_seed(epoch_number);
-    build_fn(light_cache, light_cache_num_items, epoch_seed);
+    build_light_cache(light_cache, light_cache_num_items, epoch_seed);
 
     hash1024* const full_dataset =
         full ? reinterpret_cast<hash1024*>(alloc_data + context_alloc_size + light_cache_size) :
@@ -166,13 +163,7 @@ epoch_context_full* create_epoch_context(
 
     return context;
 }
-}  // namespace generic
-
-void build_light_cache(hash512 cache[], int num_items, const hash256& seed) noexcept
-{
-    return generic::build_light_cache(keccak512, cache, num_items, seed);
-}
-
+}  // namespace
 
 /// Calculates a full dataset item.
 ///
@@ -452,12 +443,12 @@ int ethash_calculate_full_dataset_num_items(int epoch_number) noexcept
 
 epoch_context* ethash_create_epoch_context(int epoch_number) noexcept
 {
-    return generic::create_epoch_context(build_light_cache, epoch_number, false);
+    return create_epoch_context(epoch_number, false);
 }
 
 epoch_context_full* ethash_create_epoch_context_full(int epoch_number) noexcept
 {
-    return generic::create_epoch_context(build_light_cache, epoch_number, true);
+    return create_epoch_context(epoch_number, true);
 }
 
 void ethash_destroy_epoch_context_full(epoch_context_full* context) noexcept

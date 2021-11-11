@@ -52,24 +52,6 @@ static void seed(benchmark::State& state)
 BENCHMARK(seed)->Arg(1)->Arg(10)->Arg(100)->Arg(1000)->Arg(10000);
 
 
-static void light_cache(benchmark::State& state)
-{
-    const int epoch_number = static_cast<int>(state.range(0));
-    const auto num_items = ethash::calculate_light_cache_num_items(epoch_number);
-    const auto seed = ethash::calculate_epoch_seed(epoch_number);
-
-    std::unique_ptr<ethash::hash512[]> light_cache{
-        new ethash::hash512[static_cast<size_t>(num_items)]};
-
-    for (auto _ : state)
-    {
-        ethash::build_light_cache(light_cache.get(), num_items, seed);
-        benchmark::DoNotOptimize(light_cache.get());
-    }
-}
-BENCHMARK(light_cache)->Arg(1)->Unit(benchmark::kMillisecond);
-
-
 static void create_context(benchmark::State& state)
 {
     const int epoch_number = static_cast<int>(state.range(0));
@@ -79,8 +61,7 @@ static void create_context(benchmark::State& state)
         ethash::create_epoch_context(epoch_number);
     }
 }
-BENCHMARK(create_context)->Arg(1)->Unit(benchmark::kMillisecond);
-BENCHMARK(create_context)->Arg(333)->Unit(benchmark::kMillisecond);
+BENCHMARK(create_context)->Arg(1)->Arg(333)->Unit(benchmark::kMillisecond);
 
 
 static void ethash_calculate_dataset_item_1024(benchmark::State& state)
