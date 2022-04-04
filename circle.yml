@@ -270,7 +270,7 @@ jobs:
 
   macos-xcode-tsan:
     macos:
-      xcode: "13.1.0"
+      xcode: "13.3.0"
     environment:
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
@@ -279,13 +279,13 @@ jobs:
 
   macos-xcode-old:
     macos:
-      xcode: "11.2.1"
+      xcode: "11.4.1"
     steps:
       - macos-defaults
 
   macos-release:
     macos:
-      xcode: "13.1.0"
+      xcode: "13.3.0"
     environment:
       - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=~/project/dist
     steps:
@@ -348,7 +348,7 @@ workflows:
       - linux-gcc-coverage
       - linux-clang-sanitizers
       - linux-32bit-asan
-      - mips64
+      # - mips64  toolchain is broken on recent Debian
       - powerpc64
       - macos-xcode-tsan
       - macos-xcode-old
