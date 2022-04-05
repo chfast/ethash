@@ -8,10 +8,10 @@
 set -eo pipefail
 
 if [ -n "$APPVEYOR" ]; then
-    PYTHON_PATHS="/c/Python39-x64:/c/Python39-x64/Scripts /c/Python38-x64:/c/Python38-x64/Scripts /c/Python37-x64:/c/Python37-x64/Scripts"
+    PYTHON_PATHS="/c/Python310-x64:/c/Python310-x64/Scripts /c/Python39-x64:/c/Python39-x64/Scripts /c/Python38-x64:/c/Python38-x64/Scripts /c/Python37-x64:/c/Python37-x64/Scripts"
 elif [ -n "$CIRCLECI" ]; then
     if [ "$OSTYPE" = "linux-gnu" ]; then
-        PYTHON_PATHS="/opt/python/cp39-cp39/bin /opt/python/cp38-cp38/bin /opt/python/cp37-cp37m/bin /opt/python/cp36-cp36m/bin"
+        PYTHON_PATHS="/opt/python/cp310-cp310/bin /opt/python/cp39-cp39/bin /opt/python/cp38-cp38/bin /opt/python/cp37-cp37m/bin /opt/python/cp36-cp36m/bin"
     else
         # The continuation of the script expects "python" executable name,
         # so make link python -> python3.

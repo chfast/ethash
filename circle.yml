@@ -242,25 +242,25 @@ jobs:
           working_directory: ~/project/dist
           command: |
             find -name '*linux_x86_64.whl' -exec auditwheel repair {} \;
-      - store_artifacts:
-          path: ~/project/dist
-          destination: dist
       - run:
           name: "Select Python"
           command: |
-            echo 'export PATH=/opt/python/cp39-cp39/bin:$PATH' >> $BASH_ENV
+            echo 'export PATH=/opt/python/cp310-cp310/bin:$PATH' >> $BASH_ENV
             source $BASH_ENV
             python --version
             pip --version
+      - run:
+          name: "Build source dist"
+          command: ./setup.py sdist
+      - store_artifacts:
+          path: ~/project/dist
+          destination: dist
       - run:
           name: "Install libffi"
           command: apt -q update && apt -qy install libffi-dev
       - run:
           name: "Install CMake"
           command: pip install cmake
-      - run:
-          name: "Build source dist"
-          command: ./setup.py sdist
       - run:
           name: "Build wheel with CMake build"
           command: ./setup.py bdist_wheel
