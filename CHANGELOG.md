@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0] — 2022-04-05
+
+- Added: The constant `ETHASH_MAX_EPOCH_NUMBER = 32639` representing
+  the maximum supported Ethash epoch.
+  [#212](https://github.com/chfast/ethash/pull/212)
+- Removed: Previously deprecated ProgPoW implementation.
+  [#207](https://github.com/chfast/ethash/pull/207)
+  [#209](https://github.com/chfast/ethash/pull/209)
+  [#210](https://github.com/chfast/ethash/pull/210)
+- Removed: Support for using custom hash function for light cache generation.
+  [#213](https://github.com/chfast/ethash/pull/213)
+- Removed: The internal header builtins.h.
+  [#208](https://github.com/chfast/ethash/pull/208)
+
 ## [0.8.0] — 2021-11-09
 
 - Added: The new set of functions which verify Ethash hashes against difficulty
@@ -124,6 +138,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[0.9.0]: https://github.com/chfast/ethash/releases/tag/v0.9.0
 [0.8.0]: https://github.com/chfast/ethash/releases/tag/v0.8.0
 [0.7.1]: https://github.com/chfast/ethash/releases/tag/v0.7.1
 [0.7.0]: https://github.com/chfast/ethash/releases/tag/v0.7.0
