@@ -66,13 +66,13 @@ inline void keccak_default(uint64_t* out, const uint8_t* data, size_t size) noex
     static constexpr size_t block_size = (1600 - bits * 2) / 8;
     static constexpr size_t block_words = block_size / sizeof(uint64_t);
 
-    bool aligned = (uintptr_t)data % 8 == 0;
+    bool aligned = reinterpret_cast<uintptr_t>(data) % 8 == 0;
 
     uint64_t state[25] = {};
 
     uint64_t block[block_words];
 
-    uint64_t* p;
+    const uint64_t* p = nullptr;
 
     while (size >= block_size)
     {
@@ -82,7 +82,7 @@ inline void keccak_default(uint64_t* out, const uint8_t* data, size_t size) noex
             p = block;
         }
         else
-            p = (uint64_t*)data;
+            p = reinterpret_cast<const uint64_t*>(data);
         xor_into_state(state, p, block_words);
         fake_keccakf1600(state);
         data += block_size;
@@ -141,7 +141,7 @@ inline void keccak_fastest(uint64_t* out, const uint8_t* data, size_t size)
 
     while (size >= sizeof(uint64_t))
     {
-        uint64_t* p_state_word = (uint64_t*)p_state_bytes;
+        uint64_t* p_state_word = reinterpret_cast<uint64_t*>(p_state_bytes);
         *p_state_word ^= load_le(data);
         data += sizeof(uint64_t);
         size -= sizeof(uint64_t);
@@ -164,7 +164,7 @@ inline void keccak_fastest(uint64_t* out, const uint8_t* data, size_t size)
 
 void fake_keccak256_default_aligned(uint64_t* out, const uint8_t* data, size_t size) noexcept
 {
-    keccak_default_aligned<256>(out, (uint64_t*)data, size / 8);
+    keccak_default_aligned<256>(out, reinterpret_cast<const uint64_t*>(data), size / 8);
 }
 
 void fake_keccak256_default(uint64_t* out, const uint8_t* data, size_t size) noexcept
@@ -179,5 +179,5 @@ void fake_keccak256_fastest(uint64_t* out, const uint8_t* data, size_t size) noe
 
 void fake_keccak256_fastest_word4(uint64_t out[4], const uint64_t data[4]) noexcept
 {
-    keccak_fastest(out, (const uint8_t*)data, 32);
+    keccak_fastest(out, reinterpret_cast<const uint8_t*>(data), 32);
 }

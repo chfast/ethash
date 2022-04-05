@@ -774,17 +774,16 @@ TEST(ethash, small_dataset)
     auto solution = search_light(*context, {}, boundary, 940, 10);
     EXPECT_TRUE(solution.solution_found);
     EXPECT_EQ(solution.nonce, 948);
-    auto final_hash_hex = "004b92ceeb2045f9745917e4d9868a0db16b06d60ee1d8d33b9ff859053f4bb8";
+    const auto final_hash_hex = "004b92ceeb2045f9745917e4d9868a0db16b06d60ee1d8d33b9ff859053f4bb8";
     EXPECT_EQ(to_hex(solution.final_hash), final_hash_hex);
-    auto mix_hash_hex = "a5a4f053b8424f1c0a4403898d106f0488c8a819334c542ac4fabc0d2cbd7f26";
+    const auto mix_hash_hex = "a5a4f053b8424f1c0a4403898d106f0488c8a819334c542ac4fabc0d2cbd7f26";
     EXPECT_EQ(to_hex(solution.mix_hash), mix_hash_hex);
 
     solution = search(*context_full, {}, boundary, 940, 10);
     EXPECT_TRUE(solution.solution_found);
     EXPECT_EQ(solution.nonce, 948);
-    final_hash_hex = "004b92ceeb2045f9745917e4d9868a0db16b06d60ee1d8d33b9ff859053f4bb8";
     EXPECT_EQ(to_hex(solution.final_hash), final_hash_hex);
-    mix_hash_hex = "a5a4f053b8424f1c0a4403898d106f0488c8a819334c542ac4fabc0d2cbd7f26";
+    EXPECT_EQ(to_hex(solution.mix_hash), mix_hash_hex);
 
     solution = search_light(*context, {}, boundary, 483, 10);
     EXPECT_FALSE(solution.solution_found);

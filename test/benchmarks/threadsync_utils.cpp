@@ -25,7 +25,7 @@ std::shared_ptr<fake_cache> build_fake_cache(int id) noexcept
 static std::shared_ptr<fake_cache> build_sentinel() noexcept
 {
     static thread_local fake_cache sentinel;
-    return std::shared_ptr<fake_cache>(&sentinel, [](fake_cache*) {});
+    return {&sentinel, [](fake_cache* /*unused*/) {}};
 }
 
 namespace

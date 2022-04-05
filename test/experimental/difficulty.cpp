@@ -24,6 +24,8 @@ inline int clz(uint32_t x) noexcept
 
 
 extern "C" {
+// Reduce complexity of this function and enable `readability-function-cognitive-complexity`
+// in clang-tidty.
 NO_SANITIZE("unsigned-integer-overflow")
 NO_SANITIZE("unsigned-shift-base")
 ethash_hash256 ethash_difficulty_to_boundary(const ethash_hash256* difficulty) noexcept
@@ -144,7 +146,7 @@ ethash_hash256 ethash_difficulty_to_boundary(const ethash_hash256* difficulty) n
     }
 
     // Convert to big-endian.
-    ethash_hash256 boundary;
+    ethash_hash256 boundary = {};
     for (size_t i = 0; i < num_words; ++i)
         boundary.word32s[i] = ethash::be::uint32(q[num_words - 1 - i]);
     return boundary;

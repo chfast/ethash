@@ -20,6 +20,7 @@ struct hash_test_case
     const char* final_hash_hex;
 };
 
+// NOLINTNEXTLINE(misc-definitions-in-headers)
 hash_test_case hash_test_cases[] = {
     {
         0,

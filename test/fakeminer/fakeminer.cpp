@@ -21,7 +21,12 @@ namespace
 class ethash_interface
 {
 public:
-    virtual ~ethash_interface() noexcept = default;
+    ethash_interface() = default;
+    virtual ~ethash_interface() = default;
+    ethash_interface(const ethash_interface&) = delete;
+    ethash_interface& operator=(const ethash_interface&) = delete;
+    ethash_interface(ethash_interface&&) = delete;
+    ethash_interface& operator=(ethash_interface&&) = delete;
 
     virtual void search(
         const ethash::hash256& header_hash, uint64_t nonce, size_t iterations) const noexcept = 0;
