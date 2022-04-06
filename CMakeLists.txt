@@ -19,7 +19,7 @@ cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo 
 include(cmake/Hunter/init.cmake)
 
 project(ethash)
-set(PROJECT_VERSION 0.9.0)
+set(PROJECT_VERSION 1.0.0-alpha.0)
 
 cable_configure_compiler(NO_STACK_PROTECTION)
 if(CABLE_COMPILER_GNULIKE)

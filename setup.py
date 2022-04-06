@@ -68,7 +68,7 @@ class build_ext(setuptools_build_ext):
 
 setup(
     name='ethash',
-    version='0.9.0',
+    version='1.0.0-alpha.0',
     description=
     "C/C++ implementation of Ethash – the Ethereum Proof of Work algorithm",
     url='https://github.com/chfast/ethash',
