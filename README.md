@@ -1,6 +1,7 @@
 # Ethash
 
 [![readme style standard](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+[![GitPOAP Badge](https://public-api.gitpoap.io/v1/repo/chfast/ethash/badge)](https://www.gitpoap.io/gh/chfast/ethash)
 
 > C/C++ implementation of Ethash – the Ethereum Proof of Work algorithm
 
