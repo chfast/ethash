@@ -17,7 +17,7 @@
 
 ## Install
 
-Build from source using CMake.
+Build from Source using CMake.
 
 ```sh
 mkdir build
