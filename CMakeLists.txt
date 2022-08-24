@@ -60,11 +60,11 @@ option(ETHASH_BUILD_ETHASH "Build ethash::ethash library (if NO only ethash::kec
 
 cmake_dependent_option(ETHASH_BUILD_GLOBAL_CONTEXT "Build ethash::global-context library" YES "ETHASH_BUILD_ETHASH" NO)
 
-option(ETHASH_BUILD_TESTS "Build unit tests" YES)
+option(ETHASH_TESTING "Build unit tests" NO)
 
 add_subdirectory(lib)
 
-if(ETHASH_BUILD_TESTS)
+if(ETHASH_TESTING)
     enable_testing()
     add_subdirectory(test)
 endif()
