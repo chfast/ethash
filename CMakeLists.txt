@@ -47,11 +47,6 @@ if(CABLE_COMPILER_GNULIKE)
             $<$<COMPILE_LANGUAGE:CXX>:-Wno-old-style-cast>
         )
     endif()
-
-    option(ETHASH_NATIVE "Build for native CPU" OFF)
-    if(ETHASH_NATIVE)
-        add_compile_options(-march=native)
-    endif()
 elseif(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4)
     # For Win32 builds allow allocating more than 2 GB of memory.
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
@@ -65,11 +60,11 @@ option(ETHASH_BUILD_ETHASH "Build ethash::ethash library (if NO only ethash::kec
 
 cmake_dependent_option(ETHASH_BUILD_GLOBAL_CONTEXT "Build ethash::global-context library" YES "ETHASH_BUILD_ETHASH" NO)
 
-option(ETHASH_BUILD_TESTS "Build unit tests" YES)
+option(ETHASH_TESTING "Build unit tests" NO)
 
 add_subdirectory(lib)
 
-if(ETHASH_BUILD_TESTS)
+if(ETHASH_TESTING)
     enable_testing()
     add_subdirectory(test)
 endif()

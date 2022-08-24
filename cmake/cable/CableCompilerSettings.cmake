@@ -56,8 +56,8 @@ macro(cable_configure_compiler)
                 add_compile_options(-Wpedantic)
             endif()
 
-            # Enable basing warnings set and treat them as errors.
-            add_compile_options(-Werror -Wall -Wextra -Wshadow)
+            # Enable base warnings.
+            add_compile_options(-Wall -Wextra -Wshadow)
 
             if(NOT cable_NO_CONVERSION_WARNINGS)
                 # Enable conversion warnings if not explicitly disabled.
@@ -89,12 +89,8 @@ macro(cable_configure_compiler)
 
         elseif(MSVC)
 
-            # Get rid of default warning level.
-            string(REPLACE " /W3" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-            string(REPLACE " /W3" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-
-            # Enable basing warnings set and treat them as errors.
-            add_compile_options(/W4 /WX)
+            # Enable base warnings.
+            add_compile_options(/W4)
 
             # Allow unknown pragmas, we don't want to wrap them with #ifdefs.
             add_compile_options(/wd4068)

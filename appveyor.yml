@@ -37,7 +37,7 @@ install:
 
 before_build:
   - call "%ProgramFiles(x86)%\Microsoft Visual Studio\%VS%\Community\Common7\Tools\vsdevcmd" -arch=%ARCH%
-  - cmake -S . -B build -G Ninja -Wno-dev -DTOOLCHAIN=%TOOLCHAIN% -DCMAKE_INSTALL_PREFIX=./dist -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
+  - cmake -S . -B build -G Ninja -Wno-dev -DTOOLCHAIN=%TOOLCHAIN% -DCMAKE_INSTALL_PREFIX=./dist -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DETHASH_TESTING=ON -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
 
 build_script:
   - cmake --build build --target install

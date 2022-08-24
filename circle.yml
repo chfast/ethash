@@ -39,7 +39,7 @@ commands:
           # (ninja is using relative paths otherwise).
           working_directory: ~/build
           command: |
-            cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=/tmp/local $CMAKE_OPTIONS
+            cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=/tmp/local -DETHASH_TESTING=ON $CMAKE_OPTIONS
 
   build:
     steps:
@@ -217,7 +217,7 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:16-clang-11
     environment:
-      - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DHUNTER_ENABLED=OFF
+      - CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DHUNTER_ENABLED=OFF
     steps:
       - checkout
       - configure
@@ -270,7 +270,7 @@ jobs:
 
   macos-xcode-tsan:
     macos:
-      xcode: "13.3.0"
+      xcode: "13.4.1"
     environment:
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
@@ -279,28 +279,19 @@ jobs:
 
   macos-xcode-old:
     macos:
-      xcode: "11.4.1"
+      xcode: "12.5.1"
     steps:
       - macos-defaults
 
   macos-release:
     macos:
-      xcode: "13.3.0"
+      xcode: "13.4.1"
     environment:
-      - CMAKE_OPTIONS: -DETHASH_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=~/project/dist
+      - CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=~/project/dist
     steps:
+      - macos-defaults
       - run:
-          name: "Install CMake"
-          command: |
-            which python3
-            ls -l /usr/local/lib
-            ls -l /usr/local/bin
-            pip3 install -q cmake
-      - checkout
-      - configure
-      - build
-      - run:
-          name: "Test"
+          name: "Test (setup.py)"
           command: |
             ./setup.py test
       - run:
@@ -327,7 +318,7 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:17-gcc-10
     environment:
-      CMAKE_OPTIONS: -DHUNTER_RUN_UPLOAD=FALSE -DTOOLCHAIN=wasm32-wasi -DETHASH_BUILD_TESTS=NO -DETHASH_BUILD_GLOBAL_CONTEXT=NO
+      CMAKE_OPTIONS: -DHUNTER_RUN_UPLOAD=FALSE -DTOOLCHAIN=wasm32-wasi -DETHASH_TESTING=NO -DETHASH_BUILD_GLOBAL_CONTEXT=NO
     steps:
       - run:
           name: "Install WASI SDK"

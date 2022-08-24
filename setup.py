@@ -35,7 +35,6 @@ class build_ext(setuptools_build_ext):
             '-DCMAKE_INSTALL_LIBDIR=lib',
             '-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE',
             '-DHUNTER_ENABLED=OFF',
-            '-DETHASH_BUILD_TESTS=OFF',
             '-DETHASH_INSTALL_CMAKE_CONFIG=OFF'
         ]
 

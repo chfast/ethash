@@ -7,7 +7,7 @@
 
 int test(void);
 
-int test()
+int test(void)
 {
     int sum = 0;
     sum += ETHASH_EPOCH_LENGTH;
