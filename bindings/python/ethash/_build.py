@@ -60,7 +60,7 @@ const struct ethash_epoch_context* ethash_get_global_epoch_context(int epoch_num
 struct ethash_result ethash_hash(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, uint64_t nonce);
     
-bool ethash_verify(const struct ethash_epoch_context* context,
+bool ethash_verify_against_boundary(const struct ethash_epoch_context* context,
     const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
     const union ethash_hash256* boundary);
 

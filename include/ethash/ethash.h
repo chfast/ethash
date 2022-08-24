@@ -22,14 +22,6 @@
 
 #pragma clang diagnostic pop
 
-#if defined(__cplusplus) && __has_cpp_attribute(deprecated) < __cplusplus
-#define DEPRECATED(MSG) [[deprecated(MSG)]]
-#elif __has_attribute(deprecated)
-#define DEPRECATED(MSG) __attribute__((deprecated(MSG)))
-#else
-#define DEPRECATED(MSG)
-#endif
-
 #ifndef __cplusplus
 #define noexcept  // Ignore noexcept in C code.
 #endif
@@ -179,17 +171,6 @@ ethash_errc ethash_verify_against_difficulty(const struct ethash_epoch_context* 
     const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
     const union ethash_hash256* difficulty) noexcept;
 
-
-/**
- * @deprecated Use ethash_verify_against_boundary().
- */
-DEPRECATED("use ethash_verify_against_boundary()")
-static inline ethash_errc ethash_verify(const struct ethash_epoch_context* context,
-    const union ethash_hash256* header_hash, const union ethash_hash256* mix_hash, uint64_t nonce,
-    const union ethash_hash256* boundary) noexcept
-{
-    return ethash_verify_against_boundary(context, header_hash, mix_hash, nonce, boundary);
-}
 
 /**
  * Verify only the final hash. This can be performed quickly without accessing Ethash context.

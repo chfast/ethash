@@ -44,5 +44,5 @@ def verify(epoch_number, header_hash, mix_hash, nonce, boundary):
     c_boundary = ffi.new('union ethash_hash256*')
     c_boundary[0].str = boundary
 
-    ec = lib.ethash_verify(ctx, c_header_hash, c_mix_hash, nonce, c_boundary)
+    ec = lib.ethash_verify_against_boundary(ctx, c_header_hash, c_mix_hash, nonce, c_boundary)
     return ec == 0
