@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.0] — unreleased
+
+- Removed: Deprecated function `ethash_verify()` has been removed.
+  Use `ethash_verify_against_boundary()`.
+  [#226](https://github.com/chfast/ethash/pull/226)
+
 ## [0.9.0] — 2022-04-05
 
 - Added: The constant `ETHASH_MAX_EPOCH_NUMBER = 32639` representing
@@ -138,6 +144,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[1.0.0]: https://github.com/chfast/ethash/compare/v0.9.0..master
 [0.9.0]: https://github.com/chfast/ethash/releases/tag/v0.9.0
 [0.8.0]: https://github.com/chfast/ethash/releases/tag/v0.8.0
 [0.7.1]: https://github.com/chfast/ethash/releases/tag/v0.7.1
