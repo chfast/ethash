@@ -282,3 +282,58 @@ TEST(helpers, to_hash256_empty)
     hash256 h = to_hash256(hex);
     EXPECT_EQ(h, hash256{});
 }
+
+TEST(keccak, iuf_test_simple)
+{
+    const uint8_t* const data = reinterpret_cast<const uint8_t*>(test_text);
+
+    for (auto& t : test_cases)
+    {
+        const auto h256 = keccak256(data, t.input_size);
+        ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+
+        struct ethash_keccak256_context ctx;
+        keccak256_init(&ctx);
+        keccak256_update(&ctx, data, t.input_size);
+        const auto h2561 = keccak256_final(&ctx);
+        ASSERT_EQ(to_hex(h2561), t.expected_hash256) << t.input_size;
+
+        size_t i;
+
+        keccak256_init(&ctx);
+        for(i = 0; i <  t.input_size; ++i) 
+        {
+            keccak256_update(&ctx, &data[i], 1);
+        }        
+        const auto h2562 = keccak256_final(&ctx);
+        ASSERT_EQ(to_hex(h2562), t.expected_hash256) << t.input_size;
+
+        size_t step = 0;
+        for(step = 1; step < 256; ++step) 
+        {
+            keccak256_init(&ctx);
+        
+            for(i = 0; i <  t.input_size; i = i + step) 
+            {
+                size_t l = t.input_size - i >= step ? step : t.input_size - i;
+                keccak256_update(&ctx, &data[i], l);
+            }        
+            const auto h2563 = keccak256_final(&ctx);
+            ASSERT_EQ(to_hex(h2563), t.expected_hash256) << t.input_size;
+        }
+        
+
+        keccak256_init(&ctx);
+        
+        i = 0;
+        while(i <  t.input_size) 
+        {
+            step = (size_t)rand() % 300;
+            size_t l = t.input_size - i >= step ? step : t.input_size - i;
+            keccak256_update(&ctx, &data[i], l);
+            i = i + step;
+        }        
+        const auto h2563 = keccak256_final(&ctx);
+        ASSERT_EQ(to_hex(h2563), t.expected_hash256) << t.input_size;
+    }
+}
