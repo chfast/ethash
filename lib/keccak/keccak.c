@@ -527,3 +527,107 @@ union ethash_hash256 ethash_keccak256_final(struct ethash_keccak256_context* ctx
     keccak_final(ctx, hash.word64s);
     return hash;
 }
+
+static inline ALWAYS_INLINE void keccak_init_2(struct ethash_keccak256_context* ctx, size_t bits)
+{
+    __builtin_memset((uint8_t*)ctx->state, 0, sizeof ctx->state);
+    ctx->state_iter = ctx->state;
+
+    ctx->hash_size = bits / 8;
+    ctx->block_size = (1600 - bits * 2) / 8;
+    ctx->last_word = 0;
+    ctx->last_word_iter = (uint8_t*)&ctx->last_word;
+
+    __builtin_memset(ctx->buffer, 0, sizeof ctx->buffer);
+    ctx->buffer_index = 0;
+}
+
+static inline ALWAYS_INLINE void keccak_update_2(
+    struct ethash_keccak256_context* ctx, const uint8_t* data, size_t size)
+{
+    static const size_t word_size = sizeof(uint64_t);
+
+    while(size > 0) 
+    {
+        size_t empty_space_size = ctx->block_size - ctx->buffer_index;
+        size_t data_to_load_size = size >= empty_space_size ? empty_space_size : size;
+
+        __builtin_memcpy(&ctx->buffer[ctx->buffer_index], data, data_to_load_size);
+        ctx->buffer_index += data_to_load_size;
+        size -= data_to_load_size;
+        data += data_to_load_size;
+
+        if(ctx->buffer_index == ctx->block_size)
+        {
+            size_t i;
+            uint8_t* d = &ctx->buffer[0];
+
+            for (i = 0; i < (ctx->block_size / word_size); ++i)
+            {
+                *ctx->state_iter ^= load_le(d);
+                ++ctx->state_iter;
+                d += word_size;
+            }
+
+            keccakf1600_best(ctx->state);
+            ctx->state_iter = ctx->state;
+            ctx->buffer_index = 0;
+        }
+    }
+}
+
+static inline ALWAYS_INLINE void keccak_final_2(struct ethash_keccak256_context* ctx, uint64_t* out)
+{
+    static const size_t word_size = sizeof(uint64_t);
+    size_t i;
+
+    if(ctx->buffer_index != 0) 
+    {
+        uint8_t* d = ctx->buffer;
+        for (i = 0; i < (ctx->buffer_index / word_size); ++i)
+        {
+            *ctx->state_iter ^= load_le(d);
+            ++ctx->state_iter;
+            d += word_size;
+        }
+
+        size_t last_word_size = ctx->buffer_index % word_size;
+        d = &ctx->buffer[ctx->buffer_index - last_word_size];
+        ctx->last_word_iter = (uint8_t*)&ctx->last_word;
+
+        while (last_word_size > 0)    
+        {
+            *ctx->last_word_iter = *d;
+            ++ctx->last_word_iter;
+            ++d;
+            --last_word_size;
+        }
+    }
+
+    *ctx->last_word_iter = 0x01;
+    *ctx->state_iter ^= to_le64(ctx->last_word);
+
+    ctx->state[(ctx->block_size / word_size) - 1] ^= 0x8000000000000000;
+
+    keccakf1600_best(ctx->state);
+
+    for (i = 0; i < (ctx->hash_size / word_size); ++i)
+        out[i] = to_le64(ctx->state[i]);
+}
+
+void ethash_keccak256_init_2(struct ethash_keccak256_context* ctx)
+{
+    keccak_init_2(ctx, 256);
+}
+
+void ethash_keccak256_update_2(struct ethash_keccak256_context* ctx, const uint8_t* data, size_t size)
+{
+    keccak_update_2(ctx, data, size);
+}
+
+union ethash_hash256 ethash_keccak256_final_2(struct ethash_keccak256_context* ctx)
+{
+    union ethash_hash256 hash;
+    keccak_final_2(ctx, hash.word64s);
+    return hash;
+}

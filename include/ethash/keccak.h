@@ -29,11 +29,17 @@ struct ethash_keccak256_context {
     uint64_t* state_iter;
     uint64_t last_word;
     uint8_t* last_word_iter;
+    uint8_t buffer[136];
+    size_t buffer_index;
 };
 
 void ethash_keccak256_init(struct ethash_keccak256_context* ctx) noexcept;
 void ethash_keccak256_update(struct ethash_keccak256_context* ctx, const uint8_t* data, size_t size) noexcept;
 union ethash_hash256 ethash_keccak256_final(struct ethash_keccak256_context* ctx) noexcept;
+
+void ethash_keccak256_init_2(struct ethash_keccak256_context* ctx) noexcept;
+void ethash_keccak256_update_2(struct ethash_keccak256_context* ctx, const uint8_t* data, size_t size) noexcept;
+union ethash_hash256 ethash_keccak256_final_2(struct ethash_keccak256_context* ctx) noexcept;
 
 #ifdef __cplusplus
 }

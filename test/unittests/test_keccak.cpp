@@ -337,3 +337,67 @@ TEST(keccak, iuf_test_simple)
         ASSERT_EQ(to_hex(h2563), t.expected_hash256) << t.input_size;
     }
 }
+
+TEST(keccak, iuf_test_simple_2)
+{
+    const uint8_t* const data = reinterpret_cast<const uint8_t*>(test_text);
+
+    for (auto& t : test_cases)
+    {
+        {
+            struct ethash_keccak256_context ctx;
+            keccak256_init_2(&ctx);
+            keccak256_update_2(&ctx, data, t.input_size);
+            const auto h256 = keccak256_final_2(&ctx);
+            ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+        }
+
+        {
+            size_t i;
+
+            struct ethash_keccak256_context ctx;
+            keccak256_init_2(&ctx);
+            for(i = 0; i <  t.input_size; ++i) 
+            {
+                keccak256_update_2(&ctx, &data[i], 1);
+            }        
+            const auto h256 = keccak256_final_2(&ctx);
+            ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+        }
+
+        {
+            size_t i;
+            size_t step = 0;
+            struct ethash_keccak256_context ctx;
+            for(step = 1; step < 256; ++step) 
+            {
+                keccak256_init_2(&ctx);
+            
+                for(i = 0; i <  t.input_size; i = i + step) 
+                {
+                    size_t l = t.input_size - i >= step ? step : t.input_size - i;
+                    keccak256_update_2(&ctx, &data[i], l);
+                }        
+                const auto h256 = keccak256_final_2(&ctx);
+                ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+            }
+        }
+
+        {
+            struct ethash_keccak256_context ctx;
+            keccak256_init_2(&ctx);
+            
+            size_t i = 0;
+            size_t step = 0;
+            while(i <  t.input_size) 
+            {
+                step = (size_t)rand() % 300;
+                size_t l = t.input_size - i >= step ? step : t.input_size - i;
+                keccak256_update_2(&ctx, &data[i], l);
+                i = i + step;
+            }        
+            const auto h256 = keccak256_final_2(&ctx);
+            ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+        }
+    }
+}
