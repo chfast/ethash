@@ -8,6 +8,7 @@
 #if !__has_builtin(__builtin_memcpy) && !defined(__GNUC__)
 #include <string.h>
 #define __builtin_memcpy memcpy
+#define __builtin_memset memset
 #endif
 
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -399,10 +400,10 @@ static inline ALWAYS_INLINE void keccak_update(
     size_t i;
 
     size_t block_size_b = ctx->block_size / word_size;  // block size in bytes
-    size_t last_word_unfilled_size =  // calculate unfilled space in last word, ignore if all empty
-        (word_size - (size_t)(ctx->last_word_iter - (uint8_t*)&(ctx->last_word))) % word_size;
-    size_t state_unfilled_size =  // calculate unfilled space in state, ignore if all empty
-        (block_size_b - (size_t)(ctx->state_iter - ctx->state)) % block_size_b;
+    size_t last_word_unfilled_size =  // calculate unfilled space in last word
+        (word_size - (size_t)(ctx->last_word_iter - (uint8_t*)&(ctx->last_word)));
+    size_t state_unfilled_size =  // calculate unfilled space in state
+        (block_size_b - (size_t)(ctx->state_iter - ctx->state));
 
     // fill the last word unfilled space with bytes until it's full
     while(last_word_unfilled_size > 0 && size > 0)
