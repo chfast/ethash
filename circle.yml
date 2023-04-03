@@ -39,7 +39,7 @@ commands:
           # (ninja is using relative paths otherwise).
           working_directory: ~/build
           command: |
-            cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=/tmp/local -DETHASH_TESTING=ON $CMAKE_OPTIONS
+            cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=/tmp/local -DETHASH_TESTING=ON -DCMAKE_COMPILE_WARNING_AS_ERROR=TRUE $CMAKE_OPTIONS
 
   build:
     steps:
@@ -95,7 +95,7 @@ commands:
     steps:
       - run:
           name: "Upgrade codecov"
-          command: sudo pip3 install --upgrade --quiet --no-cache-dir codecov
+          command: sudo pip3 install --break-system-packages --upgrade --quiet --no-cache-dir codecov
       - run:
           name: "Upload to Codecov"
           command: |
@@ -125,10 +125,9 @@ jobs:
 
   linux-gcc-coverage:
     docker:
-      - image: ethereum/cpp-build-env:17-gcc-11
+      - image: ethereum/cpp-build-env:19-gcc-12
     environment:
-      - BUILD_TYPE: Debug
-      - CMAKE_OPTIONS: -DCOVERAGE=ON
+      - BUILD_TYPE: Coverage
     steps:
       - checkout
       - configure
@@ -154,7 +153,7 @@ jobs:
 
   linux-clang-sanitizers:
     docker:
-      - image: ethereum/cpp-build-env:17-clang-13
+      - image: ethereum/cpp-build-env:19-clang-15
     environment:
       - CMAKE_OPTIONS: -DSANITIZE=address,undefined,unsigned-integer-overflow,shift-exponent,implicit-conversion,nullability -DCMAKE_CXX_CLANG_TIDY=clang-tidy
       - ASAN_OPTIONS: allocator_may_return_null=1
@@ -168,7 +167,7 @@ jobs:
 
   linux-32bit-asan:
     docker:
-      - image: ethereum/cpp-build-env:17-gcc-11-multilib
+      - image: ethereum/cpp-build-env:19-gcc-12-multilib
     environment:
       - BUILD_TYPE: RelWithDebInfo
       - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit -DSANITIZE=address
@@ -182,7 +181,7 @@ jobs:
 
   mips64:
     docker:
-      - image: ethereum/cpp-build-env:17-gcc-10
+      - image: ethereum/cpp-build-env:19-gcc-12
     environment:
       - TESTS_EXCLUDE: _oom|_multithreaded
       - CMAKE_OPTIONS: -DTOOLCHAIN=mips64 -DCMAKE_EXE_LINKER_FLAGS=-static
@@ -195,11 +194,11 @@ jobs:
 
   powerpc64:
     docker:
-      - image: ethereum/cpp-build-env:17-gcc-11
+      - image: ethereum/cpp-build-env:19-gcc-12
     environment:
       - TESTS_EXCLUDE: _oom|_multithreaded
-      - BUILD_TYPE: Debug
-      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static -DCOVERAGE=ON
+      - BUILD_TYPE: Coverage
+      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
     steps:
       - checkout
       - install-powerpc64

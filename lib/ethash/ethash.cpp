@@ -30,8 +30,8 @@ namespace
 {
 /// The core transformation of the FNV-1 hash function.
 /// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1_hash.
-NO_SANITIZE("unsigned-integer-overflow")
-inline uint32_t fnv1(uint32_t u, uint32_t v) noexcept
+[[clang::no_sanitize("unsigned-integer-overflow")]] inline uint32_t fnv1(
+    uint32_t u, uint32_t v) noexcept
 {
     static const uint32_t fnv_prime = 0x01000193;
     return (u * fnv_prime) ^ v;
@@ -292,8 +292,6 @@ search_result search(const epoch_context_full& context, const hash256& header_ha
 }
 
 
-#pragma clang diagnostic ignored "-Wunknown-sanitizers"
-
 struct uint128
 {
     uint64_t lo;
@@ -301,9 +299,8 @@ struct uint128
 };
 
 /// Full unsigned multiplication 64 x 64 -> 128.
-NO_SANITIZE("unsigned-integer-overflow")
-NO_SANITIZE("unsigned-shift-base")
-inline uint128 umul(uint64_t x, uint64_t y) noexcept
+[[clang::no_sanitize("unsigned-integer-overflow", "unsigned-shift-base")]] inline uint128 umul(
+    uint64_t x, uint64_t y) noexcept
 {
 #ifdef __SIZEOF_INT128__
 #pragma GCC diagnostic push
@@ -334,8 +331,8 @@ inline uint128 umul(uint64_t x, uint64_t y) noexcept
     return {lo, hi};
 }
 
-NO_SANITIZE("unsigned-integer-overflow")
-bool check_against_difficulty(const hash256& final_hash, const hash256& difficulty) noexcept
+[[clang::no_sanitize("unsigned-integer-overflow")]] bool check_against_difficulty(
+    const hash256& final_hash, const hash256& difficulty) noexcept
 {
     constexpr size_t num_words = sizeof(hash256) / sizeof(uint64_t);
 

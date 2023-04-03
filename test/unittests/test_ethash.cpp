@@ -2,9 +2,9 @@
 // Copyright 2018 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
-#pragma GCC diagnostic ignored "-Wpedantic"
-#pragma clang diagnostic ignored "-Wpedantic"
+#ifdef _MSC_VER
 #pragma warning(disable : 4127)
+#endif
 
 #include <ethash/endianness.hpp>
 #include <ethash/ethash-internal.hpp>

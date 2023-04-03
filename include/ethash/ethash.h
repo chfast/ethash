@@ -9,9 +9,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreserved-id-macro"
-
 #ifndef __has_cpp_attribute
 #define __has_cpp_attribute(X) 0
 #endif
@@ -19,8 +16,6 @@
 #ifndef __has_attribute
 #define __has_attribute(X) 0
 #endif
-
-#pragma clang diagnostic pop
 
 #ifndef __cplusplus
 #define noexcept  // Ignore noexcept in C code.
