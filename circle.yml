@@ -39,7 +39,7 @@ commands:
           # (ninja is using relative paths otherwise).
           working_directory: ~/build
           command: |
-            cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=/tmp/local -DETHASH_TESTING=ON $CMAKE_OPTIONS
+            cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=/tmp/local -DETHASH_TESTING=ON -DCMAKE_COMPILE_WARNING_AS_ERROR=TRUE $CMAKE_OPTIONS
 
   build:
     steps:
