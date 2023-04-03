@@ -195,7 +195,7 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:16-clang-11
     environment:
-      - CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DHUNTER_ENABLED=OFF
+      - CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
     steps:
       - checkout
       - configure
@@ -296,7 +296,7 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:17-gcc-10
     environment:
-      CMAKE_OPTIONS: -DHUNTER_RUN_UPLOAD=FALSE -DTOOLCHAIN=wasm32-wasi -DETHASH_TESTING=NO -DETHASH_BUILD_GLOBAL_CONTEXT=NO
+      CMAKE_OPTIONS: -DTOOLCHAIN=wasm32-wasi -DETHASH_TESTING=NO -DETHASH_BUILD_GLOBAL_CONTEXT=NO
     steps:
       - run:
           name: "Install WASI SDK"
