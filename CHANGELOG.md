@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1] — 2023-04-03
+
+- CMake and build improvements.
+  [#230](https://github.com/chfast/ethash/pull/230)
+  [#231](https://github.com/chfast/ethash/pull/231)
+
 ## [1.0.0] — 2022-08-25
 
 - Removed: Deprecated function `ethash_verify()` has been removed.
@@ -144,7 +150,8 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
-[1.0.0]: https://github.com/chfast/ethash/releases/tag/v10.0.0
+[1.0.1]: https://github.com/chfast/ethash/releases/tag/v1.0.1
+[1.0.0]: https://github.com/chfast/ethash/releases/tag/v1.0.0
 [0.9.0]: https://github.com/chfast/ethash/releases/tag/v0.9.0
 [0.8.0]: https://github.com/chfast/ethash/releases/tag/v0.8.0
 [0.7.1]: https://github.com/chfast/ethash/releases/tag/v0.7.1
