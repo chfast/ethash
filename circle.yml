@@ -15,14 +15,6 @@ commands:
             $CXX --version
             cmake --version
 
-  install-mips64:
-    steps:
-      - run:
-          name: "Install mips64 toolchain"
-          command: |
-            sudo apt -q update
-            sudo apt -qy install g++-mips64-linux-gnuabi64 qemu-user-static
-
   install-powerpc64:
     steps:
       - run:
@@ -179,19 +171,6 @@ jobs:
       - build
       - test
 
-  mips64:
-    docker:
-      - image: ethereum/cpp-build-env:19-gcc-12
-    environment:
-      - TESTS_EXCLUDE: _oom|_multithreaded
-      - CMAKE_OPTIONS: -DTOOLCHAIN=mips64 -DCMAKE_EXE_LINKER_FLAGS=-static
-    steps:
-      - checkout
-      - install-mips64
-      - configure
-      - build-tests
-      - test
-
   powerpc64:
     docker:
       - image: ethereum/cpp-build-env:19-gcc-12
@@ -338,7 +317,6 @@ workflows:
       - linux-gcc-coverage
       - linux-clang-sanitizers
       - linux-32bit-asan
-      # - mips64  toolchain is broken on recent Debian
       - powerpc64
       - macos-xcode-tsan
       - macos-xcode-old
