@@ -15,14 +15,6 @@ commands:
             $CXX --version
             cmake --version
 
-  install-mips64:
-    steps:
-      - run:
-          name: "Install mips64 toolchain"
-          command: |
-            sudo apt -q update
-            sudo apt -qy install g++-mips64-linux-gnuabi64 qemu-user-static
-
   install-powerpc64:
     steps:
       - run:
@@ -170,7 +162,7 @@ jobs:
       - image: ethereum/cpp-build-env:19-gcc-12-multilib
     environment:
       - BUILD_TYPE: RelWithDebInfo
-      - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit -DSANITIZE=address
+      - CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/32bit.cmake -DSANITIZE=address
       - TESTS_EXCLUDE: _oom
       - ASAN_OPTIONS: allocator_may_return_null=1
     steps:
@@ -179,26 +171,13 @@ jobs:
       - build
       - test
 
-  mips64:
-    docker:
-      - image: ethereum/cpp-build-env:19-gcc-12
-    environment:
-      - TESTS_EXCLUDE: _oom|_multithreaded
-      - CMAKE_OPTIONS: -DTOOLCHAIN=mips64 -DCMAKE_EXE_LINKER_FLAGS=-static
-    steps:
-      - checkout
-      - install-mips64
-      - configure
-      - build-tests
-      - test
-
   powerpc64:
     docker:
       - image: ethereum/cpp-build-env:19-gcc-12
     environment:
       - TESTS_EXCLUDE: _oom|_multithreaded
       - BUILD_TYPE: Coverage
-      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
+      - CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/powerpc64.cmake -DCMAKE_EXE_LINKER_FLAGS=-static
     steps:
       - checkout
       - install-powerpc64
@@ -216,7 +195,7 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:16-clang-11
     environment:
-      - CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DHUNTER_ENABLED=OFF
+      - CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
     steps:
       - checkout
       - configure
@@ -317,7 +296,7 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:17-gcc-10
     environment:
-      CMAKE_OPTIONS: -DHUNTER_RUN_UPLOAD=FALSE -DTOOLCHAIN=wasm32-wasi -DETHASH_TESTING=NO -DETHASH_BUILD_GLOBAL_CONTEXT=NO
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/wasm32-wasi.cmake -DETHASH_TESTING=NO -DETHASH_BUILD_GLOBAL_CONTEXT=NO
     steps:
       - run:
           name: "Install WASI SDK"
@@ -338,7 +317,6 @@ workflows:
       - linux-gcc-coverage
       - linux-clang-sanitizers
       - linux-32bit-asan
-      # - mips64  toolchain is broken on recent Debian
       - powerpc64
       - macos-xcode-tsan
       - macos-xcode-old

@@ -2,21 +2,22 @@
 # Copyright 2018 Pawel Bylica.
 # Licensed under the Apache License, Version 2.0.
 
-cmake_minimum_required(VERSION 3.16.2)
+cmake_minimum_required(VERSION 3.16.2...3.25)
 
-include(cmake/cable/bootstrap.cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-include(CableBuildType)
 include(CableCompilerSettings)
-include(CableToolchains)
 include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
-include(HunterGate)
 
-cable_configure_toolchain(DEFAULT cxx14)
-cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo Debug)
+option(ETHASH_INSTALL_CMAKE_CONFIG "Install CMake configuration scripts for find_package(CONFIG)" ON)
+option(ETHASH_BUILD_ETHASH "Build ethash::ethash library (if NO only ethash::keccak is built)" YES)
+cmake_dependent_option(ETHASH_BUILD_GLOBAL_CONTEXT "Build ethash::global-context library" YES "ETHASH_BUILD_ETHASH" NO)
+option(ETHASH_TESTING "Build unit tests" NO)
 
-include(cmake/Hunter/init.cmake)
+if(ETHASH_TESTING)
+    include(cmake/Hunter/init.cmake)
+endif()
 
 project(ethash)
 set(PROJECT_VERSION 1.0.0)
@@ -62,15 +63,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES GNU)
     set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
 endif()
 
-option(ETHASH_INSTALL_CMAKE_CONFIG "Install CMake configuration scripts for find_package(CONFIG)" ON)
-
 set(include_dir ${PROJECT_SOURCE_DIR}/include)
-
-option(ETHASH_BUILD_ETHASH "Build ethash::ethash library (if NO only ethash::keccak is built)" YES)
-
-cmake_dependent_option(ETHASH_BUILD_GLOBAL_CONTEXT "Build ethash::global-context library" YES "ETHASH_BUILD_ETHASH" NO)
-
-option(ETHASH_TESTING "Build unit tests" NO)
 
 add_subdirectory(lib)
 
