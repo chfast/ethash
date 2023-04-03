@@ -127,8 +127,7 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:17-gcc-11
     environment:
-      - BUILD_TYPE: Debug
-      - CMAKE_OPTIONS: -DCOVERAGE=ON
+      - BUILD_TYPE: Coverage
     steps:
       - checkout
       - configure
@@ -198,8 +197,8 @@ jobs:
       - image: ethereum/cpp-build-env:17-gcc-11
     environment:
       - TESTS_EXCLUDE: _oom|_multithreaded
-      - BUILD_TYPE: Debug
-      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static -DCOVERAGE=ON
+      - BUILD_TYPE: Coverage
+      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
     steps:
       - checkout
       - install-powerpc64
