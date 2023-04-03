@@ -4,14 +4,11 @@
 
 cmake_minimum_required(VERSION 3.16.2...3.25)
 
-include(cmake/cable/bootstrap.cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-include(CableBuildType)
 include(CableCompilerSettings)
 include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
-
-cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo Debug)
 
 option(ETHASH_INSTALL_CMAKE_CONFIG "Install CMake configuration scripts for find_package(CONFIG)" ON)
 option(ETHASH_BUILD_ETHASH "Build ethash::ethash library (if NO only ethash::keccak is built)" YES)
