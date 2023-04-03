@@ -3,12 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "keccak_utils.hpp"
-#include <cstdint>
 #include <cstring>
-
-#pragma GCC diagnostic ignored "-Wcast-qual"
-#pragma clang diagnostic ignored "-Wcast-qual"
-#pragma clang diagnostic ignored "-Wcast-align"
 
 #define fix_endianness(X) X
 

@@ -22,10 +22,3 @@
 #else
 #define ALWAYS_INLINE
 #endif
-
-// [[no_sanitize()]]
-#if defined(__clang__)
-#define NO_SANITIZE(sanitizer) __attribute__((no_sanitize(sanitizer)))
-#else
-#define NO_SANITIZE(sanitizer)
-#endif

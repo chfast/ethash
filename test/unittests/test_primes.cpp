@@ -2,11 +2,7 @@
 // Copyright 2018-2019 Pawel Bylica.
 // Licensed under the Apache License, Version 2.0.
 
-#pragma GCC diagnostic ignored "-Wpedantic"
-#pragma clang diagnostic ignored "-Wpedantic"
-
 #include <ethash/primes.h>
-
 #include <gtest/gtest.h>
 
 TEST(primes, find_largest_prime)

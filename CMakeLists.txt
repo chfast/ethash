@@ -37,6 +37,7 @@ if(CABLE_COMPILER_GNULIKE)
         $<$<CXX_COMPILER_ID:Clang>:-Wduplicate-enum>
         $<$<CXX_COMPILER_ID:Clang>:-Wnewline-eof>
         $<$<CXX_COMPILER_ID:Clang>:-Wunreachable-code-aggressive>
+        $<$<CXX_COMPILER_ID:GNU>:-Wno-attributes>
     )
 
     if(MSVC) # clang-cl

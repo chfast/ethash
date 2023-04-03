@@ -47,8 +47,8 @@ inline bool operator!=(const ethash::hash256& a, const ethash::hash256& b) noexc
     return !(a == b);
 }
 
-NO_SANITIZE("unsigned-integer-overflow")
-inline ethash::hash256 inc(const ethash::hash256& x) noexcept
+[[clang::no_sanitize("unsigned-integer-overflow")]] inline ethash::hash256 inc(
+    const ethash::hash256& x) noexcept
 {
     ethash::hash256 z{};
     bool carry = true;
@@ -62,8 +62,8 @@ inline ethash::hash256 inc(const ethash::hash256& x) noexcept
     return z;
 }
 
-NO_SANITIZE("unsigned-integer-overflow")
-inline ethash::hash256 dec(const ethash::hash256& x) noexcept
+[[clang::no_sanitize("unsigned-integer-overflow")]] inline ethash::hash256 dec(
+    const ethash::hash256& x) noexcept
 {
     ethash::hash256 z{};
     bool borrow = true;

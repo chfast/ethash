@@ -9,8 +9,6 @@
 #include <intrin.h>
 #endif
 
-#pragma clang diagnostic ignored "-Wunknown-sanitizers"
-
 inline int clz(uint32_t x) noexcept
 {
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -25,10 +23,9 @@ inline int clz(uint32_t x) noexcept
 
 extern "C" {
 // Reduce complexity of this function and enable `readability-function-cognitive-complexity`
-// in clang-tidty.
-NO_SANITIZE("unsigned-integer-overflow")
-NO_SANITIZE("unsigned-shift-base")
-ethash_hash256 ethash_difficulty_to_boundary(const ethash_hash256* difficulty) noexcept
+// in clang-tidy.
+[[clang::no_sanitize("unsigned-integer-overflow", "unsigned-shift-base")]] ethash_hash256
+ethash_difficulty_to_boundary(const ethash_hash256* difficulty) noexcept
 {
     constexpr size_t num_words = sizeof(*difficulty) / sizeof(difficulty->word32s[0]);
 
