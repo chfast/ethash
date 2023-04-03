@@ -8,11 +8,9 @@ include(cmake/cable/bootstrap.cmake)
 
 include(CableBuildType)
 include(CableCompilerSettings)
-include(CableToolchains)
 include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 
-cable_configure_toolchain(DEFAULT cxx14)
 cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo Debug)
 
 option(ETHASH_INSTALL_CMAKE_CONFIG "Install CMake configuration scripts for find_package(CONFIG)" ON)

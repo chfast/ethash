@@ -162,7 +162,7 @@ jobs:
       - image: ethereum/cpp-build-env:19-gcc-12-multilib
     environment:
       - BUILD_TYPE: RelWithDebInfo
-      - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-32bit -DSANITIZE=address
+      - CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/cable/toolchains/cxx14-32bit.cmake -DSANITIZE=address
       - TESTS_EXCLUDE: _oom
       - ASAN_OPTIONS: allocator_may_return_null=1
     steps:
@@ -177,7 +177,7 @@ jobs:
     environment:
       - TESTS_EXCLUDE: _oom|_multithreaded
       - BUILD_TYPE: Coverage
-      - CMAKE_OPTIONS: -DTOOLCHAIN=powerpc64 -DCMAKE_EXE_LINKER_FLAGS=-static
+      - CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/cable/toolchains/powerpc64.cmake -DCMAKE_EXE_LINKER_FLAGS=-static
     steps:
       - checkout
       - install-powerpc64
@@ -296,7 +296,7 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:17-gcc-10
     environment:
-      CMAKE_OPTIONS: -DTOOLCHAIN=wasm32-wasi -DETHASH_TESTING=NO -DETHASH_BUILD_GLOBAL_CONTEXT=NO
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/wasm32-wasi.cmake -DETHASH_TESTING=NO -DETHASH_BUILD_GLOBAL_CONTEXT=NO
     steps:
       - run:
           name: "Install WASI SDK"

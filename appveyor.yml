@@ -10,14 +10,8 @@ configuration:
   - Release
 environment:
   ARCH: amd64
-  TOOLCHAIN: cxx11
-  HUNTER_CACHE_TOKEN:
-    secure: agYfiC1OKfHnGOJQolOBorIRovVTgDW3TJ8JOb2+0XZiAnNwbrtPegxaaFM8/VWu
   matrix:
     - VS: 2019
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-    - VS: 2019
-      TOOLCHAIN: cxx17
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - VS: 2019
       CC: clang-cl
@@ -37,7 +31,7 @@ install:
 
 before_build:
   - call "%ProgramFiles(x86)%\Microsoft Visual Studio\%VS%\Community\Common7\Tools\vsdevcmd" -arch=%ARCH%
-  - cmake -S . -B build -G Ninja -Wno-dev -DTOOLCHAIN=%TOOLCHAIN% -DCMAKE_INSTALL_PREFIX=./dist -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DETHASH_TESTING=ON -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
+  - cmake -S . -B build -G Ninja -Wno-dev -DCMAKE_INSTALL_PREFIX=./dist -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DETHASH_TESTING=ON -DHUNTER_CONFIGURATION_TYPES=%CONFIGURATION%
 
 build_script:
   - cmake --build build --target install
