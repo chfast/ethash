@@ -10,7 +10,6 @@
 
 - [Install](#install)
 - [Usage](#usage)
-- [Test vectors](#test-vectors)
 - [Optimizations](#optimizations)
 - [Maintainer](#maintainer)
 - [License](#license)
