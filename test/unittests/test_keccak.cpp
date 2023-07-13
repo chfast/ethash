@@ -205,19 +205,6 @@ TEST(keccak, nullptr_512)
     EXPECT_EQ(to_hex(h), test_cases[0].expected_hash512);
 }
 
-TEST(keccak, bytes)
-{
-    const uint8_t* const data = reinterpret_cast<const uint8_t*>(test_text);
-
-    for (auto& t : test_cases)
-    {
-        const auto h256 = keccak256(data, t.input_size);
-        ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
-        const auto h512 = keccak512(data, t.input_size);
-        ASSERT_EQ(to_hex(h512), t.expected_hash512) << t.input_size;
-    }
-}
-
 TEST(keccak, unaligned)
 {
     const auto text_length = std::strlen(test_text);
@@ -246,6 +233,34 @@ TEST(keccak, hpp_aliases)
     EXPECT_EQ(keccak256_32(data).word64s[1], ethash_keccak256_32(data).word64s[1]);
     EXPECT_EQ(keccak512_64(data).word64s[1], ethash_keccak512_64(data).word64s[1]);
 }
+
+// parametrized keccak tests
+
+class bytes : public testing::TestWithParam<size_t>
+{
+};
+
+TEST_P(bytes, 256)
+{
+    const uint8_t* const data = reinterpret_cast<const uint8_t*>(test_text);
+
+    const size_t index = GetParam();
+    const auto h256 = keccak256(data, test_cases[index].input_size);
+    ASSERT_EQ(to_hex(h256), test_cases[index].expected_hash256) << test_cases[index].input_size;
+}
+
+TEST_P(bytes, 512)
+{
+    const uint8_t* const data = reinterpret_cast<const uint8_t*>(test_text);
+
+    const size_t index = GetParam();
+    const auto h512 = keccak512(data, test_cases[index].input_size);
+    ASSERT_EQ(to_hex(h512), test_cases[index].expected_hash512) << test_cases[index].input_size;
+}
+
+INSTANTIATE_TEST_SUITE_P(keccak, bytes, ::testing::Range(size_t(0), size_t(167)));
+
+// end of parametrized keccak tests
 
 TEST(helpers, to_hex)
 {
