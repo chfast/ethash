@@ -77,6 +77,7 @@ setup(
 
     package_dir={'': 'bindings/python'},
     packages=['ethash'],
+    package_data={'ethash': ['py.typed']},
     cffi_modules=['bindings/python/ethash/_build.py:ffibuilder'],
 
     python_requires='>=3.6',
