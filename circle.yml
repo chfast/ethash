@@ -195,7 +195,7 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:16-clang-11
     environment:
-      - CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+      CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
     steps:
       - checkout
       - configure
@@ -207,11 +207,17 @@ jobs:
 
   linux-release-python:
     docker:
-      - image: quay.io/pypa/manylinux_2_24_x86_64
+      - image: quay.io/pypa/manylinux_2_28_x86_64
+    environment:
+      CMAKE_OPTIONS: >
+        -DETHASH_TESTING=OFF 
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON 
+        -DCMAKE_INSTALL_PREFIX=~/project/dist
+        -DCMAKE_INSTALL_LIBDIR=lib
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/project/dist
+      - configure
+      - build
       - run:
           name: "Build wheels"
           command: scripts/ci/python_build_wheels.sh
@@ -223,7 +229,7 @@ jobs:
       - run:
           name: "Select Python"
           command: |
-            echo 'export PATH=/opt/python/cp310-cp310/bin:$PATH' >> $BASH_ENV
+            echo 'export PATH=/opt/python/cp311-cp311/bin:$PATH' >> $BASH_ENV
             source $BASH_ENV
             python --version
             pip --version
@@ -233,12 +239,6 @@ jobs:
       - store_artifacts:
           path: ~/project/dist
           destination: dist
-      - run:
-          name: "Install libffi"
-          command: apt -q update && apt -qy install libffi-dev
-      - run:
-          name: "Install CMake"
-          command: pip install cmake
       - run:
           name: "Build wheel with CMake build"
           command: ./setup.py bdist_wheel
@@ -321,9 +321,7 @@ workflows:
       - macos-xcode-tsan
       - macos-xcode-old
       - linux-release
-      - linux-release-python:
-          requires:
-            - linux-release
+      - linux-release-python
       - macos-release
       - cmake-min
       - wasi
