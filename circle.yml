@@ -21,7 +21,7 @@ commands:
           name: "Install powerpc64 toolchain"
           command: |
             sudo apt -q update
-            sudo apt -qy install g++-powerpc64-linux-gnu qemu-user-static
+            sudo apt -qy install g++-powerpc64-linux-gnu lcov qemu-user-static
 
   configure:
     steps:
@@ -86,8 +86,18 @@ commands:
         type: string
     steps:
       - run:
-          name: "Upgrade codecov"
-          command: sudo pip3 install --break-system-packages --upgrade --quiet --no-cache-dir codecov
+          name: "Install codecov"
+          command: |
+            export CODECOV_VERSION=v0.6.2
+            curl -Os https://uploader.codecov.io/$CODECOV_VERSION/linux/codecov
+            curl -Os https://uploader.codecov.io/$CODECOV_VERSION/linux/codecov.SHA256SUM
+            curl -Os https://uploader.codecov.io/$CODECOV_VERSION/linux/codecov.SHA256SUM.sig
+
+            gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
+            shasum -c codecov.SHA256SUM
+
+            chmod +x codecov
+            sudo mv codecov /usr/local/bin
       - run:
           name: "Upload to Codecov"
           command: |
@@ -117,7 +127,7 @@ jobs:
 
   linux-gcc-coverage:
     docker:
-      - image: ethereum/cpp-build-env:19-gcc-12
+      - image: ethereum/cpp-build-env:20-gcc-13
     environment:
       - BUILD_TYPE: Coverage
     steps:
@@ -145,7 +155,7 @@ jobs:
 
   linux-clang-sanitizers:
     docker:
-      - image: ethereum/cpp-build-env:19-clang-15
+      - image: ethereum/cpp-build-env:20-clang-16
     environment:
       - CMAKE_OPTIONS: -DSANITIZE=address,undefined,unsigned-integer-overflow,shift-exponent,implicit-conversion,nullability -DCMAKE_CXX_CLANG_TIDY=clang-tidy
       - ASAN_OPTIONS: allocator_may_return_null=1
@@ -159,7 +169,7 @@ jobs:
 
   linux-32bit-asan:
     docker:
-      - image: ethereum/cpp-build-env:19-gcc-12-multilib
+      - image: ethereum/cpp-build-env:20-gcc-13-multilib
     environment:
       - BUILD_TYPE: RelWithDebInfo
       - CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/32bit.cmake -DSANITIZE=address
@@ -173,13 +183,16 @@ jobs:
 
   powerpc64:
     docker:
-      - image: ethereum/cpp-build-env:19-gcc-12
+      - image: cimg/base:current-22.04
     environment:
       - TESTS_EXCLUDE: _oom|_multithreaded
       - BUILD_TYPE: Coverage
       - CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/powerpc64.cmake -DCMAKE_EXE_LINKER_FLAGS=-static
     steps:
       - checkout
+      - run:
+          name: Install codecov GPG key
+          command: curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
       - install-powerpc64
       - configure
       - build-tests
@@ -193,7 +206,7 @@ jobs:
 
   linux-release:
     docker:
-      - image: ethereum/cpp-build-env:16-clang-11
+      - image: ethereum/cpp-build-env:20-gcc-12
     environment:
       CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
     steps:
@@ -248,7 +261,7 @@ jobs:
 
   macos-xcode-tsan:
     macos:
-      xcode: "13.4.1"
+      xcode: 14.3.1
     environment:
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
@@ -257,13 +270,13 @@ jobs:
 
   macos-xcode-old:
     macos:
-      xcode: "12.5.1"
+      xcode: 12.5.1
     steps:
       - macos-defaults
 
   macos-release:
     macos:
-      xcode: "13.4.1"
+      xcode: 14.3.1
     environment:
       - CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=~/project/dist
     steps:
