@@ -19,13 +19,13 @@ if TYPE_CHECKING:
 
 
 def keccak_256(data: "SizedReadableBuffer") -> bytes:
-    hash = lib.ethash_keccak256(ffi.from_buffer(data), len(data))
-    return ffi.unpack(hash.str, len(hash.str))
+    h = lib.ethash_keccak256(ffi.from_buffer(data), len(data))
+    return ffi.unpack(h.str, len(h.str))
 
 
 def keccak_512(data: "SizedReadableBuffer") -> bytes:
-    hash = lib.ethash_keccak512(ffi.from_buffer(data), len(data))
-    return ffi.unpack(hash.str, len(hash.str))
+    h = lib.ethash_keccak512(ffi.from_buffer(data), len(data))
+    return ffi.unpack(h.str, len(h.str))
 
 
 def hash(
