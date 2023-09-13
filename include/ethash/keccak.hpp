@@ -32,4 +32,34 @@ inline hash512 keccak512(const hash512& input) noexcept
 static constexpr auto keccak256_32 = ethash_keccak256_32;
 static constexpr auto keccak512_64 = ethash_keccak512_64;
 
+inline void keccak256_init(struct ethash_keccak256_context* ctx) noexcept
+{
+    ethash_keccak256_init(ctx);
+}
+
+inline void keccak256_update(struct ethash_keccak256_context* ctx, const uint8_t* data, size_t size) noexcept
+{
+    ethash_keccak256_update(ctx, data, size);
+}
+
+inline hash256 keccak256_final(struct ethash_keccak256_context* ctx) noexcept
+{
+    return ethash_keccak256_final(ctx);
+}
+
+inline void keccak256_init_2(struct ethash_keccak256_context* ctx) noexcept
+{
+    ethash_keccak256_init_2(ctx);
+}
+
+inline void keccak256_update_2(struct ethash_keccak256_context* ctx, const uint8_t* data, size_t size) noexcept
+{
+    ethash_keccak256_update_2(ctx, data, size);
+}
+
+inline hash256 keccak256_final_2(struct ethash_keccak256_context* ctx) noexcept
+{
+    return ethash_keccak256_final_2(ctx);
+}
+
 }  // namespace ethash
