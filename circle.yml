@@ -64,8 +64,8 @@ commands:
       - run:
           name: "Test Python package"
           command: |
-            pip install .
-            python bindings/python/tests/test_ethash.py
+            pip install -e .[test]
+            pytest
 
   benchmark:
     steps:
@@ -229,40 +229,26 @@ jobs:
   linux-release-python:
     docker:
       - image: quay.io/pypa/manylinux_2_28_x86_64
-    environment:
-      CMAKE_OPTIONS: >
-        -DETHASH_TESTING=OFF 
-        -DCMAKE_POSITION_INDEPENDENT_CODE=ON 
-        -DCMAKE_INSTALL_PREFIX=~/project/dist
-        -DCMAKE_INSTALL_LIBDIR=lib
     steps:
       - checkout
-      - configure
-      - build
       - run:
-          name: "Build wheels"
+          name: "Build Python package"
           command: scripts/ci/python_build_wheels.sh
       - run:
           name: "Tag wheels"
           working_directory: ~/project/dist
           command: |
             find -name '*linux_x86_64.whl' -exec auditwheel repair {} \;
-      - run:
-          name: "Select Python"
-          command: |
-            echo 'export PATH=/opt/python/cp311-cp311/bin:$PATH' >> $BASH_ENV
-            source $BASH_ENV
-            python --version
-            pip --version
-      - run:
-          name: "Build source dist"
-          command: ./setup.py sdist
       - store_artifacts:
           path: ~/project/dist
           destination: dist
       - run:
-          name: "Build wheel with CMake build"
-          command: ./setup.py bdist_wheel
+          name: "Select Python"
+          command: |
+            echo 'export PATH=/opt/python/cp313-cp313/bin:$PATH' >> $BASH_ENV
+            source $BASH_ENV
+            python --version
+            pip --version
       - test-python-package
 
   macos-xcode-tsan:
