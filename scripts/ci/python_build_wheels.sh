@@ -35,9 +35,8 @@ do
     which python
     pip --version
     echo '***'
-    pip install --use-pep517 wheel setuptools
-    python setup.py build_ext --skip-cmake-build
-    python setup.py bdist_wheel --skip-build
+    pip install --use-pep517 build
+    python -m build
     deactivate
     rm -rf venv
 done

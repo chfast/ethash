@@ -34,7 +34,6 @@ class build_ext(setuptools_build_ext):
             '-DCMAKE_INSTALL_PREFIX={}'.format(install_dir),
             '-DCMAKE_INSTALL_LIBDIR=lib',
             '-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE',
-            '-DHUNTER_ENABLED=OFF',
             '-DETHASH_INSTALL_CMAKE_CONFIG=OFF'
         ]
 
@@ -80,8 +79,8 @@ setup(
     package_data={'ethash': ['py.typed']},
     cffi_modules=['bindings/python/ethash/_build.py:ffibuilder'],
 
-    python_requires='>=3.9',
-    setup_requires=['cffi>=1.12'],
+    python_requires='>=3.10',
+    setup_requires=['cffi>=1.12', 'setuptools'],
     install_requires=['cffi>=1.12'],
 
     test_suite='tests.test_ethash',
