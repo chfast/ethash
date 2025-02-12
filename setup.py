@@ -82,8 +82,9 @@ setup(
     python_requires='>=3.10',
     setup_requires=['cffi>=1.12', 'setuptools'],
     install_requires=['cffi>=1.12'],
-
-    test_suite='tests.test_ethash',
+    extras_require={
+        "test": ["pytest>=8.3,<9"],
+    },
 
     cmdclass={'build_ext': build_ext},
 

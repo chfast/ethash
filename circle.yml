@@ -64,8 +64,8 @@ commands:
       - run:
           name: "Test Python package"
           command: |
-            pip install .
-            python bindings/python/tests/test_ethash.py
+            pip install -e .[test]
+            pytest
 
   benchmark:
     steps:
