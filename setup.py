@@ -7,10 +7,10 @@
 import os
 import subprocess
 import shutil
-from distutils.errors import CCompilerError
 from os import path
 
 from setuptools import setup
+from setuptools.errors import CCompilerError
 from setuptools.command.build_ext import build_ext as setuptools_build_ext
 
 
@@ -80,7 +80,7 @@ setup(
     package_data={'ethash': ['py.typed']},
     cffi_modules=['bindings/python/ethash/_build.py:ffibuilder'],
 
-    python_requires='>=3.6',
+    python_requires='>=3.9',
     setup_requires=['cffi>=1.12'],
     install_requires=['cffi>=1.12'],
 
@@ -93,9 +93,10 @@ setup(
         'Programming Language :: C',
         'Programming Language :: C++',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
     ],
 )

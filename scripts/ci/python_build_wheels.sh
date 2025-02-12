@@ -11,10 +11,10 @@ ACTIVATE_DIR=bin
 
 if [ -n "$APPVEYOR" ]; then
     ACTIVATE_DIR=Scripts
-    PYTHON_PATHS="/c/Python311-x64:/c/Python311-x64/Scripts /c/Python310-x64:/c/Python310-x64/Scripts /c/Python39-x64:/c/Python39-x64/Scripts /c/Python38-x64:/c/Python38-x64/Scripts"
+    PYTHON_PATHS="/c/Python313-x64:/c/Python313-x64/Scripts /c/Python312-x64:/c/Python312-x64/Scripts /c/Python311-x64:/c/Python311-x64/Scripts /c/Python310-x64:/c/Python310-x64/Scripts /c/Python39-x64:/c/Python39-x64/Scripts"
 elif [ -n "$CIRCLECI" ]; then
     if [ "$OSTYPE" = "linux-gnu" ]; then
-        PYTHON_PATHS="/opt/python/cp311-cp311/bin /opt/python/cp310-cp310/bin /opt/python/cp39-cp39/bin /opt/python/cp38-cp38/bin"
+        PYTHON_PATHS="/opt/python/cp313-cp313/bin /opt/python/cp312-cp312/bin /opt/python/cp311-cp311/bin /opt/python/cp310-cp310/bin /opt/python/cp39-cp39/bin"
     else
         # The continuation of the script expects "python" executable name,
         # so make link python -> python3.
