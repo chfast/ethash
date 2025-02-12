@@ -228,7 +228,7 @@ jobs:
 
   linux-release-python:
     docker:
-      - image: quay.io/pypa/manylinux_2_28_x86_64
+      - image: quay.io/pypa/manylinux_2_34_x86_64
 #    environment:
 #      CMAKE_OPTIONS: >
 #        -DETHASH_TESTING=OFF
