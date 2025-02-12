@@ -59,6 +59,14 @@ commands:
       - store_test_results:
           path: ~/build/results.xml
 
+  test-python-package:
+    steps:
+      - run:
+          name: "Test Python package"
+          command: |
+            pip install .
+            python bindings/python/tests/test_ethash.py
+
   benchmark:
     steps:
       - run:
@@ -255,13 +263,11 @@ jobs:
       - run:
           name: "Build wheel with CMake build"
           command: ./setup.py bdist_wheel
-      - run:
-          name: "Test"
-          command: ./setup.py test
+      - test-python-package
 
   macos-xcode-tsan:
     macos:
-      xcode: 14.3.1
+      xcode: 15.4.0
     environment:
       - CMAKE_OPTIONS: -DSANITIZE=thread
       - TSAN_OPTIONS: allocator_may_return_null=1
@@ -270,21 +276,18 @@ jobs:
 
   macos-xcode-old:
     macos:
-      xcode: 12.5.1
+      xcode: 13.4.1
     steps:
       - macos-defaults
 
   macos-release:
     macos:
-      xcode: 14.3.1
+      xcode: 15.4.0
     environment:
       - CMAKE_OPTIONS: -DETHASH_TESTING=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=~/project/dist
     steps:
       - macos-defaults
-      - run:
-          name: "Test (setup.py)"
-          command: |
-            ./setup.py test
+      - test-python-package
       - run:
           name: "Build wheels"
           command: sh scripts/ci/python_build_wheels.sh
