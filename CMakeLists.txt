@@ -20,7 +20,7 @@ if(ETHASH_TESTING)
 endif()
 
 project(ethash)
-set(PROJECT_VERSION 1.0.1)
+set(PROJECT_VERSION 1.1.0)
 
 cable_configure_compiler(NO_STACK_PROTECTION)
 if(CABLE_COMPILER_GNULIKE)

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0] — 2025-02-13
+
+- Added: Python type annotations.
+  [234](https://github.com/chfast/ethash/pull/234)
+- Added: Support for recent Python versions and modern Python packaging.
+  [239](https://github.com/chfast/ethash/pull/239)
+
 ## [1.0.1] — 2023-04-03
 
 - CMake and build improvements.
