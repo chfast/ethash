@@ -27,7 +27,7 @@ environment:
 
 install:
   # Set default Python version.
-  - set PATH=C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%
+  - set PATH=C:\Python313-x64;C:\Python313-x64\Scripts;%PATH%
 
 before_build:
   - call "%ProgramFiles(x86)%\Microsoft Visual Studio\%VS%\Community\Common7\Tools\vsdevcmd" -arch=%ARCH%
@@ -39,7 +39,7 @@ build_script:
 
 test_script:
   - if %CONFIGURATION%==Release C:\projects\ethash\build\test\ethash-test.exe
-  - if defined PYTHON (set ETHASH_PYTHON_SKIP_BUILD=1 && python setup.py test)
+  - if defined PYTHON (set ETHASH_PYTHON_SKIP_BUILD=1 && python -m pip install -e ".[test]" && python -m pytest)
 
 artifacts:
   - path: dist
