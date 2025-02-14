@@ -157,6 +157,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[1.1.0]: https://github.com/chfast/ethash/releases/tag/v1.1.0
 [1.0.1]: https://github.com/chfast/ethash/releases/tag/v1.0.1
 [1.0.0]: https://github.com/chfast/ethash/releases/tag/v1.0.0
 [0.9.0]: https://github.com/chfast/ethash/releases/tag/v0.9.0
