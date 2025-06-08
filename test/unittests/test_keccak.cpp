@@ -282,3 +282,141 @@ TEST(helpers, to_hash256_empty)
     hash256 h = to_hash256(hex);
     EXPECT_EQ(h, hash256{});
 }
+
+static size_t next_data_size_to_load()
+{
+    static size_t next = 1;
+    static const size_t sizes[216]
+        = {225, 50, 73, 72, 285, 273, 139, 299, 193, 243, 43, 102, 294, 262, 209, 114, 88, 94, 179, 233, 248,
+           182, 34, 246, 106, 148, 198, 77, 160, 289, 115, 249, 198, 26, 203, 21, 24, 65, 222, 187, 170, 281,
+           285, 185, 261, 121, 130, 270, 22, 227, 235, 206, 116, 205, 171, 30, 163, 94, 66, 98, 112, 271, 98,
+           91, 181, 181, 145, 290, 12, 261, 183, 82, 40, 25, 40, 164, 293, 150, 96, 195, 218, 122, 240, 99, 7,
+           71, 155, 165, 180, 238, 131, 271, 286, 186, 255, 62, 65, 110, 205, 86, 2, 83, 182, 225, 5, 156, 138,
+           139, 146, 3, 250, 51, 184, 282, 9, 109, 34, 245, 169, 63, 240, 100, 151, 134, 74, 125, 225, 30, 215,
+           199, 275, 131, 128, 89, 37, 195, 286, 220, 117, 183, 32, 132, 51, 122, 244, 104, 59, 73, 45, 188, 115,
+           231, 179, 217, 16, 110, 58, 142, 186, 215, 201, 223, 198, 152, 64, 9, 113, 39, 141, 209, 170, 84, 209,
+           16, 92, 64, 85, 239, 128, 88, 298, 153, 28, 269, 30, 38, 46, 97, 242, 119, 102, 299, 103, 288, 251, 187,
+           192, 8, 57, 293, 221, 43, 184, 207, 50, 129, 203, 45, 139, 0, 129, 82, 285, 254, 214, 213};
+
+    next = (next + 1) % 216;
+    return sizes[next];
+}
+
+TEST(keccak, iuf_test_simple)
+{
+    const uint8_t* const data = reinterpret_cast<const uint8_t*>(test_text);
+
+    for (auto& t : test_cases)
+    {
+        const auto h256 = keccak256(data, t.input_size);
+        ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+
+        struct ethash_keccak256_context ctx = {};
+        keccak256_init(&ctx);
+        keccak256_update(&ctx, data, t.input_size);
+        const auto h2561 = keccak256_final(&ctx);
+        ASSERT_EQ(to_hex(h2561), t.expected_hash256) << t.input_size;
+
+        size_t i;
+
+        keccak256_init(&ctx);
+        for(i = 0; i <  t.input_size; ++i) 
+        {
+            keccak256_update(&ctx, &data[i], 1);
+        }        
+        const auto h2562 = keccak256_final(&ctx);
+        ASSERT_EQ(to_hex(h2562), t.expected_hash256) << t.input_size;
+
+        size_t step = 0;
+        for(step = 1; step < 256; ++step) 
+        {
+            keccak256_init(&ctx);
+        
+            for(i = 0; i <  t.input_size; i = i + step) 
+            {
+                size_t l = t.input_size - i >= step ? step : t.input_size - i;
+                keccak256_update(&ctx, &data[i], l);
+            }        
+            const auto h2563 = keccak256_final(&ctx);
+            ASSERT_EQ(to_hex(h2563), t.expected_hash256) << t.input_size;
+        }
+        
+
+        keccak256_init(&ctx);
+        
+        i = 0;
+        while(i <  t.input_size) 
+        {
+            step = next_data_size_to_load();
+            size_t l = t.input_size - i >= step ? step : t.input_size - i;
+            keccak256_update(&ctx, &data[i], l);
+            i = i + step;
+        }
+        const auto h2563 = keccak256_final(&ctx);
+        ASSERT_EQ(to_hex(h2563), t.expected_hash256) << t.input_size;
+    }
+}
+
+TEST(keccak, iuf_test_simple_2)
+{
+    const uint8_t* const data = reinterpret_cast<const uint8_t*>(test_text);
+
+    for (auto& t : test_cases)
+    {
+        {
+            struct ethash_keccak256_context ctx = {};
+            keccak256_init_2(&ctx);
+            keccak256_update_2(&ctx, data, t.input_size);
+            const auto h256 = keccak256_final_2(&ctx);
+            ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+        }
+
+        {
+            size_t i;
+
+            struct ethash_keccak256_context ctx = {};
+            keccak256_init_2(&ctx);
+            for(i = 0; i <  t.input_size; ++i) 
+            {
+                keccak256_update_2(&ctx, &data[i], 1);
+            }        
+            const auto h256 = keccak256_final_2(&ctx);
+            ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+        }
+
+        {
+            size_t i;
+            size_t step = 0;
+            struct ethash_keccak256_context ctx = {};
+            for(step = 1; step < 256; ++step) 
+            {
+                keccak256_init_2(&ctx);
+            
+                for(i = 0; i <  t.input_size; i = i + step) 
+                {
+                    size_t l = t.input_size - i >= step ? step : t.input_size - i;
+                    keccak256_update_2(&ctx, &data[i], l);
+                }        
+                const auto h256 = keccak256_final_2(&ctx);
+                ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+            }
+        }
+
+        {
+            struct ethash_keccak256_context ctx = {};
+            keccak256_init_2(&ctx);
+            
+            size_t i = 0;
+            size_t step = 0;
+            while(i <  t.input_size) 
+            {
+                step = next_data_size_to_load();
+                size_t l = t.input_size - i >= step ? step : t.input_size - i;
+                keccak256_update_2(&ctx, &data[i], l);
+                i = i + step;
+            }        
+            const auto h256 = keccak256_final_2(&ctx);
+            ASSERT_EQ(to_hex(h256), t.expected_hash256) << t.input_size;
+        }
+    }
+}
