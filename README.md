@@ -10,7 +10,6 @@
 
 - [Install](#install)
 - [Usage](#usage)
-- [Test vectors](#test-vectors)
 - [Optimizations](#optimizations)
 - [Maintainer](#maintainer)
 - [License](#license)
@@ -37,7 +36,7 @@ See [ethash.hpp] for a list of exported functions and documentation.
 This section describes the optimizations, modifications and tweaks applied
 in this library in relation to [Ethash reference implementation].
 
-The library contains a set of micro-benchmarks.Build and run the `ethash-bench`
+The library contains a set of micro-benchmarks. Build and run the `ethash-bench`
 tool.
 
 ### Seed hash is computed on the fly.
