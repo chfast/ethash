@@ -7,14 +7,17 @@
 
 set -eo pipefail
 
+# Wheels are tagged cp310-abi3 (see setup.cfg), so a single wheel built with
+# one interpreter per platform covers CPython 3.10 and all later versions.
+
 ACTIVATE_DIR=bin
 
 if [ -n "$APPVEYOR" ]; then
     ACTIVATE_DIR=Scripts
-    PYTHON_PATHS="/c/Python313-x64:/c/Python313-x64/Scripts /c/Python312-x64:/c/Python312-x64/Scripts /c/Python311-x64:/c/Python311-x64/Scripts /c/Python310-x64:/c/Python310-x64/Scripts"
+    PYTHON_PATHS="/c/Python313-x64:/c/Python313-x64/Scripts"
 elif [ -n "$CIRCLECI" ]; then
     if [ "$OSTYPE" = "linux-gnu" ]; then
-        PYTHON_PATHS="/opt/python/cp313-cp313/bin /opt/python/cp312-cp312/bin /opt/python/cp311-cp311/bin /opt/python/cp310-cp310/bin"
+        PYTHON_PATHS="/opt/python/cp313-cp313/bin"
     else
         # The continuation of the script expects "python" executable name,
         # so make link python -> python3.

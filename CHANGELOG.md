@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] — 2026-07-15
+
+- Added: Wheel build support for Python 3.14. Wheels are now tagged
+  `cp310-abi3` (the extension module already targets the stable ABI), so a
+  single wheel per platform covers Python 3.10 and all later versions.
+
 ## [1.1.0] — 2025-02-13
 
 - Added: Python type annotations.
@@ -157,6 +163,7 @@
  - Added: Experimental support for [ProgPoW] [0.9.1][ProgPoW-changelog].
 
 
+[1.1.1]: https://github.com/chfast/ethash/releases/tag/v1.1.1
 [1.1.0]: https://github.com/chfast/ethash/releases/tag/v1.1.0
 [1.0.1]: https://github.com/chfast/ethash/releases/tag/v1.0.1
 [1.0.0]: https://github.com/chfast/ethash/releases/tag/v1.0.0
