@@ -276,7 +276,17 @@ jobs:
       - test-python-package
       - run:
           name: "Build wheels"
-          command: sh scripts/ci/python_build_wheels.sh
+          # Build a universal2 (x86_64 + arm64) wheel. The architecture flags
+          # must reach both the cmake build of the static libraries and the
+          # cffi extension build.
+          command: |
+            export MACOSX_DEPLOYMENT_TARGET=11.0
+            export CMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+            export ARCHFLAGS="-arch arm64 -arch x86_64"
+            export CFLAGS="-arch arm64 -arch x86_64"
+            export LDFLAGS="-arch arm64 -arch x86_64"
+            export _PYTHON_HOST_PLATFORM="macosx-11.0-universal2"
+            sh scripts/ci/python_build_wheels.sh
       - store_artifacts:
           path: ~/project/dist
           destination: dist
