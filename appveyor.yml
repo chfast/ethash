@@ -10,6 +10,10 @@ configuration:
   - Release
 environment:
   ARCH: amd64
+  # Hunter 0.24.0's CMake scripts declare a minimum version below 3.5, which
+  # CMake >= 4 rejects. The environment variable (unlike -D) also reaches
+  # Hunter's child cmake invocations. Ignored by CMake < 4.
+  CMAKE_POLICY_VERSION_MINIMUM: 3.5
   matrix:
     - VS: 2019
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
